@@ -1,23 +1,24 @@
+// src/app/layout.js
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './globals.css'
-import Navbar from '@/components/Navbar'
-
-export const metadata = {
-  title: 'Freelancer Dashboard App',
-  description: 'Freelancer Dashboard App',
-}
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        <Navbar />
-        <div className="container-fluid">
-          <div className="row">
-            <main className="col-md-10 ms-sm-auto px-md-4 py-4">{children}</main>
-          </div>
+      <body className="bg-light">
+        <div className="d-flex">
+          <Sidebar />
+          <main className="flex-grow-1">
+            <Topbar />
+            <div className="container py-4">
+              {children}
+            </div>
+          </main>
         </div>
       </body>
     </html>
   )
 }
+
+import Sidebar from '../components/Sidebar'
+import Topbar from '../components/Topbar'

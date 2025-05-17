@@ -1,16 +1,54 @@
 body {
   background-color: #f8f9fa;
 }
-body.dark-mode {
-  background-color: #121212 !important;
-  color: #f1f1f1 !important;
+
+:root {
+  --bg: #f8f9fa;
+  --text: #212529;
+  --card-bg: #ffffff;
 }
 
-body.dark-mode .card {
-  background-color: #1e1e1e;
-  color: #eaeaea;
+[data-theme="dark"] {
+  --bg: #121212;
+  --text: #ffffff;
+  --card-bg: #1e1e1e;
 }
 
-body.dark-mode .navbar {
-  background-color: #1a1a1a !important;
+body {
+  background-color: var(--bg) !important;
+  color: var(--text);
+}
+.card, .table {
+  background-color: var(--card-bg) !important;
+  color: var(--text) !important;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  transition: all 0.2s ease;
+}
+.card.metric {
+  background: linear-gradient(to right, #e3f2fd, #f1f8e9);
+}
+.card {
+  transition: all 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeInUp 0.6s ease-in-out;
 }

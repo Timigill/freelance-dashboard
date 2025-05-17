@@ -1,57 +1,95 @@
 'use client'
-import { useState } from 'react'
-
-const clients = [
-  { name: 'Jane Doe', email: 'jane@example.com', type: 'Agency', status: 'Active' },
-  { name: 'John Smith', email: 'john@example.com', type: 'Freelancer', status: 'Inactive' },
-  { name: 'Ali Raza', email: 'ali@agency.com', type: 'Startup', status: 'Active' },
-  { name: 'Sara Khan', email: 'sara@biz.com', type: 'Enterprise', status: 'Pending' }
-]
-
-const statusColor = {
-  Active: 'success',
-  Inactive: 'secondary',
-  Pending: 'warning'
-}
+import { useState, useEffect } from 'react'
 
 export default function ClientsPage() {
-  const [search, setSearch] = useState('')
-  const filtered = clients.filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
+  const [clients, setClients] = useState([])
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    company: '',
+    phone: '',
+    notes: ''
+  })
+
+  const isValid = Object.values(form).every(field => field.trim() !== '')
+
+  useEffect(() => {
+    fetchClients()
+  }, [])
+
+  const fetchClients = async () => {
+    const res = await fetch('/api/clients')
+    const data = await res.json()
+    setClients(data)
+  }
+
+  const handleChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+    if (!isValid) return alert('Please fill all fields.')
+    await fetch('/api/clients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
+    })
+    setForm({ name: '', email: '', company: '', phone: '', notes: '' })
+    fetchClients()
+  }
 
   return (
     <div>
-      <h2>Clients</h2>
-      <input
-        type="text"
-        className="form-control mb-3"
-        placeholder="Search clients..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-      <table className="table table-hover">
-        <thead>
-          <tr><th>Name</th><th>Email</th><th>Type</th><th>Status</th></tr>
+      <h2 className="mb-4 fw-bold">Clients</h2>
+
+      <form onSubmit={handleSubmit} className="mb-5">
+        <div className="row">
+          {['name', 'email', 'company', 'phone'].map((field, i) => (
+            <div className="col-md-6 mb-3" key={i}>
+              <label className="text-capitalize">{field}</label>
+              <input
+                name={field}
+                value={form[field]}
+                onChange={handleChange}
+                className="form-control"
+              />
+            </div>
+          ))}
+          <div className="col-12 mb-3">
+            <label>Notes</label>
+            <textarea
+              name="notes"
+              value={form.notes}
+              onChange={handleChange}
+              className="form-control"
+            />
+          </div>
+        </div>
+        <button type="submit" className="btn btn-primary" disabled={!isValid}>
+          Add Client
+        </button>
+      </form>
+
+      <table className="table table-bordered">
+        <thead className="table-light">
+          <tr>
+            <th>Name</th><th>Email</th><th>Company</th><th>Phone</th><th>Notes</th><th>Joined</th>
+          </tr>
         </thead>
         <tbody>
-          {filtered.map((c, i) => (
-            <tr key={i}>
-              <td>{c.name}</td>
-              <td>{c.email}</td>
-              <td>{c.type}</td>
-              <td><span className={`badge bg-${statusColor[c.status]}`}>{c.status}</span></td>
+          {clients.map(client => (
+            <tr key={client._id}>
+              <td>{client.name}</td>
+              <td>{client.email}</td>
+              <td>{client.company}</td>
+              <td>{client.phone}</td>
+              <td>{client.notes}</td>
+              <td>{new Date(client.createdAt).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <div className="d-flex justify-content-between">
-        <small>Showing {filtered.length} clients</small>
-        <nav>
-          <ul className="pagination pagination-sm">
-            <li className="page-item active"><a className="page-link">1</a></li>
-            <li className="page-item"><a className="page-link">2</a></li>
-          </ul>
-        </nav>
-      </div>
     </div>
   )
 }
