@@ -1,15 +1,16 @@
-import { dbConnect } from '@/lib/dbConnect'
+import { NextResponse } from 'next/server'
+import {dbConnect} from '@/lib/dbConnect'
 import Client from '@/models/Client'
 
 export async function GET() {
   await dbConnect()
   const clients = await Client.find().sort({ createdAt: -1 })
-  return Response.json(clients)
+  return NextResponse.json(clients)
 }
 
 export async function POST(request) {
-  const body = await request.json()
   await dbConnect()
+  const body = await request.json()
   const client = await Client.create(body)
-  return Response.json(client)
+  return NextResponse.json(client)
 }

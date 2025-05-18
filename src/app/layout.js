@@ -10,7 +10,7 @@ export default function RootLayout({ children }) {
           <Sidebar />
           <main className="flex-grow-1">
             <Topbar />
-            <div className="container py-4">
+            <div className="container py-2">
               {children}
             </div>
           </main>
