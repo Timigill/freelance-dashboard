@@ -1,36 +1,42 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import Chart from 'chart.js/auto'
 
 export default function PieChart() {
+  const chartRef = useRef(null)
+  const chartInstanceRef = useRef(null)
+
   useEffect(() => {
-    const chartCanvas = document.getElementById('pieChart')
-    if (!chartCanvas) return
-
-    // Destroy existing chart instance if it exists to prevent overlap
-    if (Chart.getChart('pieChart')) {
-      Chart.getChart('pieChart').destroy()
-    }
-
-    new Chart(chartCanvas, {
-      type: 'pie',
-      data: {
-        labels: ['Marketing', 'Operations', 'Dev', 'Sex', 'Other'],
-        datasets: [{
-          data: [3000, 1500, 2500, 1000, 2000],
-          backgroundColor: ['#0d6efd', '#20c997', '#ffc107', '#dc3545', '#6c757d']
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
+    if (chartRef.current) {
+      // Destroy existing chart instance if it exists to prevent overlap
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy()
+      }
+      chartInstanceRef.current = new Chart(chartRef.current, {
+        type: 'pie',
+        data: {
+          labels: ['Marketing', 'Operations', 'Dev', 'Sex', 'Other'],
+          datasets: [{
+            data: [3000, 1500, 2500, 1000, 2000],
+            backgroundColor: ['#0d6efd', '#20c997', '#ffc107', '#dc3545', '#6c757d']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
           }
         }
+      })
+    }
+    return () => {
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy()
       }
-    })
+    }
   }, [])
 
   const labels = [
@@ -47,7 +53,7 @@ export default function PieChart() {
       <div className="row">
         {/* Pie Chart */}
         <div className="col-6" style={{ height: '150px' }}>
-          <canvas id="pieChart" width="100%" height="100%" />
+          <canvas ref={chartRef} width="100%" height="100%" />
         </div>
 
         {/* Labels */}
@@ -63,8 +69,8 @@ export default function PieChart() {
                   marginRight: '10px'
                 }}
               />
-              <span style={{ width: '100px',fontSize:"14px" }}>{item.name}:</span>
-              <span className="ms-2" style={{fontSize:"14px"}}>{item.value.toLocaleString()}</span>
+              <span style={{ width: '100px', fontSize: "14px" }}>{item.name}:</span>
+              <span className="ms-2" style={{ fontSize: "14px" }}>{item.value.toLocaleString()}</span>
             </div>
           ))}
         </div>

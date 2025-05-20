@@ -6,6 +6,7 @@ export default function ClientsPage() {
   const [form, setForm] = useState({
     name: '', email: '', company: '', phone: '', notes: ''
   })
+  const [shouldCloseModal, setShouldCloseModal] = useState(false)
 
   const isValid = Object.values(form).every(f => f.trim() !== '')
 
@@ -33,8 +34,17 @@ export default function ClientsPage() {
     })
     setForm({ name: '', email: '', company: '', phone: '', notes: '' })
     fetchClients()
-    document.getElementById('closeModalBtn').click()
+    setShouldCloseModal(true)
   }
+
+  useEffect(() => {
+    if (shouldCloseModal) {
+      if (typeof window !== 'undefined' && document.getElementById('closeModalBtn')) {
+        document.getElementById('closeModalBtn').click()
+      }
+      setShouldCloseModal(false)
+    }
+  }, [shouldCloseModal])
 
   const getUniqueCompanies = () => {
     return [...new Set(clients.map(c => c.company.trim()).filter(Boolean))]

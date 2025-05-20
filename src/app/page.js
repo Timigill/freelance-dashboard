@@ -8,7 +8,7 @@ import ConversionChart from '@/components/ConversionChart'
 import RecentInvoices from '@/components/RecentInvoices'
 import TopClients from '@/components/TopClients'
 import MarqueeBar from '@/components/MarqueeBar'
-
+import Image from 'next/image'
 export default function HomePage() {
   return (
     <div className="dashboard-page container-fluid py-3 px-2">
@@ -55,7 +55,7 @@ export default function HomePage() {
         <div className="col-md-6 mb-3">
           <div className="card shadow-sm p-2 h-100">
             <h6 className="mb-2 small">System Overview</h6>
-            <img
+            <Image
               src="/overview.webp"
               alt="System Overview"
               className="img-fluid rounded w-100"
