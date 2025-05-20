@@ -29,7 +29,7 @@ const IncomeChart = () => {
     datasets: [
       {
         label: 'Income',
-        data: [500, 1200, 750, 1100],
+        data: [500, 1200, 4500, 750, 1100],
         borderColor: '#3b82f6',
         backgroundColor: 'rgba(59, 130, 246, 0.2)',
         fill: true,

@@ -24,7 +24,7 @@ const RevenueChart = () => {
   }, [])
 
   const data = {
-    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+    labels: ['Q1', 'Q2', 'Q3', 'Q4', 'Q5'],
     datasets: [
       {
         label: 'Revenue',
@@ -33,7 +33,7 @@ const RevenueChart = () => {
       },
       {
         label: 'Expenses',
-        data: [800, 1200, 950, 1600],
+        data: [800, 1200, 2300, 950, 1600],
         backgroundColor: '#ef4444',
       },
     ],

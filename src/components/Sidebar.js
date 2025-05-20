@@ -1,107 +1,117 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Tooltip, OverlayTrigger } from 'react-bootstrap'
+import {
+  BsBarChartLine, BsPeopleFill, BsFileEarmarkTextFill, BsGearFill, BsList
+} from 'react-icons/bs'
 
-export default function Sidebar() {
+const navItems = [
+  { href: '/', label: 'Dashboard', icon: <BsBarChartLine /> },
+  { href: '/clients', label: 'Clients', icon: <BsPeopleFill /> },
+  { href: '/invoices', label: 'Invoices', icon: <BsFileEarmarkTextFill /> },
+  { href: '/settings', label: 'Settings', icon: <BsGearFill /> },
+]
+
+export default function Sidebar({ collapsed, setCollapsed }) {
   const pathname = usePathname()
 
-  const primaryNav = [
-    { href: '/', label: 'Dashboard', icon: '📊' },
-    { href: '/clients', label: 'Clients', icon: '👥' },
-    { href: '/invoices', label: 'Invoices', icon: '🧾' },
-  ]
-
-  const secondaryNav = [
-    { href: '/settings', label: 'Settings', icon: '⚙️' },
-  ]
+  const renderTooltip = (label) => (
+    <Tooltip id={`tooltip-${label.toLowerCase()}`}>{label}</Tooltip>
+  )
 
   return (
     <div
-      className="sidebar d-flex flex-column text-white p-3"
+      className={`d-flex flex-column text-white position-fixed sidebar-glass p-2 pt-3 ${collapsed ? 'collapsed' : ''}`}
       style={{
-        width: '250px',
-        minHeight: '100vh',
-        background: 'linear-gradient(180deg, #1e1e2f, #12121a)',
-        backdropFilter: 'blur(12px)',
-        borderRight: '1px solid rgba(255,255,255,0.05)',
-        boxShadow: '2px 0 5px rgba(0,0,0,0.2)',
+        width: collapsed ? '60px' : '170px',
+        height: '100vh',
+        top: 0,
+        left: 0,
+        zIndex: 1000,
+        background: 'rgba(0, 0, 0, 1)',
+        backdropFilter: 'blur(10px)',
+        borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+        transition: 'all 0.3s ease',
+        overflowX: 'hidden'
       }}
     >
-      {/* 🧑 Profile Section */}
-      <div className="mb-4 d-flex align-items-center gap-3">
-        <div
-          className="rounded-circle bg-info d-flex justify-content-center align-items-center"
-          style={{ width: 42, height: 42, fontSize: '1.2rem', fontWeight: 'bold' }}
-        >
-          N
-        </div>
-        <div>
-          <div className="fw-semibold">Noman</div>
-          <small className="">Freelancer</small>
-        </div>
-      </div>
-
-      {/* 📌 Primary Navigation */}
-      <ul className="nav flex-column mb-2">
-        {primaryNav.map(({ href, label, icon }) => (
-          <li className="nav-item mb-1" key={href}>
-            <Link
-              href={href}
-              className={`nav-link px-3 py-2 rounded d-flex align-items-center gap-2 ${
-                pathname === href ? 'active' : ''
-              }`}
-              style={{
-                color: pathname === href ? '#0dcaf0' : '#ffffff',
-                backgroundColor:
-                  pathname === href ? 'rgba(255,255,255,0.08)' : 'transparent',
-                borderLeft:
-                  pathname === href ? '4px solid #0dcaf0' : '4px solid transparent',
-                transition: 'all 0.3s ease',
-              }}
-            >
-              <span>{icon}</span>
-              <span>{label}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-
-      <hr className="text-secondary" />
-
-      {/* ⚙️ Secondary Navigation */}
-      <ul className="nav flex-column mb-auto">
-        {secondaryNav.map(({ href, label, icon }) => (
-          <li className="nav-item mb-1" key={href}>
-            <Link
-              href={href}
-              className={`nav-link px-3 py-2 rounded d-flex align-items-center gap-2 ${
-                pathname === href ? 'active' : ''
-              }`}
-              style={{
-                color: pathname === href ? '#0dcaf0' : '#ffffff',
-                backgroundColor:
-                  pathname === href ? 'rgba(255,255,255,0.08)' : 'transparent',
-                borderLeft:
-                  pathname === href ? '4px solid #0dcaf0' : '4px solid transparent',
-                transition: 'all 0.3s ease',
-              }}
-            >
-              <span>{icon}</span>
-              <span>{label}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-
-      {/* 🚪 Logout */}
-      <div className="mt-auto pt-3 border-top border-secondary">
+      {/* Centered Toggle Button */}
+      <div className="d-flex justify-content-center align-items-center mb-4" style={{ height: '60px' }}>
         <button
-          className="btn btn-outline-light w-100 d-flex align-items-center gap-2 justify-content-center"
-          style={{ fontSize: '0.9rem' }}
+          className="btn btn-outline-light"
+          onClick={() => setCollapsed(!collapsed)}
+          style={{
+            borderRadius: '10px',
+            border: 'none',
+            width: '60px',
+            height: '40px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
         >
-          🔓 Logout
+          <BsList style={{ width: '24px', height: '24px' }} />
         </button>
       </div>
+
+      {/* Navigation */}
+      <ul className="nav flex-column gap-3">
+        {navItems.map(({ href, label, icon }) => {
+          const isActive = pathname === href
+
+          return (
+            <li key={href} className="nav-item">
+              <OverlayTrigger
+                placement="right"
+                overlay={collapsed ? renderTooltip(label) : <></>}
+              >
+                <Link
+                  href={href}
+                  className={`nav-link d-flex align-items-center gap-2 px-3 py-2 icon-hover rounded-pill ${
+                    isActive ? 'active-glow' : 'text-white'
+                  }`}
+                  style={{
+                    justifyContent: collapsed ? 'center' : 'flex-start',
+                    transition: 'all 0.3s ease',
+                    fontSize: '1rem'
+                  }}
+                >
+                  <span className="fs-5">{icon}</span>
+                  {!collapsed && <span>{label}</span>}
+                </Link>
+              </OverlayTrigger>
+            </li>
+          )
+        })}
+      </ul>
+
+      {/* Footer */}
+      <div className="mt-auto pt-3 border-top border-secondary text-center small ">
+        {!collapsed && <span>© 2025 Freelance Dashboard</span>}
+      </div>
+
+      <style jsx>{`
+        .icon-hover:hover {
+          background: rgba(255, 255, 255, 0.1);
+          transform: scale(1.05);
+        }
+
+        .active-glow {
+          background: linear-gradient(135deg, #1e90ff, #3f76ff);
+          box-shadow: 0 0 12px #1e90ff;
+          color: white !important;
+        }
+
+        .collapsed .nav-link span:not(.fs-5),
+        .collapsed .mt-auto {
+          display: none !important;
+        }
+
+        .sidebar-glass {
+          box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.05);
+        }
+      `}</style>
     </div>
   )
 }
