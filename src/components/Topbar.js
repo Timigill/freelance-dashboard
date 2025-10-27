@@ -20,7 +20,7 @@ export default function Topbar() {
       <div className="d-flex align-items-center justify-content-between h-100 px-3">
         <div style={{ height: '37px !IMPORTANT', position: 'relative', width: '110px' }}>
           <Image
-            src="/lancer.png"
+            src="/Lancer.png"
             alt="Lancer Logo"
             fill
             // style={{ objectFit: 'contain' }}
