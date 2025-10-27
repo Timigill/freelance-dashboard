@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import { BsBell, BsSearch, BsPersonCircle } from 'react-icons/bs'
 
 export default function Topbar() {
   const [dark, setDark] = useState(false)
@@ -14,9 +16,29 @@ export default function Topbar() {
   }, [dark])
 
   return (
-    <div className="d-flex justify-content-between align-items-center bg-white text-dark px-4 py-3 shadow-sm border-bottom">
-      <span className="fw-bold fs-5">📋 Freelance Dashboard</span>
-    </div>
-
+    <header style={{ height: '63px'}} className="sticky-top bg-white shadow-sm border-bottom">
+      <div className="d-flex align-items-center justify-content-between h-100 px-3">
+        <div style={{ height: '27px !IMPORTANT', position: 'relative', width: '100px' }}>
+          <Image
+            src="/lancer.png"
+            alt="Lancer Logo"
+            fill
+            // style={{ objectFit: 'contain' }}
+            priority
+          />
+        </div>
+        <div className="d-flex align-items-center gap-3">
+          <button className="btn btn-link p-1 position-relative" style={{ fontSize: '1.4rem', color: '#352359' }}>
+            <BsBell />
+            <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+              <span className="visually-hidden">New notifications</span>
+            </span>
+          </button>
+          <button className="btn btn-link p-1" style={{ fontSize: '1.7rem', color: '#352359' }}>
+            <BsPersonCircle />
+          </button>
+        </div>
+      </div>
+    </header>
   )
 }

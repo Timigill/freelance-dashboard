@@ -1,26 +1,22 @@
 'use client'
-import { useState } from 'react'
-import Sidebar from './Sidebar'
 import Topbar from './Topbar'
+import BottomBar from './BottomBar'
 
 export default function DashboardShell({ children }) {
-  const [collapsed, setCollapsed] = useState(false)
-
   return (
-    <div className="d-flex">
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-      <main
-        className="flex-grow-1"
-        style={{
-          marginLeft: collapsed ? '60px' : '170px',
-          transition: 'margin 0.3s ease',
-          minHeight: '100vh',
-          overflowX: 'hidden'
-        }}
-      >
-        <Topbar />
-        <div className="container py-2">{children}</div>
+    <div className="container-fluid p-0 min-vh-100 d-flex flex-column">
+      {/* Topbar always visible */}
+      <Topbar />
+      <main className="flex-grow-1 bg-light pb-bottom-bar">
+        <div className="container-fluid py-2">{children}</div>
       </main>
+      {/* Bottom navigation bar for mobile */}
+      <BottomBar />
+      <style jsx>{`
+        .pb-bottom-bar {
+          padding-bottom: 65px;
+        }
+      `}</style>
     </div>
   )
 }

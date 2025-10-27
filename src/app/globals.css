@@ -1,29 +1,29 @@
-body {
-  background-color: #f8f9fa;
-}
-body {
-  overflow-x: hidden !important;
+.navbar-toggler-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  background-size: 1.5rem 1.5rem;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(53,35,89,1)' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 :root {
-  --bg: #f8f9fa;
-  --text: #212529;
-  --card-bg: #ffffff;
-}
-
-[data-theme="dark"] {
-  --bg: #121212;
-  --text: #ffffff;
-  --card-bg: #1e1e1e;
+  --bs-primary: #352359;
+  --bs-secondary: #fff;
+  --bs-success: #352359;
+  --bs-info: #fff;
+  --bs-warning: #352359;
+  --bs-danger: #fff;
+  --bs-dark: #352359;
+  --bs-light: #fff;
 }
 
 body {
-  background-color: var(--bg) !important;
-  color: var(--text);
+  background-color: #fff !important;
+  color: #352359 !important;
+  overflow-x: hidden !important;
 }
-.card, .table {
-  background-color: var(--card-bg) !important;
-  color: var(--text) !important;
+.card, .table, .sidebar-glass {
+  background-color: #fff !important;
+  color: #352359 !important;
 }
 
 .card:hover {
@@ -168,3 +168,118 @@ p, .text-muted, .small {
 .sidebar-footer {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* Brand and mobile homepage helpers */
+:root {
+  --brand: #352359;
+}
+
+/* Hero card at top of mobile homepage */
+.hero-card {
+  background: linear-gradient(135deg, var(--brand), #5b3b7a);
+  color: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.hero-card .hero-label {
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+.hero-card .hero-amount {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+/* Make overview cards horizontally scrollable on small screens */
+.overview-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
+}
+.overview-scroll .col-md-3 {
+  min-width: 200px;
+  flex: 0 0 auto;
+}
+
+/* Floating action button above the BottomBar on mobile */
+.fab {
+  position: fixed;
+  right: 18px;
+  bottom: 86px; /* sits above the 65px bottom bar */
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(53,35,89,0.22);
+  z-index: 1050;
+  border: none;
+}
+.fab:active { transform: scale(0.98); }
+
+@media (min-width: 768px) {
+  .fab { display: none; }
+  .bottom-bar { display: none !important; }
+  .dashboard-page { padding-bottom: 40px; }
+}
+
+/* Date filter (month/year) styling */
+.date-filter {
+  background: rgba(53,35,89,0.04);
+  border-radius: 12px;
+  padding: 6px 8px;
+  align-items: center;
+}
+.date-filter .btn-link {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0.15rem !important;
+  margin: 0 !important;
+  color: var(--brand) !important;
+}
+.date-filter {
+  display: inline-flex; /* keep it inline with the heading */
+  flex-shrink: 0; /* avoid collapsing on small widths so it stays to the right */
+}
+.date-filter .calendar-icon {
+  color: var(--brand);
+  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+}
+.filter-select {
+  border-radius: 8px;
+  border: 1px solid rgba(53,35,89,0.12);
+  color: var(--brand);
+  background: #fff;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.filter-select:focus {
+  box-shadow: 0 0 0 4px rgba(53,35,89,0.06);
+  border-color: var(--brand);
+  outline: none;
+}
+
+@media (max-width: 576px) {
+  .date-filter { padding: 6px; }
+  .filter-select { min-width: 90px; }
+}
+
+/* Ensure header title stays left and date-filter stays right on small screens
+   If space is too tight, the selects will shrink but remain on one line */
+.d-flex.justify-content-between.align-items-center > .date-filter {
+  margin-left: 12px;
+}
+
+.d-flex.justify-content-between.align-items-center h2 {
+  margin-bottom: 0;
+}
+
