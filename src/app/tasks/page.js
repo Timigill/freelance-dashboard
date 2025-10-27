@@ -95,7 +95,7 @@ export default function TasksPage() {
       name: task.name,
       description: task.description || '',
       amount: task.amount,
-      sourceId: task.sourceId._id,
+      sourceId: task.sourceId?._id || '',
       dueDate: task.dueDate.split('T')[0],
       status: task.status,
       paymentStatus: task.paymentStatus,
@@ -300,7 +300,7 @@ export default function TasksPage() {
                       <small className="text-muted">{task.description}</small>
                     </td>
                     <td>
-                      <Badge bg="info">{task.sourceId.name}</Badge>
+                      <Badge bg="info">{task.sourceId?.name}</Badge>
                     </td>
                     <td>${task.amount.toLocaleString()}</td>
                     <td>{new Date(task.dueDate).toLocaleDateString()}</td>

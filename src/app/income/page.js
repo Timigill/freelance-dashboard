@@ -18,6 +18,26 @@ export default function IncomePage() {
     clientName: ''
   })
 
+  const fetchIncomeSources = async () => {
+    try {
+      const res = await fetch('/api/income');
+      const data = await res.json();
+      setIncomeSources(data);
+    } catch (error) {
+      console.error('Error fetching income sources:', error);
+    }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const res = await fetch('/api/clients');
+      const data = await res.json();
+      setClients(data);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+    }
+  };
+
   useEffect(() => {
     fetchIncomeSources()
     fetchClients()
