@@ -127,11 +127,19 @@ export default function IncomePage() {
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h3 className="fw-bold mb-0">Income Sources</h3>
+          <h3 className="fw-bold mb-0"
+          style={{
+            color:"var(--bs-primary)"
+          }}
+          >Income Sources</h3>
           <p className="text-muted">Manage your income streams and track earnings</p>
         </div>
         <button
-          className="btn btn-primary"
+          className="btn "
+          style={{
+            background:"var(--bs-primary)",
+            color:"white"
+          }}
           onClick={() => {
             setCurrentSource(null)
             setForm({
@@ -149,38 +157,51 @@ export default function IncomePage() {
           ➕ Add Income Source
         </button>
       </div>
-
-      {/* Summary Cards */}
-      <div className="row mb-4">
-        <div className="col-md-4">
-          <div className="card bg-primary text-white">
-            <div className="card-body">
-              <h6 className="mb-2">Total Monthly Income</h6>
-              <h3 className="mb-0">${totalIncome.toLocaleString()}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <div className="card bg-success text-white">
-            <div className="card-body">
-              <h6 className="mb-2">Active Sources</h6>
-              <h3 className="mb-0">{incomeSources.length}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <div className="card bg-info text-white">
-            <div className="card-body">
-              <h6 className="mb-2">Average per Source</h6>
-              <h3 className="mb-0">
-                ${incomeSources.length
-                  ? Math.round(totalIncome / incomeSources.length).toLocaleString()
-                  : 0}
-              </h3>
-            </div>
-          </div>
-        </div>
+     {/* Summary Cards */}
+<div className="row mb-4 g-3 justify-content-center justify-content-md-start">
+  <div className="col-6 col-md-4">
+    <div className="card bg-primary text-white h-100 text-center">
+      <div className="card-body d-flex flex-column justify-content-center">
+        <h6 className="mb-2"
+        style={{
+          color:"var(--bs-primary)"
+        }}
+        >Total Monthly Income</h6>
+        <h3 className="mb-0">${totalIncome.toLocaleString()}</h3>
       </div>
+    </div>
+  </div>
+
+  <div className="col-6 col-md-4">
+    <div className="card bg-success text-white h-100 text-center">
+      <div className="card-body d-flex flex-column justify-content-center">
+        <h6 className="mb-2"
+         style={{
+          color:"var(--bs-primary)"
+        }}
+        >Active Sources</h6>
+        <h3 className="mb-0">{incomeSources.length}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div className="col-6 col-md-4 d-flex justify-content-center justify-content-md-start">
+    <div className="card bg-info text-white h-100 text-center" style={{ minWidth: "100%" }}>
+      <div className="card-body d-flex flex-column justify-content-center">
+        <h6 className="mb-2"
+         style={{
+          color:"var(--bs-primary)"
+        }}
+        >Average per Source</h6>
+        <h3 className="mb-0">
+          ${incomeSources.length
+            ? Math.round(totalIncome / incomeSources.length).toLocaleString()
+            : 0}
+        </h3>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Filter Controls */}
       <div className="card shadow-sm mb-4">

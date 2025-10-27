@@ -25,7 +25,19 @@ body {
   background-color: #fff !important;
   color: #352359 !important;
 }
-
+.btn-primary{
+  background-color: #352359 !important;
+  border-color: #352359 !important;
+}
+.btn-outline-primary {
+  color: #352359 !important;
+  border-color: #352359 !important;
+}
+.btn-outline-primary:hover {
+  background-color: #352359 !important;
+  color: #fff !important;
+  border-color: #352359 !important;
+}
 .card:hover {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
