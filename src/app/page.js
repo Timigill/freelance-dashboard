@@ -173,7 +173,19 @@ export default function HomePage() {
     ]
     setIncomeSources(sampleData)
     calculateMonthlyIncome(sampleData)
+
+const fetchIncomeSources = async () => {
+  try {
+    const res = await fetch(`/api/income?month=${selectedMonth}&year=${selectedYear}`)
+    const data = await res.json()
+    setIncomeSources(data)
+    calculateMonthlyIncome(data)
+  } catch (error) {
+    console.error('Error fetching income sources:', error)
   }
+}
+
+
 
   const fetchTasks = async () => {
     // Hardcoded sample tasks
