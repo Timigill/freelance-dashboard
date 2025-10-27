@@ -2,53 +2,99 @@
 import { useState, useEffect } from 'react'
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState([])
+  const [clients, setClients] = useState([]);
   const [form, setForm] = useState({
-    name: '', email: '', company: '', phone: '', notes: ''
-  })
-  const [shouldCloseModal, setShouldCloseModal] = useState(false)
+    name: "",
+    email: "",
+    company: "",
+    phone: "",
+    notes: "",
+  });
+  const [shouldCloseModal, setShouldCloseModal] = useState(false);
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [deadlineFilter, setDeadlineFilter] = useState("All");
 
-  const isValid = Object.values(form).every(f => f.trim() !== '')
+  // 🔹 Validation
+  const isValid = Object.values(form).every((f) => f.trim() !== "");
 
+  // 🔹 Fetch Clients
   useEffect(() => {
-    fetchClients()
-  }, [])
+    fetchClients();
+  }, []);
 
   const fetchClients = async () => {
-    const res = await fetch('/api/clients')
-    const data = await res.json()
-    setClients(data)
-  }
+    try {
+      const res = await fetch("/api/clients");
+      const data = await res.json();
+      setClients(data);
+    } catch (err) {
+      console.error("Error fetching clients:", err);
+    }
+  };
 
-  const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+  // 🔹 Handle Form Input
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-  const handleSubmit = async e => {
-    e.preventDefault()
-    if (!isValid) return alert('Please fill all fields.')
-    await fetch('/api/clients', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    })
-    setForm({ name: '', email: '', company: '', phone: '', notes: '' })
-    fetchClients()
-    setShouldCloseModal(true)
-  }
+  // 🔹 Submit New Client
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isValid) return alert("Please fill all fields.");
 
+    try {
+      await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      setForm({ name: "", email: "", company: "", phone: "", notes: "" });
+      fetchClients();
+      setShouldCloseModal(true);
+    } catch (err) {
+      console.error("Error adding client:", err);
+    }
+  };
+
+  // 🔹 Auto-close Modal After Save
   useEffect(() => {
     if (shouldCloseModal) {
-      if (typeof window !== 'undefined' && document.getElementById('closeModalBtn')) {
-        document.getElementById('closeModalBtn').click()
-      }
-      setShouldCloseModal(false)
+      const btn = document.getElementById("closeModalBtn");
+      if (btn) btn.click();
+      setShouldCloseModal(false);
     }
-  }, [shouldCloseModal])
+  }, [shouldCloseModal]);
 
+  // 🔹 Unique Companies for Filters
   const getUniqueCompanies = () => {
-    return [...new Set(clients.map(c => c.company.trim()).filter(Boolean))]
-  }
+    return [...new Set(clients.map((c) => c.company?.trim()).filter(Boolean))];
+  };
+
+  // 🔹 FILTER + SORT Logic
+  const filteredAndSortedClients = clients
+    .filter((c) => {
+      // Category Filter
+      if (categoryFilter !== "All" && c.category !== categoryFilter)
+        return false;
+
+      // Deadline Filter
+      if (deadlineFilter !== "All" && c.deadline) {
+        const today = new Date();
+        const deadlineDate = new Date(c.deadline);
+        if (deadlineFilter === "Upcoming" && deadlineDate < today) return false;
+        if (deadlineFilter === "Expired" && deadlineDate >= today) return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortOrder === "newest") {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else {
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      }
+    });
 
   return (
     <div className="container-fluid py-4">
@@ -69,7 +115,8 @@ export default function ClientsPage() {
 
       {/* Summary Cards */}
       <div className="row mb-4">
-        <div className="col-md-4">
+        {/* Total Clients */}
+        <div className="col-6 col-md-4 col-lg-2 mb-3">
           <div className="card bg-primary text-white shadow-sm">
             <div className="card-body">
               <h6 className="mb-1">Total Clients</h6>
@@ -77,55 +124,188 @@ export default function ClientsPage() {
             </div>
           </div>
         </div>
-        <div className="col-md-4">
-          <div className="card bg-success text-white shadow-sm">
-            <div className="card-body">
-              <h6 className="mb-1">Active Companies</h6>
-              <h4 className="fw-bold">{getUniqueCompanies().length}</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
+
+        {/* Latest Client */}
+        <div className="col-6 col-md-4 col-lg-2 mb-3">
           <div className="card bg-dark text-white shadow-sm">
             <div className="card-body">
               <h6 className="mb-1">Latest Client</h6>
               <p className="mb-0 fw-semibold">
-                {clients.length > 0 ? clients[clients.length - 1].name : '—'}
+                {clients.length > 0 ? clients[clients.length - 1].name : "—"}
               </p>
-              <small>{clients.length > 0 ? new Date(clients[clients.length - 1].createdAt).toLocaleDateString() : ''}</small>
+              <small>
+                {clients.length > 0
+                  ? new Date(
+                    clients[clients.length - 1].createdAt
+                  ).toLocaleDateString()
+                  : ""}
+              </small>
+            </div>
+          </div>
+        </div>
+
+        {/* Active Clients */}
+        <div className="col-6 col-md-4 col-lg-2 mb-3">
+          <div className="card bg-info text-white shadow-sm">
+            <div className="card-body">
+              <h6 className="mb-1">Active Clients</h6>
+              <h4 className="fw-bold">
+                {clients.filter((c) => c.status === "active").length}
+              </h4>
+            </div>
+          </div>
+        </div>
+
+        {/* New Clients */}
+        <div className="col-6 col-md-4 col-lg-2 mb-3">
+          <div className="card bg-warning text-dark shadow-sm">
+            <div className="card-body">
+              <h6 className="mb-1">New Clients</h6>
+              <h4 className="fw-bold">
+                {
+                  clients.filter((c) => {
+                    const date = new Date(c.createdAt);
+                    const now = new Date();
+                    return (
+                      date.getMonth() === now.getMonth() &&
+                      date.getFullYear() === now.getFullYear()
+                    );
+                  }).length
+                }
+              </h4>
+            </div>
+          </div>
+        </div>
+
+        {/* Inactive Clients */}
+        <div className="col-6 col-md-4 col-lg-2 mb-3">
+          <div className="card bg-danger text-white shadow-sm">
+            <div className="card-body">
+              <h6 className="mb-1">Inactive Clients</h6>
+              <h4 className="fw-bold">
+                {clients.filter((c) => c.status === "inactive").length}
+              </h4>
+            </div>
+          </div>
+        </div>
+
+        {/* Closed Clients */}
+        <div className="col-6 col-md-4 col-lg-2 mb-3">
+          <div className="card bg-secondary text-white shadow-sm">
+            <div className="card-body">
+              <h6 className="mb-1">Closed Clients</h6>
+              <h4 className="fw-bold">
+                {clients.filter((c) => c.status === "closed").length}
+              </h4>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Clients Table */}
+
       <div className="card shadow-sm">
-        <div className="card-header fw-semibold">Client List</div>
+        <div className="card-header fw-semibold d-flex justify-content-between align-items-center">
+          <span>Client List</span>
+        </div>
+
+        {/* 🔽 Filter Controls */}
+        <div className="card-body d-flex  mb-3 gap-2">
+          <div className="d-flex flex-wrap justify-content-between  gap-2">
+            {/* Sort by Newest/Oldest */}
+            <select
+              className="form-select form-select-sm"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+
+            {/* Filter by Category */}
+            <select
+              className="form-select form-select-sm"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+            >
+              <option value="All">All Categories</option>
+              <option value="Freelance">Freelance</option>
+              <option value="Fixed">Fixed</option>
+              <option value="Salary-Based">Salary-Based</option>
+              <option value="Contract">Contract</option>
+            </select>
+
+            {/* Filter by Deadline */}
+            <select
+              className="form-select form-select-sm"
+              value={deadlineFilter}
+              onChange={(e) => setDeadlineFilter(e.target.value)}
+            >
+              <option value="All">All Deadlines</option>
+              <option value="Upcoming">Upcoming</option>
+              <option value="Expired">Expired</option>
+            </select>
+          </div>
+        </div>
+
+        {/* 📋 Client Table */}
         <div className="card-body p-0">
           <div className="table-responsive">
             <table className="table align-middle mb-0 table-striped table-bordered">
               <thead className="table-light">
                 <tr>
                   <th>Name</th>
-                  <th>Email</th>
+                  <th>Email / Address</th>
                   <th>Company</th>
                   <th>Phone</th>
-                  <th>Notes</th>
+                  <th>Category</th>
+                  <th>Deadline</th>
                   <th>Joined</th>
                 </tr>
               </thead>
               <tbody>
-                {clients.length > 0 ? clients.map(client => (
-                  <tr key={client._id}>
-                    <td>{client.name}</td>
-                    <td>{client.email}</td>
-                    <td><span className="badge bg-info text-dark">{client.company}</span></td>
-                    <td>{client.phone}</td>
-                    <td className="text-muted">{client.notes}</td>
-                    <td><span className="badge bg-secondary">{new Date(client.createdAt).toLocaleDateString()}</span></td>
+                {filteredAndSortedClients.length > 0 ? (
+                  filteredAndSortedClients.map((client) => (
+                    <tr key={client._id}>
+                      <td>{client.name}</td>
+                      <td>{client.email}</td>
+                      <td>
+                        <span className="badge bg-info text-dark">
+                          {client.company || '—'}
+                        </span>
+                      </td>
+                      <td>{client.phone || '—'}</td>
+                      <td>
+                        <span className="badge bg-secondary">
+                          {client.category || 'Uncategorized'}
+                        </span>
+                      </td>
+                      <td>
+                        {client.deadline ? (
+                          <span
+                            className={`badge ${new Date(client.deadline) < new Date()
+                              ? 'bg-danger'
+                              : 'bg-success'
+                              }`}
+                          >
+                            {new Date(client.deadline).toLocaleDateString()}
+                          </span>
+                        ) : (
+                          <span className="text-muted">—</span>
+                        )}
+                      </td>
+                      <td>
+                        <small className="text-muted">
+                          {new Date(client.createdAt).toLocaleDateString()}
+                        </small>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="text-center py-4 text-muted">
+                      No clients found.
+                    </td>
                   </tr>
-                )) : (
-                  <tr><td colSpan="6" className="text-center py-4 text-muted">No clients added yet.</td></tr>
                 )}
               </tbody>
             </table>
@@ -133,29 +313,83 @@ export default function ClientsPage() {
         </div>
       </div>
 
+
+
       {/* Modal */}
-      <div className="modal fade" id="clientModal" tabIndex="-1" aria-labelledby="clientModalLabel" aria-hidden="true">
+      <div
+        className="modal fade"
+        id="clientModal"
+        tabIndex="-1"
+        aria-labelledby="clientModalLabel"
+        aria-hidden="true"
+      >
         <div className="modal-dialog modal-lg modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="clientModalLabel">Add New Client</h5>
-              <button id="closeModalBtn" type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <h5 className="modal-title" id="clientModalLabel">
+                Add New Client
+              </h5>
+              <button
+                id="closeModalBtn"
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
             </div>
+
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="row">
-                  {['name', 'email', 'company', 'phone'].map((field, i) => (
+                  {/* Basic Fields */}
+                  {["name", "email", "company", "phone"].map((field, i) => (
                     <div className="col-md-6 mb-3" key={i}>
-                      <label className="form-label text-capitalize">{field}</label>
+                      <label className="form-label text-capitalize">
+                        {field}
+                      </label>
                       <input
+                        type={field === "email" ? "email" : "text"}
                         name={field}
                         value={form[field]}
                         onChange={handleChange}
                         className="form-control"
                         placeholder={`Enter ${field}`}
+                        required
                       />
                     </div>
                   ))}
+
+                  {/* Category Dropdown */}
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Category</label>
+                    <select
+                      name="category"
+                      value={form.category || ""}
+                      onChange={handleChange}
+                      className="form-select"
+                      required
+                    >
+                      <option value="">Select category</option>
+                      <option value="Fixed">Fixed</option>
+                      <option value="Salary-Based">Salary-Based</option>
+                      <option value="Freelance">Freelance</option>
+                      <option value="Task-Based">Task-Based</option>
+                    </select>
+                  </div>
+
+                  {/* Deadline Picker */}
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Deadline</label>
+                    <input
+                      type="date"
+                      name="deadline"
+                      value={form.deadline || ""}
+                      onChange={handleChange}
+                      className="form-control"
+                    />
+                  </div>
+
+                  {/* Notes */}
                   <div className="col-12 mb-3">
                     <label className="form-label">Notes</label>
                     <textarea
@@ -169,11 +403,21 @@ export default function ClientsPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Footer */}
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={!isValid}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={!isValid}
+                >
                   Save Client
                 </button>
               </div>
@@ -181,6 +425,7 @@ export default function ClientsPage() {
           </div>
         </div>
       </div>
+
     </div>
   )
 }
