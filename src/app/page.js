@@ -163,18 +163,6 @@ export default function HomePage() {
   // Removed dynamic client distribution calculation
 
   const fetchIncomeSources = async () => {
-    // Hardcoded sample income sources
-    const sampleData = [
-      { id: 1, name: 'Microsoft Contract', type: 'Fixed', amount: 45000, isActive: true },
-      { id: 2, name: 'Google Project', type: 'Task-Based', amount: 38000, isActive: true },
-      { id: 3, name: 'Apple Consulting', type: 'Freelance', amount: 32000, isActive: true },
-      { id: 4, name: 'Meta Development', type: 'Fixed', amount: 28000, isActive: true },
-      { id: 5, name: 'Amazon Services', type: 'Task-Based', amount: 22000, isActive: true }
-    ]
-    setIncomeSources(sampleData)
-    calculateMonthlyIncome(sampleData)
-
-const fetchIncomeSources = async () => {
   try {
     const res = await fetch(`/api/income?month=${selectedMonth}&year=${selectedYear}`)
     const data = await res.json()
