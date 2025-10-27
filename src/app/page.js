@@ -74,16 +74,19 @@ export default function HomePage() {
     fetchTasks()
   }, [selectedMonth, selectedYear])
 
-  const fetchIncomeSources = async () => {
-    try {
-      const res = await fetch('/api/income')
-      const data = await res.json()
-      setIncomeSources(data)
-      calculateMonthlyIncome(data)
-    } catch (error) {
-      console.error('Error fetching income sources:', error)
-    }
+
+const fetchIncomeSources = async () => {
+  try {
+    const res = await fetch(`/api/income?month=${selectedMonth}&year=${selectedYear}`)
+    const data = await res.json()
+    setIncomeSources(data)
+    calculateMonthlyIncome(data)
+  } catch (error) {
+    console.error('Error fetching income sources:', error)
   }
+}
+
+
 
   const fetchTasks = async () => {
     try {
