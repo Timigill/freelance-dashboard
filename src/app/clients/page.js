@@ -118,11 +118,11 @@ const [form, setForm] = useState({
       </div>
 
       {/* Summary Cards */}
- <div className="row row-cols-2 row-cols-lg-5 g-3">
+<div className="row row-cols-2 row-cols-lg-5 g-3">
 
   <Link href="/clients/all" className="col text-decoration-none">
-    <div className="card bg-primary text-white shadow-sm" style={{ cursor: "pointer" }}>
-      <div className="card-body">
+    <div className="card bg-primary text-white shadow-sm h-100 text-center" style={{ cursor: "pointer", minHeight: "130px" }}>
+      <div className="card-body d-flex flex-column justify-content-center align-items-center">
         <h6 className="mb-1">Total Clients</h6>
         <h3 className="fw-bold">{clients.length}</h3>
       </div>
@@ -130,8 +130,8 @@ const [form, setForm] = useState({
   </Link>
 
   <Link href="/clients/active" className="col text-decoration-none">
-    <div className="card bg-info text-white shadow-sm" style={{ cursor: "pointer" }}>
-      <div className="card-body">
+    <div className="card bg-info text-white shadow-sm h-100 text-center" style={{ cursor: "pointer", minHeight: "130px" }}>
+      <div className="card-body d-flex flex-column justify-content-center align-items-center">
         <h6 className="mb-1">Active Clients</h6>
         <h4 className="fw-bold">
           {clients.filter((c) => c.status === "active").length}
@@ -141,8 +141,8 @@ const [form, setForm] = useState({
   </Link>
 
   <Link href="/clients/new" className="col text-decoration-none">
-    <div className="card bg-warning text-dark shadow-sm" style={{ cursor: "pointer" }}>
-      <div className="card-body">
+    <div className="card bg-warning text-dark shadow-sm h-100 text-center" style={{ cursor: "pointer", minHeight: "130px" }}>
+      <div className="card-body d-flex flex-column justify-content-center align-items-center">
         <h6 className="mb-1">New Clients</h6>
         <h4 className="fw-bold">
           {
@@ -161,8 +161,8 @@ const [form, setForm] = useState({
   </Link>
 
   <Link href="/clients/inactive" className="col text-decoration-none">
-    <div className="card bg-danger text-white shadow-sm" style={{ cursor: "pointer" }}>
-      <div className="card-body">
+    <div className="card bg-danger text-white shadow-sm h-100 text-center" style={{ cursor: "pointer", minHeight: "130px" }}>
+      <div className="card-body d-flex flex-column justify-content-center align-items-center">
         <h6 className="mb-1">Inactive Clients</h6>
         <h4 className="fw-bold">
           {clients.filter((c) => c.status === "inactive").length}
@@ -172,8 +172,8 @@ const [form, setForm] = useState({
   </Link>
 
   <Link href="/clients/closed" className="col text-decoration-none">
-    <div className="card bg-secondary text-white shadow-sm" style={{ cursor: "pointer" }}>
-      <div className="card-body">
+    <div className="card bg-secondary text-white shadow-sm h-100 text-center" style={{ cursor: "pointer", minHeight: "130px" }}>
+      <div className="card-body d-flex flex-column justify-content-center align-items-center">
         <h6 className="mb-1">Closed Clients</h6>
         <h4 className="fw-bold">
           {clients.filter((c) => c.status === "closed").length}
@@ -183,6 +183,7 @@ const [form, setForm] = useState({
   </Link>
 
 </div>
+
 
 
 
