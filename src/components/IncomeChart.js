@@ -13,7 +13,7 @@ import {
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend)
 
-const IncomeChart = () => {
+const IncomeChart = ({ monthlyData }) => {
   const [textColor, setTextColor] = useState('#000')
 
   useEffect(() => {
@@ -24,17 +24,20 @@ const IncomeChart = () => {
     }
   }, [])
 
+  const labels = (monthlyData && monthlyData.labels) || []
+  const values = (monthlyData && monthlyData.values) || []
+
   const data = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr'],
+    labels,
     datasets: [
       {
         label: 'Income',
-        data: [500, 1200, 4500, 750, 1100],
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        data: values,
+        borderColor: '#352359',
+        backgroundColor: 'rgba(53, 35, 89, 0.12)',
         fill: true,
-        tension: 0.4,
-        pointBackgroundColor: '#3b82f6',
+        tension: 0.35,
+        pointBackgroundColor: '#352359',
       },
     ],
   }
@@ -47,6 +50,7 @@ const IncomeChart = () => {
   },
   plugins: {
     legend: {
+      display: false,
       labels: {
         color: textColor,
       },
@@ -75,12 +79,11 @@ const IncomeChart = () => {
 }
 
 
+  // Render only the chart itself (no extra card or heading) so the parent
+  // page's card/title sits flush above the chart with no extra spacing.
   return (
-    <div className="card shadow-sm border-0 mb-4">
-      <div className="card-body">
-        <h5 className="mb-3">📈 Income Trends</h5>
-        <Line data={data} options={options} />
-      </div>
+    <div className="p-0 m-0">
+      <Line data={data} options={options} />
     </div>
   )
 }

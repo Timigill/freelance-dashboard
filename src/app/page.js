@@ -57,6 +57,7 @@ function MonthPickerIcon({ selectedMonth, selectedYear, onChange }) {
 export default function HomePage() {
   const [incomeSources, setIncomeSources] = useState([])
   const [tasks, setTasks] = useState([])
+  const [clients, setClients] = useState([])
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [monthlyStats, setMonthlyStats] = useState({
@@ -68,32 +69,122 @@ export default function HomePage() {
     completedTasks: 0,
     pendingTasks: 0
   })
+  const [monthlySeries, setMonthlySeries] = useState({ labels: [], values: [] })
 
   useEffect(() => {
     fetchIncomeSources()
     fetchTasks()
+    fetchClients()
   }, [selectedMonth, selectedYear])
 
-  const fetchIncomeSources = async () => {
-    try {
-      const res = await fetch('/api/income')
-      const data = await res.json()
-      setIncomeSources(data)
-      calculateMonthlyIncome(data)
-    } catch (error) {
-      console.error('Error fetching income sources:', error)
+  // compute last 6 months totals (ending at selectedMonth/selectedYear)
+  const computeLastSixMonths = () => {
+    const labelsArr = []
+    const valuesArr = []
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(selectedYear, selectedMonth - i, 1)
+      const year = d.getFullYear()
+      const month = d.getMonth()
+      labelsArr.push(`${months[month].slice(0, 3)} ${String(year).slice(-2)}`)
+
+      const startOfMonth = new Date(year, month, 1)
+      const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999)
+
+      let total = 0
+
+      // Sum payments on incomeSources if payments exist, otherwise approximate recurring amounts
+      incomeSources.forEach(src => {
+        if (src.payments && src.payments.length) {
+          src.payments.forEach(p => {
+            const pd = new Date(p.date)
+            if (pd >= startOfMonth && pd <= endOfMonth) total += (p.amount || 0)
+          })
+        } else {
+          // approximate based on frequency
+          const freq = src.frequency || 'Monthly'
+          const amt = Number(src.amount || 0)
+          if (freq === 'Monthly') total += amt
+          else if (freq === 'Weekly') total += amt * 4
+          else if (freq === 'Yearly') total += amt / 12
+          else if (freq === 'One-time') {
+            const sd = src.startDate ? new Date(src.startDate) : null
+            if (sd && sd >= startOfMonth && sd <= endOfMonth) total += amt
+          }
+        }
+      })
+
+      // Include paid/completed tasks in that month
+      tasks.forEach(task => {
+        const td = task.dueDate ? new Date(task.dueDate) : null
+        if (td && td >= startOfMonth && td <= endOfMonth) {
+          // count completed/paid tasks
+          if (task.status === 'Completed' || task.paymentStatus === 'Paid') {
+            total += Number(task.amount || 0)
+          }
+          // include explicit payments array on tasks if available
+          if (task.payments && task.payments.length) {
+            task.payments.forEach(p => {
+              const pd = new Date(p.date)
+              if (pd >= startOfMonth && pd <= endOfMonth) total += (p.amount || 0)
+            })
+          }
+        }
+      })
+
+      valuesArr.push(Math.round(total))
     }
+
+    setMonthlySeries({ labels: labelsArr, values: valuesArr })
+  }
+
+  useEffect(() => {
+    computeLastSixMonths()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomeSources, tasks, selectedMonth, selectedYear])
+
+  const fetchClients = async () => {
+    // Hardcoded sample clients
+    const sampleClients = [
+      { _id: '1', name: 'John Smith', company: 'Microsoft', },
+      { _id: '2', name: 'Sarah Johnson', company: 'Google' },
+      { _id: '3', name: 'David Chen', company: 'Apple' },
+      { _id: '4', name: 'Maria Garcia', company: 'Meta' },
+      { _id: '5', name: 'James Wilson', company: 'Amazon' }
+    ]
+    setClients(sampleClients)
+  }
+
+  // Removed dynamic client distribution logic in favor of hardcoded data
+  const hardcodedClientData = {
+    labels: ['Microsoft', 'Google', 'Apple', 'Meta', 'Amazon'],
+    values: [45000, 38000, 32000, 28000, 22000]
+  }
+
+  // Removed dynamic client distribution calculation
+
+  const fetchIncomeSources = async () => {
+    // Hardcoded sample income sources
+    const sampleData = [
+      { id: 1, name: 'Microsoft Contract', type: 'Fixed', amount: 45000, isActive: true },
+      { id: 2, name: 'Google Project', type: 'Task-Based', amount: 38000, isActive: true },
+      { id: 3, name: 'Apple Consulting', type: 'Freelance', amount: 32000, isActive: true },
+      { id: 4, name: 'Meta Development', type: 'Fixed', amount: 28000, isActive: true },
+      { id: 5, name: 'Amazon Services', type: 'Task-Based', amount: 22000, isActive: true }
+    ]
+    setIncomeSources(sampleData)
+    calculateMonthlyIncome(sampleData)
   }
 
   const fetchTasks = async () => {
-    try {
-      const res = await fetch('/api/tasks')
-      const data = await res.json()
-      setTasks(data)
-      calculateTaskStats(data)
-    } catch (error) {
-      console.error('Error fetching tasks:', error)
-    }
+    // Hardcoded sample tasks
+    const sampleTasks = [
+      { id: 1, name: 'API Integration', status: 'Completed', amount: 15000, dueDate: new Date(), paymentStatus: 'Paid' },
+      { id: 2, name: 'UI Development', status: 'Completed', amount: 12000, dueDate: new Date(), paymentStatus: 'Paid' },
+      { id: 3, name: 'Database Design', status: 'In Progress', amount: 8000, dueDate: new Date(), paymentStatus: 'Unpaid' },
+      { id: 4, name: 'Testing', status: 'Pending', amount: 5000, dueDate: new Date(), paymentStatus: 'Unpaid' }
+    ]
+    setTasks(sampleTasks)
+    calculateTaskStats(sampleTasks)
   }
 
   const calculateMonthlyIncome = (sources) => {
@@ -174,27 +265,25 @@ export default function HomePage() {
     {
       title: 'Total Monthly Income',
       value: monthlyStats.totalIncome,
-      icon: '💰',
+     
       color: 'primary'
     },
     {
       title: 'Pending Payments',
       value: monthlyStats.pendingAmount,
-      icon: '⏳',
+     
       color: 'warning'
     },
     {
       title: 'Tasks Completed',
       value: monthlyStats.completedTasks,
       suffix: ' tasks',
-      icon: '✅',
-      color: 'success'
+       color: 'success'
     },
     {
       title: 'Pending Tasks',
       value: monthlyStats.pendingTasks,
       suffix: ' tasks',
-      icon: '📋',
       color: 'info'
     }
   ]
@@ -214,9 +303,9 @@ export default function HomePage() {
       </div>
 
       {/* Header with Date Filter */}
-  <div className="d-flex justify-content-between align-items-center mb-3">
+  <div className="d-flex justify-content-between mt-2 pt-2 align-items-center mb-3">
         <div>
-          <h2 className="fw-bold mb-1 fs-5">Income Dashboard</h2>
+          <h2 className="fw-bold mb-0 fs-5">Income Dashboard</h2>
           <p className="text-muted small mb-0">Financial overview for {months[selectedMonth]} {selectedYear}</p>
         </div>
         <div className="d-flex gap-2 align-items-center">
@@ -244,13 +333,10 @@ export default function HomePage() {
       <div className="d-md-none row g-2 mb-3">
         {overviewData.map((card, index) => (
           <div key={index} className="col-6">
-            <div className="card shadow-sm p-3 h-100">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="mb-1" style={{ fontSize: '0.85rem' }}>{card.title}</h6>
-                  <div className="fw-bold" style={{ fontSize: '0.95rem' }}>{card.value.toLocaleString('en-US', { style: card.suffix ? 'decimal' : 'currency', currency: 'USD', maximumFractionDigits: 0 })}{card.suffix || ''}</div>
-                </div>
-                <div className="fs-4" style={{ color: '#352359' }}>{card.icon}</div>
+            <div className="card shadow-sm p-2 h-100 overview-card">
+              <div className="d-flex flex-column align-items-center justify-content-center">
+                <h3 className="fw-bold mb-1" style={{ fontSize: '1.5rem' }}>{card.value.toLocaleString('en-US', { style: card.suffix ? 'decimal' : 'currency', currency: 'USD', maximumFractionDigits: 0 })}{card.suffix || ''}</h3>
+                <p className="mb-1 text-muted" style={{ fontSize: '0.8rem' }}>{card.title}</p>
               </div>
             </div>
           </div>
@@ -261,21 +347,18 @@ export default function HomePage() {
       <div className="row g-3 mb-4 d-none d-md-flex">
         {overviewData.map((card, index) => (
           <div key={index} className="col-md-3">
-            <div className={`card border-0 shadow-sm bg-${card.color} text-white h-100`}>
+            <div className={`card border-0 shadow-sm bg-${card.color} text-white h-100 overview-card`}>
               <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h6 className="mb-0">{card.title}</h6>
-                  <span className="fs-4">{card.icon}</span>
-                </div>
-                <h3 className="mb-0">
-                  {card.value.toLocaleString('en-US', {
+                <div className="d-flex flex-column align-items-center justify-content-center mb-2 text-center">
+                  <h3 className="mb-1">{card.value.toLocaleString('en-US', {
                     style: card.suffix ? 'decimal' : 'currency',
                     currency: 'USD',
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
-                  })}
-                  {card.suffix || ''}
-                </h3>
+                  })}{card.suffix || ''}</h3>
+                  <h6 className="mb-1 text-white-50" style={{ opacity: 0.9 }}>{card.title}</h6>
+                  <span className="fs-4 mt-1">{card.icon}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -285,30 +368,22 @@ export default function HomePage() {
       {/* Income Distribution */}
       <div className="row mb-4">
         <div className="col-md-8">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <h5 className="card-title mb-4">Monthly Income Breakdown</h5>
-              <div className="chart-container">
-                <IncomeChart data={[
-                  monthlyStats.fixedIncome,
-                  monthlyStats.taskBasedIncome,
-                  monthlyStats.freelanceIncome
-                ]} />
+            <div className="card shadow-sm h-100">
+              <div className="card-body d-flex flex-column  px-3">
+                <h5 className="card-title ">Half Yearky Income Distribution</h5>
+                <div className="chart-container flex-fill d-flex align-items-center" style={{ minHeight: 150 }}>
+                  <IncomeChart monthlyData={monthlySeries} />
+                </div>
               </div>
             </div>
-          </div>
         </div>
         <div className="col-md-4">
           <div className="card shadow-sm h-100">
             <div className="card-body">
-              <h5 className="card-title mb-4">Income Distribution</h5>
+              <h5 className="card-title mb-4">Income by Client</h5>
               <PieChart data={{
-                labels: ['Fixed', 'Task-Based', 'Freelance'],
-                values: [
-                  monthlyStats.fixedIncome,
-                  monthlyStats.taskBasedIncome,
-                  monthlyStats.freelanceIncome
-                ]
+                labels: ['Microsoft', 'Google', 'Apple', 'Meta', 'Amazon'],
+                values: [45000, 38000, 32000, 28000, 22000]
               }} />
             </div>
           </div>

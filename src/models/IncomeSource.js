@@ -29,6 +29,11 @@ const IncomeSourceSchema = new mongoose.Schema({
     default: 'Monthly',
   },
   description: String,
+  clientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Client',
+  },
+  clientName: String,
   isActive: {
     type: Boolean,
     default: true,

@@ -18,19 +18,19 @@ export default function Topbar() {
   return (
     <header style={{ height: '63px'}} className="sticky-top bg-white shadow-sm border-bottom">
       <div className="d-flex align-items-center justify-content-between h-100 px-3">
-        <div style={{ height: '27px !IMPORTANT', position: 'relative', width: '100px' }}>
+        <div style={{ height: '37px !IMPORTANT', position: 'relative', width: '110px' }}>
           <Image
             src="/lancer.png"
             alt="Lancer Logo"
             fill
             // style={{ objectFit: 'contain' }}
             priority
-          />
+          />  `1  `
         </div>
         <div className="d-flex align-items-center gap-3">
           <button className="btn btn-link p-1 position-relative" style={{ fontSize: '1.4rem', color: '#352359' }}>
             <BsBell />
-            <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+            <span className="position-absolute top-0 start-100 translate-mid  dle p-1 bg-danger border border-light rounded-circle">
               <span className="visually-hidden">New notifications</span>
             </span>
           </button>

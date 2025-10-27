@@ -4,6 +4,7 @@ import { Modal, Button, Form, Badge } from 'react-bootstrap'
 
 export default function IncomePage() {
   const [incomeSources, setIncomeSources] = useState([])
+  const [clients, setClients] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [currentSource, setCurrentSource] = useState(null)
   const [filter, setFilter] = useState('all')
@@ -12,35 +13,39 @@ export default function IncomePage() {
     type: 'Fixed',
     amount: '',
     frequency: 'Monthly',
-    description: ''
+    description: '',
+    clientId: '',
+    clientName: ''
   })
 
   useEffect(() => {
     fetchIncomeSources()
+    fetchClients()
   }, [])
-
-  const fetchIncomeSources = async () => {
-    try {
-      const res = await fetch('/api/income')
-      const data = await res.json()
-      setIncomeSources(data)
-    } catch (error) {
-      console.error('Error fetching income sources:', error)
-    }
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
+      // ensure clientName is present if a clientId is selected
+      if (form.clientId && !form.clientName) {
+        const sel = clients.find(c => c._id === form.clientId)
+        if (sel) form.clientName = sel.company ? `${sel.company} — ${sel.name}` : sel.name
+      }
+
+      // ensure amount is numeric
+      if (form.amount && typeof form.amount === 'string') {
+        form.amount = parseFloat(form.amount) || 0
+      }
+
       const url = currentSource ? `/api/income/${currentSource._id}` : '/api/income'
       const method = currentSource ? 'PUT' : 'POST'
-      
+
       await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       })
-      
+
       setShowModal(false)
       setCurrentSource(null)
       setForm({
@@ -48,7 +53,9 @@ export default function IncomePage() {
         type: 'Fixed',
         amount: '',
         frequency: 'Monthly',
-        description: ''
+        description: '',
+        clientId: '',
+        clientName: ''
       })
       fetchIncomeSources()
     } catch (error) {
@@ -63,7 +70,9 @@ export default function IncomePage() {
       type: source.type,
       amount: source.amount,
       frequency: source.frequency,
-      description: source.description || ''
+      description: source.description || '',
+      clientId: source.clientId || '',
+      clientName: source.clientName || ''
     })
     setShowModal(true)
   }
@@ -102,7 +111,9 @@ export default function IncomePage() {
               type: 'Fixed',
               amount: '',
               frequency: 'Monthly',
-              description: ''
+              description: '',
+              clientId: '',
+              clientName: ''
             })
             setShowModal(true)
           }}
@@ -183,6 +194,7 @@ export default function IncomePage() {
               <thead className="table-light">
                 <tr>
                   <th>Name</th>
+                  <th>Client</th>
                   <th>Type</th>
                   <th>Amount</th>
                   <th>Frequency</th>
@@ -194,6 +206,7 @@ export default function IncomePage() {
                 {filteredSources.map(source => (
                   <tr key={source._id}>
                     <td>{source.name}</td>
+                    <td>{source.clientName || (source.clientId ? 'Client' : '—')}</td>
                     <td>
                       <Badge bg={
                         source.type === 'Fixed' ? 'primary' :
@@ -250,6 +263,25 @@ export default function IncomePage() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
               />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Client</Form.Label>
+              <Form.Select
+                required
+                value={form.clientId || ''}
+                onChange={(e) => {
+                  const id = e.target.value
+                  const selected = clients.find(c => c._id === id)
+                  const clientName = selected ? (selected.company ? `${selected.company} — ${selected.name}` : selected.name) : ''
+                  setForm(prev => ({ ...prev, clientId: id, clientName }))
+                }}
+              >
+                <option value="">Select client...</option>
+                {clients.map(c => (
+                  <option key={c._id} value={c._id}>{c.company ? `${c.company} — ${c.name}` : c.name}</option>
+                ))}
+              </Form.Select>
             </Form.Group>
 
             <Form.Group className="mb-3">

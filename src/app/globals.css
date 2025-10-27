@@ -244,6 +244,24 @@ p, .text-muted, .small {
   margin: 0 !important;
   color: var(--brand) !important;
 }
+
+/* Centered overview cards */
+.overview-card {
+  text-align: center;
+}
+.overview-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+.overview-card .fs-4 {
+  margin-top: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .overview-card h3 {
+    font-size: 1.5rem;
+  }
+}
 .date-filter {
   display: inline-flex; /* keep it inline with the heading */
   flex-shrink: 0; /* avoid collapsing on small widths so it stays to the right */

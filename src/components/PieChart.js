@@ -2,9 +2,19 @@
 import { useEffect, useRef } from 'react'
 import Chart from 'chart.js/auto'
 
-export default function PieChart() {
+export default function PieChart({ data }) {
   const chartRef = useRef(null)
   const chartInstanceRef = useRef(null)
+
+  // Professional muted color palette
+  const themeColors = [
+    '#614599ff', // Deep Purple (Primary brand color) 
+   '#b96122ff', // Saddle Brown
+    '#79a035ff', // Muted Olive
+    '#2188adff', // Steel Blue Gray
+   
+    '#c04b42ff'  // Warm Gray
+  ]
 
   useEffect(() => {
     if (chartRef.current) {
@@ -15,10 +25,11 @@ export default function PieChart() {
       chartInstanceRef.current = new Chart(chartRef.current, {
         type: 'pie',
         data: {
-          labels: ['Marketing', 'Operations', 'Dev', 'Sex', 'Other'],
+          labels: data.labels,
           datasets: [{
-            data: [3000, 1500, 2500, 1000, 2000],
-            backgroundColor: ['#0d6efd', '#20c997', '#ffc107', '#dc3545', '#6c757d']
+            data: data.values,
+            backgroundColor: themeColors,
+            borderWidth: 0
           }]
         },
         options: {
@@ -37,43 +48,36 @@ export default function PieChart() {
         chartInstanceRef.current.destroy()
       }
     }
-  }, [])
+  }, [data])
 
-  const labels = [
-    { name: 'Marketing', value: 3000, color: '#034efd' },
-    { name: 'Operations', value: 1500, color: '#202e97' },
-    { name: 'Dev', value: 2500, color: '#ffc107' },
-    { name: 'Sex', value: 1000, color: '#dc3545' },
-    { name: 'Other', value: 2000, color: '#6c757d' }
-  ]
+  // Theme-matching muted colors for consistency
+
 
   return (
-    <div className="card p-3 shadow-sm">
-      <h6 className="mb-3">📊 Budget Allocation</h6>
-      <div className="row">
-        {/* Pie Chart */}
-        <div className="col-6" style={{ height: '150px' }}>
-          <canvas ref={chartRef} width="100%" height="100%" />
-        </div>
-
-        {/* Labels */}
-        <div className="col-6 d-flex flex-column justify-content-center">
-          {labels.map((item, index) => (
-            <div key={index} className="d-flex align-items-center mb-2">
-              <div
-                style={{
-                  width: '10px',
-                  height: '10px',
-                  backgroundColor: item.color,
-                  borderRadius: '50%',
-                  marginRight: '10px'
-                }}
-              />
-              <span style={{ width: '100px', fontSize: "14px" }}>{item.name}:</span>
-              <span className="ms-2" style={{ fontSize: "14px" }}>{item.value.toLocaleString()}</span>
-            </div>
-          ))}
-        </div>
+    <div className="d-flex align-items-center" style={{ height: '160px' }}>
+      {/* Chart */}
+      <div style={{ width: '50%', height: '160px', position: 'relative' }}>
+        <canvas ref={chartRef} />
+      </div>
+      {/* Labels */}
+      <div className="ms-3" style={{ width: '50%', fontSize: '0.75rem' }}>
+        {data.labels.map((label, index) => (
+          <div key={index} className="d-flex align-items-center mb-2">
+            <div
+              style={{
+                width: '8px',
+                height: '8px',
+                backgroundColor: themeColors[index],
+                borderRadius: '50%',
+                marginRight: '8px'
+              }}
+            />
+            <span className="text-nowrap text-truncate" style={{ maxWidth: '100px' }}>{label}</span>
+            <span className="ms-2 text-end" style={{ minWidth: '70px' }}>
+              ${data.values[index].toLocaleString()}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   )
