@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import Link from 'next/link';
 
 export default function ClientsPage() {
   const [clients, setClients] = useState([]);
@@ -117,93 +118,72 @@ const [form, setForm] = useState({
       </div>
 
       {/* Summary Cards */}
-      <div className="row mb-4">
-        {/* Total Clients */}
-        <div className="col-6 col-md-4 col-lg-2 mb-3">
-          <div className="card bg-primary text-white shadow-sm">
-            <div className="card-body">
-              <h6 className="mb-1">Total Clients</h6>
-              <h3 className="fw-bold">{clients.length}</h3>
-            </div>
-          </div>
-        </div>
+ <div className="row row-cols-2 row-cols-lg-5 g-3">
 
-        {/* Latest Client */}
-        <div className="col-6 col-md-4 col-lg-2 mb-3">
-          <div className="card bg-dark text-white shadow-sm">
-            <div className="card-body">
-              <h6 className="mb-1">Latest Client</h6>
-              <p className="mb-0 fw-semibold">
-                {clients.length > 0 ? clients[clients.length - 1].name : "—"}
-              </p>
-              <small>
-                {clients.length > 0
-                  ? new Date(
-                    clients[clients.length - 1].createdAt
-                  ).toLocaleDateString()
-                  : ""}
-              </small>
-            </div>
-          </div>
-        </div>
-
-        {/* Active Clients */}
-        <div className="col-6 col-md-4 col-lg-2 mb-3">
-          <div className="card bg-info text-white shadow-sm">
-            <div className="card-body">
-              <h6 className="mb-1">Active Clients</h6>
-              <h4 className="fw-bold">
-                {clients.filter((c) => c.status === "active").length}
-              </h4>
-            </div>
-          </div>
-        </div>
-
-        {/* New Clients */}
-        <div className="col-6 col-md-4 col-lg-2 mb-3">
-          <div className="card bg-warning text-dark shadow-sm">
-            <div className="card-body">
-              <h6 className="mb-1">New Clients</h6>
-              <h4 className="fw-bold">
-                {
-                  clients.filter((c) => {
-                    const date = new Date(c.createdAt);
-                    const now = new Date();
-                    return (
-                      date.getMonth() === now.getMonth() &&
-                      date.getFullYear() === now.getFullYear()
-                    );
-                  }).length
-                }
-              </h4>
-            </div>
-          </div>
-        </div>
-
-        {/* Inactive Clients */}
-        <div className="col-6 col-md-4 col-lg-2 mb-3">
-          <div className="card bg-danger text-white shadow-sm">
-            <div className="card-body">
-              <h6 className="mb-1">Inactive Clients</h6>
-              <h4 className="fw-bold">
-                {clients.filter((c) => c.status === "inactive").length}
-              </h4>
-            </div>
-          </div>
-        </div>
-
-        {/* Closed Clients */}
-        <div className="col-6 col-md-4 col-lg-2 mb-3">
-          <div className="card bg-secondary text-white shadow-sm">
-            <div className="card-body">
-              <h6 className="mb-1">Closed Clients</h6>
-              <h4 className="fw-bold">
-                {clients.filter((c) => c.status === "closed").length}
-              </h4>
-            </div>
-          </div>
-        </div>
+  <Link href="/clients/all" className="col text-decoration-none">
+    <div className="card bg-primary text-white shadow-sm" style={{ cursor: "pointer" }}>
+      <div className="card-body">
+        <h6 className="mb-1">Total Clients</h6>
+        <h3 className="fw-bold">{clients.length}</h3>
       </div>
+    </div>
+  </Link>
+
+  <Link href="/clients/active" className="col text-decoration-none">
+    <div className="card bg-info text-white shadow-sm" style={{ cursor: "pointer" }}>
+      <div className="card-body">
+        <h6 className="mb-1">Active Clients</h6>
+        <h4 className="fw-bold">
+          {clients.filter((c) => c.status === "active").length}
+        </h4>
+      </div>
+    </div>
+  </Link>
+
+  <Link href="/clients/new" className="col text-decoration-none">
+    <div className="card bg-warning text-dark shadow-sm" style={{ cursor: "pointer" }}>
+      <div className="card-body">
+        <h6 className="mb-1">New Clients</h6>
+        <h4 className="fw-bold">
+          {
+            clients.filter((c) => {
+              const date = new Date(c.createdAt);
+              const now = new Date();
+              return (
+                date.getMonth() === now.getMonth() &&
+                date.getFullYear() === now.getFullYear()
+              );
+            }).length
+          }
+        </h4>
+      </div>
+    </div>
+  </Link>
+
+  <Link href="/clients/inactive" className="col text-decoration-none">
+    <div className="card bg-danger text-white shadow-sm" style={{ cursor: "pointer" }}>
+      <div className="card-body">
+        <h6 className="mb-1">Inactive Clients</h6>
+        <h4 className="fw-bold">
+          {clients.filter((c) => c.status === "inactive").length}
+        </h4>
+      </div>
+    </div>
+  </Link>
+
+  <Link href="/clients/closed" className="col text-decoration-none">
+    <div className="card bg-secondary text-white shadow-sm" style={{ cursor: "pointer" }}>
+      <div className="card-body">
+        <h6 className="mb-1">Closed Clients</h6>
+        <h4 className="fw-bold">
+          {clients.filter((c) => c.status === "closed").length}
+        </h4>
+      </div>
+    </div>
+  </Link>
+
+</div>
+
 
 
       <div className="card shadow-sm">
