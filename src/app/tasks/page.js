@@ -32,15 +32,15 @@ export default function TasksPage() {
     try {
       let url = '/api/tasks'
       const queryParams = []
-      
+
       if (filters.status !== 'all') queryParams.push(`status=${filters.status}`)
       if (filters.paymentStatus !== 'all') queryParams.push(`paymentStatus=${filters.paymentStatus}`)
       if (filters.sourceId !== 'all') queryParams.push(`sourceId=${filters.sourceId}`)
-      
+
       if (queryParams.length > 0) {
         url += '?' + queryParams.join('&')
       }
-      
+
       const res = await fetch(url)
       const data = await res.json()
       setTasks(data)
@@ -64,13 +64,13 @@ export default function TasksPage() {
     try {
       const url = currentTask ? `/api/tasks/${currentTask._id}` : '/api/tasks'
       const method = currentTask ? 'PUT' : 'POST'
-      
+
       await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       })
-      
+
       setShowModal(false)
       setCurrentTask(null)
       setForm({
@@ -106,7 +106,7 @@ export default function TasksPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this task?')) return
-    
+
     try {
       await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
       fetchTasks()
@@ -182,40 +182,43 @@ export default function TasksPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="row mb-4">
-        <div className="col-md-3">
-          <div className="card bg-primary text-white">
-            <div className="card-body">
-              <h6 className="mb-2">Total Tasks Value</h6>
-              <h3 className="mb-0">${totalAmount.toLocaleString()}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-warning text-white">
-            <div className="card-body">
-              <h6 className="mb-2">Pending Payments</h6>
-              <h3 className="mb-0">${pendingAmount.toLocaleString()}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-success text-white">
-            <div className="card-body">
-              <h6 className="mb-2">Active Tasks</h6>
-              <h3 className="mb-0">{tasks.filter(t => t.status !== 'Completed').length}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-info text-white">
-            <div className="card-body">
-              <h6 className="mb-2">Completed Tasks</h6>
-              <h3 className="mb-0">{tasks.filter(t => t.status === 'Completed').length}</h3>
-            </div>
-          </div>
-        </div>
+    <div className="row mb-4 g-3">
+  <div className="col-6 col-md-3">
+    <div className="card bg-primary text-white h-100 text-center">
+      <div className="card-body d-flex flex-column justify-content-center">
+        <h6 className="mb-2">Total Tasks Value</h6>
+        <h3 className="mb-0">${totalAmount.toLocaleString()}</h3>
       </div>
+    </div>
+  </div>
+
+  <div className="col-6 col-md-3">
+    <div className="card bg-warning text-white h-100 text-center">
+      <div className="card-body d-flex flex-column justify-content-center">
+        <h6 className="mb-2">Pending Payments</h6>
+        <h3 className="mb-0">${pendingAmount.toLocaleString()}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div className="col-6 col-md-3">
+    <div className="card bg-success text-white h-100 text-center">
+      <div className="card-body d-flex flex-column justify-content-center">
+        <h6 className="mb-2">Active Tasks</h6>
+        <h3 className="mb-0">{tasks.filter(t => t.status !== 'Completed').length}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div className="col-6 col-md-3">
+    <div className="card bg-info text-white h-100 text-center">
+      <div className="card-body d-flex flex-column justify-content-center">
+        <h6 className="mb-2">Completed Tasks</h6>
+        <h3 className="mb-0">{tasks.filter(t => t.status === 'Completed').length}</h3>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Filters */}
       <div className="card shadow-sm mb-4">
@@ -300,7 +303,10 @@ export default function TasksPage() {
                       <small className="text-muted">{task.description}</small>
                     </td>
                     <td>
-                      <Badge bg="info">{task.sourceId?.name}</Badge>
+                      {tasks && tasks.map(task => (
+                        task ? <div key={task._id}>{task.name}</div> : null
+                      ))}
+
                     </td>
                     <td>${task.amount.toLocaleString()}</td>
                     <td>{new Date(task.dueDate).toLocaleDateString()}</td>
