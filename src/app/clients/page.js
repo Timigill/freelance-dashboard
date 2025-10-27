@@ -3,13 +3,16 @@ import { useState, useEffect } from 'react'
 
 export default function ClientsPage() {
   const [clients, setClients] = useState([]);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    company: "",
-    phone: "",
-    notes: "",
-  });
+const [form, setForm] = useState({
+  name: "",
+  email: "",
+  company: "",
+  phone: "",
+  category: "",
+  deadline: "",
+  notes: "",
+});
+
   const [shouldCloseModal, setShouldCloseModal] = useState(false);
   const [sortOrder, setSortOrder] = useState("newest");
   const [categoryFilter, setCategoryFilter] = useState("All");
