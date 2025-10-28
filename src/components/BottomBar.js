@@ -28,8 +28,7 @@ export default function BottomBar() {
               className={`nav-link d-flex flex-column align-items-center py-2 ${
                 isActive ? 'active' : 'text-muted'
               }`}
-              style={{ color: isActive ? '#352359' : undefined }}
-              style={{ fontSize: '0.8rem' }}
+              style={{ color: isActive ? '#352359' : undefined, fontSize: '0.8rem' }}
             >
               <span className="fs-5 mb-1">{icon}</span>
               <span>{label}</span>

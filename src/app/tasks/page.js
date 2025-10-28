@@ -95,7 +95,7 @@ export default function TasksPage() {
       name: task.name,
       description: task.description || '',
       amount: task.amount,
-      sourceId: task.sourceId._id,
+      sourceId: task.sourceId?._id || '',
       dueDate: task.dueDate.split('T')[0],
       status: task.status,
       paymentStatus: task.paymentStatus,
@@ -147,7 +147,7 @@ export default function TasksPage() {
     }
   }
 
-  const totalAmount = tasks.reduce((sum, task) => sum + task.amount, 0)
+  const totalAmount = tasks.reduce((sum, task) => sum + task.amount, 0)  
   const pendingAmount = tasks
     .filter(task => task.paymentStatus === 'Unpaid')
     .reduce((sum, task) => sum + task.amount, 0)
