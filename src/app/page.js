@@ -296,8 +296,8 @@ export default function HomePage() {
           <div className="hero-label">This Month</div>
           <div className="hero-amount">{monthlyStats.totalIncome.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</div>
         </div>
-        <div className="d-flex gap-2">
-          <button className="btn btn-light btn-sm">New Invoice</button>
+        <div className="d-flex flex-column gap-2">
+          <button className="btn btn-light btn-sm">New Client</button>
           <button className="btn btn-outline-light btn-sm">New Task</button>
         </div>
       </div>

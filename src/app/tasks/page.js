@@ -147,7 +147,7 @@ export default function TasksPage() {
     }
   }
 
-  const totalAmount = tasks.reduce((sum, task) => sum + task.amount, 0)
+  const totalAmount = tasks.reduce((sum, task) => sum + task.amount, 0)  
   const pendingAmount = tasks
     .filter(task => task.paymentStatus === 'Unpaid')
     .reduce((sum, task) => sum + task.amount, 0)
@@ -156,9 +156,9 @@ export default function TasksPage() {
     <div className="container-fluid py-4">
       {/* Header Section */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
+        <div className="mb-0 d-flex flex-column align-start justify-content-center">
           <h3 className="fw-bold mb-0">Task Management</h3>
-          <p className="text-muted">Track and manage your tasks and payments</p>
+          <p className="text-muted">Track and manage your tasks  and payments</p>
         </div>
         <button
           className="btn btn-primary"
@@ -177,7 +177,7 @@ export default function TasksPage() {
             setShowModal(true)
           }}
         >
-          ➕ Add Task
+          Add New 
         </button>
       </div>
 
