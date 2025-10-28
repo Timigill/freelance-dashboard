@@ -4,6 +4,7 @@ import IncomeChart from '@/components/IncomeChart'
 import PieChart from '@/components/PieChart'
 import { Form } from 'react-bootstrap'
 import { BsPlusLg, BsCalendar3 } from 'react-icons/bs'
+import FloatingActionButton from '@/components/FloatingIcon'
 
 function MonthPickerIcon({ selectedMonth, selectedYear, onChange }) {
   const inputRef = useRef(null)
@@ -393,9 +394,7 @@ export default function HomePage() {
       {/* Recent Activity removed per request */}
 
       {/* Floating quick-add button */}
-      <button className="fab" aria-label="Quick add">
-        <BsPlusLg />
-      </button>
+    <FloatingActionButton />
     </div>
   )
 }

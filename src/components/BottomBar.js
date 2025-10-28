@@ -11,6 +11,7 @@ const navItems = [
   { href: '/tasks', label: 'Tasks', icon: <BsListTask /> },
   { href: '/clients', label: 'Clients', icon: <BsPeopleFill /> },
   { href: '/income', label: 'Income', icon: <BsCashStack /> },
+  { href: '/invoices', label: 'Invoices', icon: <BsFileEarmarkTextFill /> },
 ]
 
 export default function BottomBar() {
@@ -38,7 +39,7 @@ export default function BottomBar() {
       </div>
       <style jsx>{`
         .bottom-bar {
-          height: 65px;
+          height: 75px;
           background-color: #fff !important;
         }
         .nav-link {
