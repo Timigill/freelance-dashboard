@@ -1,0 +1,52 @@
+/* verify.css */
+
+.verify-container {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 35px 30px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  animation: fadeInScale 0.7s ease forwards;
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.verify-container h3 {
+  color: var(--brand);
+  margin-bottom: 20px;
+  font-weight: 700;
+  font-size: 1.6rem;
+}
+
+.verify-container .message {
+  font-size: 1rem;
+  margin-top: 15px;
+  color: var(--brand);
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .verify-container {
+    margin: 40px 15px;
+    padding: 30px 20px;
+  }
+  .verify-container h3 {
+    font-size: 1.4rem;
+  }
+}
