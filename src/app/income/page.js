@@ -125,38 +125,46 @@ export default function IncomePage() {
   return (
     <div className="container-fluid py-4">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h3 className="fw-bold mb-0"
-          style={{
-            color:"var(--bs-primary)"
-          }}
-          >Income Sources</h3>
-          <p className="text-muted">Manage your income streams and track earnings</p>
-        </div>
-        <button
-          className="btn "
-          style={{
-            background:"var(--bs-primary)",
-            color:"white"
-          }}
-          onClick={() => {
-            setCurrentSource(null)
-            setForm({
-              name: '',
-              type: 'Fixed',
-              amount: '',
-              frequency: 'Monthly',
-              description: '',
-              clientId: '',
-              clientName: ''
-            })
-            setShowModal(true)
-          }}
-        >
-          ➕ Add Income Source
-        </button>
-      </div>
+     <div className="d-flex justify-content-between align-items-center mb-4 flex-nowrap">
+  <div>
+    <h3
+      className="fw-bold mb-0 fs-5 fs-md-4"
+      style={{ color: "var(--bs-primary)" }}
+    >
+      Income Sources
+    </h3>
+    <p className="text-muted fs-6 mb-0">
+      Manage your income streams and track earnings
+    </p>
+  </div>
+
+  <button
+    className="btn mt-2 mt-md-0"
+    style={{
+      background: "var(--bs-primary)",
+      color: "white",
+      whiteSpace: "nowrap", // ✅ keeps text in one line
+      fontSize: "0.9rem",   // smaller on mobile
+      padding: "6px 14px",  // compact padding
+    }}
+    onClick={() => {
+      setCurrentSource(null)
+      setForm({
+        name: '',
+        type: 'Fixed',
+        amount: '',
+        frequency: 'Monthly',
+        description: '',
+        clientId: '',
+        clientName: ''
+      })
+      setShowModal(true)
+    }}
+  >
+  Add Income Source
+  </button>
+</div>
+
      {/* Summary Cards */}
 <div className="row mb-4 g-3 justify-content-center justify-content-md-start">
   <div className="col-6 col-md-4">

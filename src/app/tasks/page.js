@@ -155,31 +155,40 @@ export default function TasksPage() {
   return (
     <div className="container-fluid py-4">
       {/* Header Section */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h3 className="fw-bold mb-0">Task Management</h3>
-          <p className="text-muted">Track and manage your tasks and payments</p>
-        </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setCurrentTask(null)
-            setForm({
-              name: '',
-              description: '',
-              amount: '',
-              sourceId: '',
-              dueDate: '',
-              status: 'Pending',
-              paymentStatus: 'Unpaid',
-              priority: 'Medium'
-            })
-            setShowModal(true)
-          }}
-        >
-          ➕ Add Task
-        </button>
-      </div>
+     <div className="d-flex justify-content-between align-items-center mb-4 flex-nowrap">
+  <div>
+    <h3 className="fw-bold mb-0 fs-5 fs-md-4">Task Management</h3>
+    <p className="text-muted fs-6 mb-0">
+      Track and manage your tasks and payments
+    </p>
+  </div>
+
+  <button
+    className="btn btn-primary mt-2 mt-md-0"
+    onClick={() => {
+      setCurrentTask(null)
+      setForm({
+        name: '',
+        description: '',
+        amount: '',
+        sourceId: '',
+        dueDate: '',
+        status: 'Pending',
+        paymentStatus: 'Unpaid',
+        priority: 'Medium'
+      })
+      setShowModal(true)
+    }}
+    style={{
+      whiteSpace: 'nowrap', // ✅ prevents text from splitting
+      fontSize: '0.9rem',   // smaller size for mobile
+      padding: '6px 14px',  // compact padding
+    }}
+  >
+ Add Task
+  </button>
+</div>
+
 
       {/* Summary Cards */}
     <div className="row mb-4 g-3">
