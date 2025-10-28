@@ -6,7 +6,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [callbackUrl, setCallbackUrl] = useState("/");
+  const [callbackUrl, setCallbackUrl] = useState("/dashboard");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
