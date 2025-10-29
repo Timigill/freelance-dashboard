@@ -1,41 +1,63 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import './dashboard.css'; // CSS file
+import { signOut, useSession } from "next-auth/react";
+import "./dashboard.css";
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  // Dummy data for testing
+  useEffect(() => {
+    if (session?.user) {
+      setUser({
+        name: session.user.name || "John Doe",
+        email: session.user.email || "john@example.com",
+      });
+    }
+  }, [session]);
+
+  if (status === "loading") {
+    return <p className="loading">Loading...</p>;
+  }
+
+  if (!session) {
+    return (
+      <p className="loading">
+        You must be logged in to access the dashboard.
+      </p>
+    );
+  }
+
   const dummyStats = {
     projects: 12,
     tasks: 34,
-    messages: 7
+    messages: 7,
   };
-
-  useEffect(() => {
-    // Simulate API fetch delay
-    setTimeout(() => {
-      // Replace this with real API fetch later
-      const dummyUser = { name: "John Doe", email: "john@example.com" };
-      setUser(dummyUser);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  if (loading) return <p className="text-center mt-20">Loading...</p>;
-  if (error) return <p className="text-center mt-20 text-red-500">{error}</p>;
 
   return (
     <div className="dashboard-container">
-      <h2>Welcome, {user.name}</h2>
+      <div className="header">
+        <h2>Welcome, {user?.name}</h2>
+        <div className="actions">
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="logout-btn"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
 
       <div className="cards-container">
         <div className="card">
           <h3>Profile</h3>
-          <p><strong>Name:</strong> {user.name}</p>
-          <p><strong>Email:</strong> {user.email}</p>
+          <p>
+            <strong>Name:</strong> {user?.name}
+          </p>
+          <p>
+            <strong>Email:</strong> {user?.email}
+          </p>
         </div>
 
         <div className="card">

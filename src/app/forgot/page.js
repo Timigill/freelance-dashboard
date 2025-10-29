@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
       </form>
       {message && <p className="message">{message}</p>}
       <p className="text-center links">
-        <a href="/auth/login">Back to Login</a>
+        <a href="/login">Back to Login</a>
       </p>
     </div>
   );

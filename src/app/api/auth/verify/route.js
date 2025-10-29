@@ -22,7 +22,7 @@ export async function GET(req) {
     await user.save();
 
     // Redirect to login page with query param for success message
-    return NextResponse.redirect(`http://localhost:3000/auth/login?verified=true`);
+    return NextResponse.redirect(`http://localhost:3000/login?verified=true`);
   } catch (error) {
     console.error("Verification error:", error);
     return NextResponse.json({ error: "Invalid or expired token" }, { status: 400 });

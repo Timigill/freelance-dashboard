@@ -3,20 +3,41 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "@/models/User";
 import { dbConnect } from "@/lib/dbConnect";
+import parsePhoneNumber from "libphonenumber-js";
 
 export async function POST(req) {
   try {
-    const { email, password } = await req.json();
+    const { emailOrPhone, password } = await req.json();
     await dbConnect();
 
-    const user = await User.findOne({ email });
+    let query;
 
+    if (emailOrPhone.includes("@")) {
+      // Email login
+      query = { email: emailOrPhone.toLowerCase() };
+    } else {
+      // Phone login
+      try {
+        const phoneNumber = parsePhoneNumber(emailOrPhone, "PK"); // default PK
+        query = { phone: phoneNumber.number }; // standardized format e.g. +923017697832
+      } catch {
+        return NextResponse.json(
+          { error: "Invalid phone number" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const user = await User.findOne(query);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     if (!user.isVerified) {
-      return NextResponse.json({ error: "Please verify your email first" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Please verify your account first" },
+        { status: 403 }
+      );
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -38,9 +59,11 @@ export async function POST(req) {
     });
 
     return response;
-
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

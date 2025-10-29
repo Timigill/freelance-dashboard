@@ -7,12 +7,31 @@ import { dbConnect } from "@/lib/dbConnect";
 
 export async function POST(req) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, phone } = await req.json(); // ✅ phone included
     await dbConnect();
+
+    // Validation
+    if (!name || !email || !password || !phone) {
+      return NextResponse.json(
+        { error: "All fields are required" },
+        { status: 400 }
+      );
+    }
+
+    // ✅ Simple validation for international format
+    if (!/^\+\d{10,15}$/.test(phone)) {
+      return NextResponse.json(
+        { error: "Invalid phone number format. Use +CountryCode format." },
+        { status: 400 }
+      );
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json({ error: "User already exists" }, { status: 400 });
+      return NextResponse.json(
+        { error: "User already exists" },
+        { status: 400 }
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -20,17 +39,22 @@ export async function POST(req) {
     const newUser = new User({
       name,
       email,
+      phone, // ✅ saved here
       password: hashedPassword,
       isVerified: false,
     });
 
     await newUser.save();
 
-    // ✅ Generate JWT with user ID
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    // ✅ Generate JWT for verification
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
     newUser.verificationToken = token;
     await newUser.save();
 
+    // ✅ Send verification email
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -39,7 +63,7 @@ export async function POST(req) {
       },
     });
 
-    const verifyLink = `http://localhost:3000/auth/verify?token=${token}`;
+    const verifyLink = `http://localhost:3000/verify?token=${token}`;
 
     await transporter.sendMail({
       from: `"Freelance Dashboard" <${process.env.EMAIL_USER}>`,
@@ -57,6 +81,9 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("Signup error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

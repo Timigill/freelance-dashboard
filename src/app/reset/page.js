@@ -47,7 +47,7 @@ export default function ResetPasswordPage() {
       </form>
       {message && <p className="message">{message}</p>}
       <p className="text-center links">
-        <a href="/auth/login">Go to Login</a>
+        <a href="/login">Go to Login</a>
       </p>
     </div>
   );

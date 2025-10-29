@@ -22,7 +22,7 @@ export async function POST(req) {
     await user.save();
 
     // Password reset link
-    const resetUrl = `${process.env.BASE_URL}/auth/reset?token=${token}`;
+    const resetUrl = `${process.env.BASE_URL}/reset?token=${token}`;
 
     // Nodemailer transporter for Gmail
     const transporter = nodemailer.createTransport({
