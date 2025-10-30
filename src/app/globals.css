@@ -235,6 +235,40 @@ p, .text-muted, .small {
 }
 .fab:active { transform: scale(0.98); }
 
+
+
+
+
+
+
+/* --- Toast animations --- */
+[data-sonner-toast] {
+  opacity: 0;
+  transform: translateX(20px);
+  animation: toast-enter 0.4s ease forwards;
+}
+
+@keyframes toast-enter {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+[data-sonner-toast].leave {
+  animation: toast-exit 0.4s ease forwards;
+}
+
+@keyframes toast-exit {
+  to {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+
+
+
 @media (min-width: 768px) {
   .fab { display: none; }
   .bottom-bar { display: none !important; }

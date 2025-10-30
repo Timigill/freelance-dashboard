@@ -1,15 +1,19 @@
 "use client";
 import { useState } from "react";
-import './reset.css'; // create this CSS file
+import "./reset.css";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const showToast = (text, type = "info") => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 3000); // hide after 3s
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
     setLoading(true);
     const token = new URLSearchParams(window.location.search).get("token");
 
@@ -21,34 +25,44 @@ export default function ResetPasswordPage() {
       });
 
       const data = await res.json();
-      setMessage(data.message || data.error || "Something went wrong");
+
+      if (!res.ok) {
+        showToast(data.error || "Something went wrong", "error");
+      } else {
+        showToast(data.message || "Password updated successfully", "success");
+      }
     } catch (err) {
-      setMessage("Request failed. Try again later.");
+      showToast("Request failed. Try again later.", "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="reset-container">
-      <h3>Set New Password</h3>
-      <form onSubmit={handleSubmit} noValidate>
-        <input
-          type="password"
-          placeholder="Enter new password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          aria-label="New Password"
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? "Updating..." : "Update Password"}
-        </button>
-      </form>
-      {message && <p className="message">{message}</p>}
-      <p className="text-center links">
-        <a href="/login">Go to Login</a>
-      </p>
-    </div>
+    <>
+      {/* ✅ Toast at page top-right */}
+      {toast && <div className={`toast-message ${toast.type}`}>{toast.text}</div>}
+
+      <div className="reset-container">
+        <h3>Set New Password</h3>
+        <form onSubmit={handleSubmit} noValidate>
+          <input
+            type="password"
+            placeholder="Enter new password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            aria-label="New Password"
+          />
+          <button type="submit" disabled={loading}>
+            {loading ? "Updating..." : "Update Password"}
+          </button>
+        </form>
+
+        <p className="text-center links">
+          <a href="/login">Go to Login</a>
+        </p>
+      </div>
+    </>
   );
 }
