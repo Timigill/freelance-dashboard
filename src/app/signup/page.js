@@ -4,7 +4,8 @@ import { FcGoogle } from "react-icons/fc";
 import { BsGithub } from "react-icons/bs";
 import { signIn } from "next-auth/react";
 import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css"; // ✅ important
+import "react-phone-input-2/lib/style.css";
+import toast from "react-hot-toast";
 
 import "./signup.css";
 
@@ -18,7 +19,6 @@ export default function SignupPage() {
     confirmPassword: "",
     agree: false,
   });
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -37,20 +37,19 @@ export default function SignupPage() {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
-      setMessage("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
     if (!form.agree) {
-      setMessage("You must agree to Terms & Conditions");
+      toast.error("You must agree to Terms & Conditions");
       return;
     }
     if (!form.phone || form.phone.length < 10) {
-      setMessage("Please enter a valid phone number");
+      toast.error("Please enter a valid phone number");
       return;
     }
 
     setLoading(true);
-    setMessage("");
 
     try {
       const res = await fetch("/api/auth/signup", {
@@ -67,7 +66,7 @@ export default function SignupPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Signup failed");
 
-      setMessage("Signup successful! Check your email for verification.");
+      toast.success("Signup successful! Check your email for verification.");
       setForm({
         firstName: "",
         lastName: "",
@@ -78,7 +77,7 @@ export default function SignupPage() {
         agree: false,
       });
     } catch (err) {
-      setMessage(err.message);
+      toast.error(err.message || "Signup failed");
     } finally {
       setLoading(false);
     }
@@ -115,7 +114,6 @@ export default function SignupPage() {
           required
         />
 
-        {/* ✅ Phone input with country flags */}
         <div className="phone-wrapper">
           <PhoneInput
             country="pk"
@@ -164,8 +162,6 @@ export default function SignupPage() {
           {loading ? "Creating..." : "Sign Up"}
         </button>
       </form>
-
-      {message && <p className="message">{message}</p>}
 
       <div className="social-login">
         <p>Or continue with</p>

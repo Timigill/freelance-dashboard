@@ -26,7 +26,7 @@
 /* Inputs */
 .login-container form input {
   width: 100%;
-  padding: 14px 16px;
+  padding: 8px 10px;
   margin-bottom: 18px;
   border: 1px solid rgba(53, 35, 89, 0.2);
   border-radius: 10px;
@@ -60,7 +60,7 @@
 /* Submit button */
 .login-container form button {
   width: 100%;
-  padding: 15px;
+  padding: 6px;
   font-size: 1.05rem;
   font-weight: 600;
   border-radius: 10px;
@@ -130,7 +130,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 18px;
+  padding: 8px 20px;
   font-size: 0.95rem;
   font-weight: 500;
   border-radius: 10px;
@@ -178,7 +178,7 @@
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .login-container {
-    margin: 40px 25px;
+    margin: 90px 25px;
     padding: 35px 20px;
   }
   .login-container h3 {
