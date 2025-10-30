@@ -1,15 +1,19 @@
 "use client";
 import { useState } from "react";
-import './forgot.css'; // make sure to create this CSS
+import "./forgot.css";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
+  const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const showToast = (text, type = "info") => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 3000); // auto-hide after 3s
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
     setLoading(true);
 
     try {
@@ -22,38 +26,47 @@ export default function ForgotPasswordPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setMessage(data.error || "Something went wrong");
+        showToast(data.error || "Something went wrong", "error");
       } else {
-        setMessage(data.message || "Reset link sent. Check your email.");
+        showToast(data.message || "Reset link sent. Check your email.", "success");
       }
     } catch (err) {
       console.error("Fetch error:", err);
-      setMessage("Failed to send request. Try again later.");
+      showToast("Failed to send request. Try again later.", "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="forgot-container">
-      <h3>Forgot Password</h3>
-      <form onSubmit={handleSubmit} noValidate>
-        <input
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          aria-label="Email"
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? "Sending..." : "Send Reset Link"}
-        </button>
-      </form>
-      {message && <p className="message">{message}</p>}
-      <p className="text-center links">
-        <a href="/login">Back to Login</a>
-      </p>
-    </div>
+    <>
+      {/* ✅ Toast container fixed to page top-right */}
+      {toast && (
+        <div className={`toast-message ${toast.type}`}>
+          {toast.text}
+        </div>
+      )}
+
+      <div className="forgot-container">
+        <h3>Forgot Password</h3>
+        <form onSubmit={handleSubmit} noValidate>
+          <input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            aria-label="Email"
+          />
+          <button type="submit" disabled={loading}>
+            {loading ? "Sending..." : "Send Reset Link"}
+          </button>
+        </form>
+
+        <p className="text-center links">
+          <a href="/login">Back to Login</a>
+        </p>
+      </div>
+    </>
   );
 }

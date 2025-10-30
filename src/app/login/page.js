@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { BsGithub } from "react-icons/bs";
 import { signIn } from "next-auth/react";
-
+import toast from "react-hot-toast"; // ✅ added
 import "./login.css";
 
 export default function LoginPage() {
@@ -12,7 +12,6 @@ export default function LoginPage() {
     password: "",
     remember: false,
   });
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [callbackUrl, setCallbackUrl] = useState("/dashboard");
 
@@ -22,7 +21,7 @@ export default function LoginPage() {
     if (url) setCallbackUrl(url);
 
     const verified = params.get("verified");
-    if (verified) setMessage("Your email has been verified. Please login.");
+    if (verified) toast.success("Your email has been verified. Please login."); // ✅ replaced message
   }, []);
 
   const handleChange = (e) => {
@@ -36,19 +35,19 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
 
     const result = await signIn("credentials", {
-      redirect: false, // important to handle manually
+      redirect: false,
       emailOrPhone: form.emailOrPhone,
       password: form.password,
-      callbackUrl: "/dashboard",
+      callbackUrl,
     });
 
     if (result?.error) {
-      setMessage(result.error);
+      toast.error(result.error); // ✅ show error
     } else {
-      window.location.href = result.url; // redirect to dashboard
+      toast.success("Login successful!"); // ✅ show success
+      window.location.href = result.url; // redirect
     }
 
     setLoading(false);
@@ -77,6 +76,7 @@ export default function LoginPage() {
           required
           aria-label="Password"
         />
+
         <div className="checkbox-wrapper">
           <input
             type="checkbox"
@@ -87,12 +87,13 @@ export default function LoginPage() {
           />
           <label htmlFor="remember">Remember me</label>
         </div>
+
         <button type="submit" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
 
-      {message && <p className="message">{message}</p>}
+      {/* ✅ removed the old message display */}
 
       <div className="text-center links">
         <a href="/forgot">Forgot Password?</a>
@@ -114,6 +115,7 @@ export default function LoginPage() {
             />
             Continue with Google
           </button>
+
           <button
             type="button"
             className="github-btn"
