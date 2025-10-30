@@ -1,6 +1,4 @@
-/* ===========================
-   DASHBOARD PAGE STYLES
-   =========================== */
+/* 
 
 .dashboard-container {
   max-width: 950px;
@@ -12,12 +10,12 @@
 }
 .loading{
   padding: 180px;
+  
   font-size: 1.7rem !important;
   color: var(--brand);
   text-align: center;
   font-weight: bold;
 }
-/* Header */
 .header {
   display: flex;
   justify-content: space-between;
@@ -55,7 +53,7 @@
 }
 
 .logout-btn {
-  background-color: var(--brand); /* same brand blue */
+  background-color: var(--brand); 
   color: white;
 }
 
@@ -65,7 +63,6 @@
 
 
 
-/* Cards */
 .cards-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -100,7 +97,6 @@
   background: linear-gradient(145deg, #f9f9f9, #ffffff);
 }
 
-/* Animation */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -112,7 +108,6 @@
   }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .header {
     flex-direction: column;
@@ -152,4 +147,4 @@
   .card {
     padding: 20px 15px;
   }
-}
+} */
