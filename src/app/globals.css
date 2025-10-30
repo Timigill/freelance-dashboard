@@ -267,8 +267,6 @@ p, .text-muted, .small {
 }
 
 
-
-
 @media (min-width: 768px) {
   .fab { display: none; }
   .bottom-bar { display: none !important; }
