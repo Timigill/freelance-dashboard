@@ -178,7 +178,7 @@
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .login-container {
-    margin: 40px 25px;
+    margin: 90px 25px;
     padding: 35px 20px;
   }
   .login-container h3 {
