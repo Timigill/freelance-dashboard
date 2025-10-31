@@ -164,15 +164,15 @@ export default function HomePage() {
   // Removed dynamic client distribution calculation
 
   const fetchIncomeSources = async () => {
-  try {
-    const res = await fetch(`/api/income?month=${selectedMonth}&year=${selectedYear}`)
-    const data = await res.json()
-    setIncomeSources(data)
-    calculateMonthlyIncome(data)
-  } catch (error) {
-    console.error('Error fetching income sources:', error)
+    try {
+      const res = await fetch(`/api/income?month=${selectedMonth}&year=${selectedYear}`)
+      const data = await res.json()
+      setIncomeSources(data)
+      calculateMonthlyIncome(data)
+    } catch (error) {
+      console.error('Error fetching income sources:', error)
+    }
   }
-}
 
 
 
@@ -266,20 +266,20 @@ export default function HomePage() {
     {
       title: 'Total Monthly Income',
       value: monthlyStats.totalIncome,
-     
+
       color: 'primary'
     },
     {
       title: 'Pending Payments',
       value: monthlyStats.pendingAmount,
-     
+
       color: 'warning'
     },
     {
       title: 'Tasks Completed',
       value: monthlyStats.completedTasks,
       suffix: ' tasks',
-       color: 'success'
+      color: 'success'
     },
     {
       title: 'Pending Tasks',
@@ -297,14 +297,10 @@ export default function HomePage() {
           <div className="hero-label">This Month</div>
           <div className="hero-amount">{monthlyStats.totalIncome.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</div>
         </div>
-        <div className="d-flex flex-column gap-2">
-          <button className="btn btn-light btn-sm">New Client</button>
-          <button className="btn btn-outline-light btn-sm">New Task</button>
-        </div>
       </div>
 
       {/* Header with Date Filter */}
-  <div className="d-flex justify-content-between mt-2 pt-2 align-items-center mb-3">
+      <div className="d-flex justify-content-between mt-2 pt-2 align-items-center mb-3">
         <div>
           <h2 className="fw-bold mb-0 fs-5">Income Dashboard</h2>
           <p className="text-muted small mb-0">Financial overview for {months[selectedMonth]} {selectedYear}</p>
@@ -331,36 +327,44 @@ export default function HomePage() {
       </div>
 
       {/* Mobile: two cards per row (no horizontal scroll) */}
-      <div className="d-md-none row g-2 mb-3">
+      <div className="row g-3 mb-4">
         {overviewData.map((card, index) => (
-          <div key={index} className="col-6">
-            <div className="card shadow-sm p-2 h-100 overview-card">
-              <div className="d-flex flex-column align-items-center justify-content-center">
-                <h3 className="fw-bold mb-1" style={{ fontSize: '1.5rem' }}>{card.value.toLocaleString('en-US', { style: card.suffix ? 'decimal' : 'currency', currency: 'USD', maximumFractionDigits: 0 })}{card.suffix || ''}</h3>
-                <p className="mb-1 text-muted" style={{ fontSize: '0.8rem' }}>{card.title}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Desktop/tablet overview grid */}
-      <div className="row g-3 mb-4 d-none d-md-flex">
-        {overviewData.map((card, index) => (
-          <div key={index} className="col-md-3">
-            <div className={`card border-0 shadow-sm bg-${card.color} text-white h-100 overview-card`}>
-              <div className="card-body">
-                <div className="d-flex flex-column align-items-center justify-content-center mb-2 text-center">
-                  <h3 className="mb-1">{card.value.toLocaleString('en-US', {
-                    style: card.suffix ? 'decimal' : 'currency',
-                    currency: 'USD',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  })}{card.suffix || ''}</h3>
-                  <h6 className="mb-1 text-white-50" style={{ opacity: 0.9 }}>{card.title}</h6>
-                  <span className="fs-4 mt-1">{card.icon}</span>
-                </div>
-              </div>
+          <div
+            key={index}
+            className="col-6 col-md-3 col-lg-2"
+          >
+            <div
+              className="card shadow-sm p-3 h-100 overview-card text-center"
+              style={{
+                transition: 'transform 0.2s ease',
+                borderLeft: '4px solid var(--bs-primary)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-3px)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+            >
+              <h3
+                className="fw-bold mb-1"
+                style={{
+                  fontSize: '1.4rem',
+                  color: 'var(--bs-primary)',
+                }}
+              >
+                {card.value.toLocaleString('en-US', {
+                  style: card.suffix ? 'decimal' : 'currency',
+                  currency: 'USD',
+                  maximumFractionDigits: 0,
+                })}
+                {card.suffix || ''}
+              </h3>
+              <p
+                className="mb-0 fw-medium"
+                style={{
+                  fontSize: '0.9rem',
+                  color: 'var(--bs-muted)',
+                }}
+              >
+                {card.title}
+              </p>
             </div>
           </div>
         ))}
@@ -369,14 +373,14 @@ export default function HomePage() {
       {/* Income Distribution */}
       <div className="row mb-4">
         <div className="col-md-8">
-            <div className="card shadow-sm h-100">
-              <div className="card-body d-flex flex-column  px-3">
-                <h5 className="card-title ">Half Yearky Income Distribution</h5>
-                <div className="chart-container flex-fill d-flex align-items-center" style={{ minHeight: 150 }}>
-                  <IncomeChart monthlyData={monthlySeries} />
-                </div>
+          <div className="card shadow-sm h-100">
+            <div className="card-body d-flex flex-column  px-3">
+              <h5 className="card-title ">Half Yearky Income Distribution</h5>
+              <div className="chart-container flex-fill d-flex align-items-center" style={{ minHeight: 150 }}>
+                <IncomeChart monthlyData={monthlySeries} />
               </div>
             </div>
+          </div>
         </div>
         <div className="col-md-4">
           <div className="card shadow-sm h-100">
@@ -394,7 +398,7 @@ export default function HomePage() {
       {/* Recent Activity removed per request */}
 
       {/* Floating quick-add button */}
-    <FloatingActionButton />
+      <FloatingActionButton />
     </div>
   )
 }
