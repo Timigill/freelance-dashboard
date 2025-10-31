@@ -46,7 +46,7 @@ function MonthPickerIcon({ selectedMonth, selectedYear, onChange }) {
         className="btn btn-link p-1"
         onClick={openPicker}
         aria-label="Select month"
-        style={{ color: "#352359", fontSize: "1.05rem" }}
+        style={{ color: "var(--bs-primary)", fontSize: "1.05rem" }}
       >
         <BsCalendar3 />
       </button>
@@ -358,7 +358,7 @@ if (!session || status !== "authenticated") {
           e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.15)";
         }}
       >
-        <h4 className="mb-3" style={{ color: "#352359" }}>Access Denied</h4>
+        <h4 className="mb-3" style={{ color: "var(--bs-primary)" }}>Access Denied</h4>
         <p className="text-muted mb-4 " style={{fontSize:"18px"}}>
           You must be logged in to access the dashboard.
         </p>
@@ -385,7 +385,7 @@ if (!session || status !== "authenticated") {
 
   return (
     <div className="dashboard-page container-fluid py-3 px-2">
-      <div className="hero-card d-flex justify-content-between align-items-center">
+      <div className="hero-card d-flex justify-content-between align-items-center" style={{ background: 'linear-gradient(135deg, var(--bs-primary), #0056b3)', color: '#fff' }}>
         <div>
           <div className="hero-label">This Month</div>
           <div className="hero-amount">
@@ -397,14 +397,14 @@ if (!session || status !== "authenticated") {
           </div>
         </div>
         <div className="d-flex gap-2">
-          <button className="btn btn-light btn-sm">New Invoice</button>
-          <button className="btn btn-outline-light btn-sm">New Task</button>
+          <button className="btn btn-primary btn-sm">New Invoice</button>
+          <button className="btn btn-outline-primary btn-sm">New Task</button>
         </div>
       </div>
 
       <div className="d-flex justify-content-between mt-2 pt-2 align-items-center mb-3">
         <div>
-          <h2 className="fw-bold mb-0 fs-5">Income Dashboard</h2>
+          <h2 className="fw-bold mb-0 fs-5">Lancer Dashboard</h2>
           <p className="text-muted small mb-0">
             Financial overview for {months[selectedMonth]} {selectedYear}
           </p>
@@ -434,7 +434,7 @@ if (!session || status !== "authenticated") {
                   })}
                   {card.suffix || ""}
                 </h3>
-                <h6 className="mb-0 text-white-50">{card.title}</h6>
+                <h6 className="mb-0 text-white">{card.title}</h6>
               </div>
             </div>
           </div>
