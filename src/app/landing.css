@@ -1,7 +1,7 @@
 :root {
-  --brand-dark: #352359;
+  --brand-dark: #241b36;
   --brand-light: #8b5cf6;
-  --text-dark: #1f2937;
+  --text-dark: #241b36;
   --text-light: #6b7280;
   --surface: #ffffff;
   --background: #f9fafb;
@@ -144,7 +144,7 @@
 .cta {
   padding: 80px 60px;
   text-align: center;
-  background: linear-gradient(to right, var(--brand-dark), var(--brand-light));
+  background: linear-gradient(to right, var(--brand-dark), #241b36);
   color: var(--surface);
 }
 

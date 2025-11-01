@@ -9,22 +9,22 @@ export default function LandingPage() {
 
   const features = [
     {
-      icon: <FiFolder size={36} color="#007bff" />,
+      icon: <FiFolder size={36} color="#241b36" />,
       title: "Project Management",
       desc: "Organize your workflow and deadlines effortlessly.",
     },
     
     {
-      icon: <FiCreditCard size={36} color="#007bff" />,
+      icon: <FiCreditCard size={36} color="#241b36" />,
       title: "Invoicing & Payments",
       desc: "Bill clients and track payments with confidence.",
     },
     {
-      icon: <FiBarChart2 size={36} color="#007bff" />,
+      icon: <FiBarChart2 size={36} color="#241b36" />,
       title: "Income Analytics",
       desc: "Understand your financial growth through smart analytics.",
     },{
-      icon: <FiUsers size={36} color="#007bff" />,
+      icon: <FiUsers size={36} color="#241b36" />,
       title: "Client CRM",
       desc: "Maintain strong client relationships in one place.",
     },
@@ -47,7 +47,7 @@ export default function LandingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         style={{
-          background: "linear-gradient(135deg, var(--bs-primary), #0056b3)",
+          background: "linear-gradient(135deg, var(--bs-primary), #241b36)",
           color: "#fff",
         }}
       >
@@ -144,7 +144,7 @@ export default function LandingPage() {
       <section
         className="py-5 text-center text-white"
         style={{
-          background: "linear-gradient(135deg, #0070f3, #00c6ff)",
+          background: "linear-gradient(135deg, #241b36b9, #241b36)",
           paddingTop: "5rem",
           paddingBottom: "5rem",
         }}
@@ -168,7 +168,7 @@ export default function LandingPage() {
           <div className="d-flex flex-column flex-sm-row justify-content-center gap-3">
             <button
               className="btn btn-light fw-semibold px-4 py-2"
-              style={{ color: "#0070f3", borderRadius: "8px" }}
+              style={{ color: "#241b36", borderRadius: "8px" }}
               onClick={() => router.push("/signup")}
             >
               Create Free Account

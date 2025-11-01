@@ -385,7 +385,7 @@ if (!session || status !== "authenticated") {
 
   return (
     <div className="dashboard-page container-fluid py-3 px-2">
-      <div className="hero-card d-flex justify-content-between align-items-center" style={{ background: 'linear-gradient(135deg, var(--bs-primary), #0056b3)', color: '#fff' }}>
+      <div className="hero-card d-flex justify-content-between align-items-center" style={{ background: 'linear-gradient(135deg, var(--bs-primary), #241b36)', color: '#fff' }}>
         <div>
           <div className="hero-label">This Month</div>
           <div className="hero-amount">
