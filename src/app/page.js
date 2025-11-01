@@ -1,245 +1,182 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import "./landing.css";
+import Image from "next/image";
+import { FiFolder, FiUsers, FiCreditCard, FiBarChart2 } from "react-icons/fi"; // React icons
 
 export default function LandingPage() {
   const router = useRouter();
 
+  const features = [
+    {
+      icon: <FiFolder size={36} color="#007bff" />,
+      title: "Project Management",
+      desc: "Organize your workflow and deadlines effortlessly.",
+    },
+    
+    {
+      icon: <FiCreditCard size={36} color="#007bff" />,
+      title: "Invoicing & Payments",
+      desc: "Bill clients and track payments with confidence.",
+    },
+    {
+      icon: <FiBarChart2 size={36} color="#007bff" />,
+      title: "Income Analytics",
+      desc: "Understand your financial growth through smart analytics.",
+    },{
+      icon: <FiUsers size={36} color="#007bff" />,
+      title: "Client CRM",
+      desc: "Maintain strong client relationships in one place.",
+    },
+  ];
+
   return (
-    <div className="landing-container">
+    <div className="container-fluid p-0" style={{ fontFamily: "Inter, sans-serif" }}>
       {/* Navbar */}
-      <header className="navbar">
-        <div className="logo">FreelanceFlow</div>
-        <div className="nav-buttons">
-          <button onClick={() => router.push("/login")}>Login</button>
-          <button className="signup" onClick={() => router.push("/signup")}>
-            Sign Up
-          </button>
-        </div>
+      <header
+        className="d-flex justify-content-center align-items-center border-bottom bg-white sticky-top py-3"
+        style={{ zIndex: 100 }}
+      >
+        <Image src="/Lancer.png" alt="Lancer Logo" width={120} height={40} priority />
       </header>
 
       {/* Hero Section */}
-      <motion.main
-        className="hero section"
-        initial={{ opacity: 0, y: 40 }}
+      <motion.section
+        className="container-fluid py-5"
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
+        style={{
+          background: "linear-gradient(135deg, var(--bs-primary), #0056b3)",
+          color: "#fff",
+        }}
       >
-        <div className="hero-content">
-          <h1>
-            Manage Your <span>Freelance</span> Journey Smarter
-          </h1>
-          <p>
-            FreelanceFlow helps freelancers organize clients, track payments,
-            and grow their business — all from one simple dashboard.
-          </p>
-          <div className="hero-buttons">
-            <button onClick={() => router.push("/signup")}>Get Started</button>
-            <button className="secondary" onClick={() => router.push("/login")}>
-              Login
-            </button>
+        <div className="container d-flex flex-column flex-lg-row align-items-center justify-content-between">
+          <div className="text-center text-lg-start mb-5 pt-4 mb-lg-0" style={{ maxWidth: "550px" }}>
+            <h1 className="fw-bold mb-3" style={{ fontSize: "2.3rem", lineHeight: "1.3" }}>
+            Elevate and Simplify <br />
+              <span style={{ color: "#eaf2ff" }}>Your Freelancing</span>
+            </h1>
+            <p className="lead mb-4" style={{ color: "rgba(255,255,255,0.85)" , fontSize: "1.1rem"}}>
+              Lancer helps freelancers streamline projects, clients, and income tracking in one dashboard.
+            </p>
+            <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+              <button
+                className="btn btn-light px-4 py-2 fw-semibold"
+                style={{
+                  color: "var(--bs-primary)",
+                  borderRadius: "8px",
+                  boxShadow: "0 3px 10px rgba(255,255,255,0.25)",
+                }}
+                onClick={() => router.push("/signup")}
+              >
+                Get Started Free
+              </button>
+              <button
+                className="btn btn-outline-light px-3 py-2 "
+                style={{ borderRadius: "8px" }}
+                onClick={() => router.push("/login")}
+              >
+                Already have an Account?
+              </button>
+            </div>
           </div>
-        </div>
 
-        <motion.div
-          className="hero-image"
-          initial={{ opacity: 0, x: 80 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.9 }}
-        >
-          <img src="/dashboard-preview.jpg" alt="Dashboard preview" />
-        </motion.div>
-      </motion.main>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.9, delay: 0.2 }}
+            className="text-center"
+          >
+            <Image
+              src="/Overview.webp"
+              alt="Dashboard preview"
+              width={650}
+              height={480}
+              className="img-fluid rounded shadow-lg"
+              style={{ border: "2px solid rgba(255,255,255,0.2)" }}
+            />
+          </motion.div>
+        </div>
+      </motion.section>
 
       {/* Features Section */}
-      <section className="features section">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          Why FreelanceFlow?
-        </motion.h2>
-
-        <div className="feature-grid">
-          {[
-            {
-              title: "Project Tracking",
-              desc: "Stay on top of deadlines and deliverables with smart project tracking tools.",
-              icon: "📁",
-            },
-            {
-              title: "Client Management",
-              desc: "Keep all client info organized and accessible whenever you need it.",
-              icon: "🤝",
-            },
-            {
-              title: "Income Insights",
-              desc: "Visualize your monthly earnings and manage invoices effortlessly.",
-              icon: "💰",
-            },
-          ].map((f, i) => (
+    <section className="py-5 bg-light text-center">
+      <div className="container">
+        <h2 className="fw-bold mb-4">Everything You Need to Succeed</h2>
+        <div className="row g-3 justify-content-center">
+          {features.map((feature, i) => (
             <motion.div
               key={i}
-              className="feature-card"
+              className="col-6 col-md-6 col-lg-6 col-xl-5"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.2 }}
+              transition={{ duration: 0.5, delay: i * 0.15 }}
             >
-              <div className="icon">{f.icon}</div>
-              <h3>{f.title}</h3>
-              <p>{f.desc}</p>
+              <div
+                className="p-4 bg-white rounded-4 shadow-sm h-100 mx-auto"
+                style={{
+                  maxWidth: "100%",
+                  transition: "transform 0.3s, box-shadow 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-5px)";
+                  e.currentTarget.style.boxShadow = "0 10px 25px rgba(0,0,0,0.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.05)";
+                }}
+              >
+                <div className="mb-2">{feature.icon}</div>
+                <h6 className="fw-semibold mt-2 mb-1">{feature.title}</h6>
+                <p className="text-muted small  mb-0" style={{fontSize:"0.7rem"}}>{feature.desc}</p>
+              </div>
             </motion.div>
           ))}
         </div>
-      </section>
+      </div>
+    </section>
 
-      {/* How It Works */}
-      <section className="how-it-works section">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          How It Works
-        </motion.h2>
-
-        <div className="steps">
-          {[
-            {
-              step: "1",
-              title: "Create Your Account",
-              desc: "Sign up in seconds and set up your freelancer profile.",
-            },
-            {
-              step: "2",
-              title: "Add Your Clients & Projects",
-              desc: "Organize all your clients, deadlines, and invoices in one place.",
-            },
-            {
-              step: "3",
-              title: "Track & Grow",
-              desc: "View progress, get insights, and grow your freelance business with ease.",
-            },
-          ].map((s, i) => (
-            <motion.div
-              key={i}
-              className="step-card"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.2 }}
-            >
-              <div className="step-number">{s.step}</div>
-              <h3>{s.title}</h3>
-              <p>{s.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="testimonials section">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          Loved by Freelancers Everywhere
-        </motion.h2>
-
-        <div className="testimonial-grid">
-          {[
-            {
-              name: "Aisha Malik",
-              text: "FreelanceFlow keeps my projects organized and clients happy. I’ve doubled my productivity.",
-            },
-            {
-              name: "Daniel Khan",
-              text: "The income insights feature changed how I track earnings — super helpful for taxes.",
-            },
-            {
-              name: "Sara Ahmed",
-              text: "Finally, a dashboard made for freelancers. Clean, simple, and everything in one place.",
-            },
-          ].map((t, i) => (
-            <motion.div
-              key={i}
-              className="testimonial-card"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.2 }}
-            >
-              <p>“{t.text}”</p>
-              <h4>- {t.name}</h4>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="faq section">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          Frequently Asked Questions
-        </motion.h2>
-
-        <div className="faq-list">
-          {[
-            {
-              q: "Is FreelanceFlow free to use?",
-              a: "Yes! You can start for free and upgrade later if you need advanced features.",
-            },
-            {
-              q: "Can I manage multiple clients?",
-              a: "Absolutely. FreelanceFlow is built for freelancers handling multiple clients or projects at once.",
-            },
-            {
-              q: "Is my data secure?",
-              a: "We use industry-standard encryption and never share your data with third parties.",
-            },
-          ].map((f, i) => (
-            <motion.div
-              key={i}
-              className="faq-item"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
-            >
-              <h4>{f.q}</h4>
-              <p>{f.a}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
 
       {/* CTA Section */}
-      <motion.section
-        className="cta section"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.7 }}
+      <section
+        className="py-5 text-center text-white"
+        style={{
+          background: "linear-gradient(135deg, #0070f3, #00c6ff)",
+          paddingTop: "5rem",
+          paddingBottom: "5rem",
+        }}
       >
-        <h2>Start managing your freelance work smarter today.</h2>
-        <div className="cta-buttons">
-          <button onClick={() => router.push("/signup")}>Join Now</button>
-          <button className="secondary" onClick={() => router.push("/login")}>
-            Login
-          </button>
+        <div className="container" style={{ maxWidth: "700px" }}>
+          <motion.h2
+            className="fw-bold mb-3"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{fontSize:"1.5rem!important"}}
+          >
+            Ready to elevate your freelance career?
+          </motion.h2>
+          <p
+            className="mb-4"
+            style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.9rem" }}
+          >
+            Join professionals who use Lancer to take control of their business, track income, and grow faster.
+          </p>
+          <div className="d-flex flex-column flex-sm-row justify-content-center gap-3">
+            <button
+              className="btn btn-light fw-semibold px-4 py-2"
+              style={{ color: "#0070f3", borderRadius: "8px" }}
+              onClick={() => router.push("/signup")}
+            >
+              Create Free Account
+            </button>
+           
+          </div>
         </div>
-      </motion.section>
+      </section>
     </div>
   );
 }
