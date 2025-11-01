@@ -76,6 +76,10 @@ export default function SignupPage() {
         confirmPassword: "",
         agree: false,
       });
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
     } catch (err) {
       toast.error(err.message || "Signup failed");
     } finally {

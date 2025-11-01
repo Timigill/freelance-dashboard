@@ -47,7 +47,10 @@ export default function LoginPage() {
       toast.error(result.error); // ✅ show error
     } else {
       toast.success("Login successful!"); // ✅ show success
-      window.location.href = result.url; // redirect
+      if (result?.url) {
+  const url = new URL(result.url);
+  window.location.href = `${window.location.origin}${url.pathname}`;
+}
     }
 
     setLoading(false);
