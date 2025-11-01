@@ -1,0 +1,294 @@
+/* ----------------------------- */
+/* Container */
+.signup-container {
+  max-width: 450px;
+  margin: 60px auto;
+  padding: 40px 30px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.301);
+  animation: fadeInUp 0.7s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Title */
+.signup-container h3 {
+  text-align: center;
+  color: var(--brand);
+  margin-bottom: 30px;
+  font-weight: 700;
+  font-size: 1.7rem;
+  letter-spacing: 0.5px;
+}
+
+/* Name fields side by side */
+.name-fields {
+  display: flex;
+  gap: 12px;
+}
+
+.name-fields input {
+  flex: 1;
+}
+
+/* Inputs */
+.signup-container form input {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(53, 35, 89, 0.2);
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.25s ease-in-out;
+  background-color: #f9f9f9;
+}
+
+.signup-container form input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 12px rgba(53, 35, 89, 0.15);
+  outline: none;
+  background-color: #fff;
+}
+
+/* ----------------------------- */
+/* ----------------------------- */
+/* Phone Input Field */
+.phone-wrapper {
+  margin-bottom: 18px;
+  position: relative;
+}
+
+/* Outer container */
+.react-tel-input {
+  width: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Input field styling */
+.react-tel-input .form-control {
+  width: 100% !important;
+  padding: 14px 16px 14px 70px !important;
+  border: 1px solid rgba(53, 35, 89, 0.2) !important;
+  border-radius: 10px !important;
+  background-color: #f9f9f9 !important;
+  font-size: 1rem !important;
+  color: #333 !important;
+  transition: all 0.25s ease-in-out;
+  height: 50px !important;
+}
+
+/* Focus state */
+.react-tel-input .form-control:focus {
+  border-color: var(--brand) !important;
+  background-color: #fff !important;
+  box-shadow: 0 0 12px rgba(53, 35, 89, 0.15) !important;
+  outline: none !important;
+}
+
+/* Flag dropdown (left box) */
+.react-tel-input .flag-dropdown {
+  border-radius: 10px 0 0 10px !important;
+  background-color: #f9f9f9 !important;
+  border: 1px solid rgba(53, 35, 89, 0.2) !important;
+  transition: all 0.25s ease-in-out;
+  height: 50px !important;
+}
+
+/* Flag hover/focus */
+.react-tel-input .flag-dropdown:hover,
+.react-tel-input .flag-dropdown.open {
+  background-color: #f0f0f0 !important;
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 10px rgba(53, 35, 89, 0.15) !important;
+}
+
+/* Flag itself */
+.react-tel-input .selected-flag {
+  background: transparent !important;
+  padding: 0 18px !important;
+  margin-right: 18px !important;
+  border-radius: 10px 0 0 10px !important;
+}
+
+/* Dropdown list */
+.react-tel-input .country-list {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  border: none !important;
+  z-index: 9999 !important;
+  font-size: 0.95rem !important;
+}
+
+/* Country options */
+.react-tel-input .country-list .country {
+  padding: 10px 12px !important;
+  transition: background 0.2s ease;
+}
+
+.react-tel-input .country-list .country:hover {
+  background-color: #f4f4f4 !important;
+}
+
+/* Dial code color inside dropdown */
+.react-tel-input .country-list .dial-code {
+  color: #777 !important;
+  font-weight: 500;
+}
+/* ----------------------------- */
+/* Checkbox */
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  margin-right: 10px;
+  margin-top: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* Submit button */
+.signup-container form button {
+  width: 100%;
+  padding: 9px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 10px;
+  background-color: var(--brand);
+  border: none;
+  color: #fff;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+.signup-container form button:hover:not(:disabled) {
+  background-color: #2a1e53;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(53, 35, 89, 0.25);
+}
+
+.signup-container form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Message */
+.signup-container .message {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 0.95rem;
+  color: var(--brand);
+}
+
+/* Text center links */
+.signup-container p.text-center {
+  margin-top: 25px;
+  font-size: 0.95rem;
+}
+
+.signup-container p.text-center a {
+  color: var(--brand);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.signup-container p.text-center a:hover {
+  text-decoration: underline;
+}
+
+/* ----------------------------- */
+/* Social login */
+.social-login {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.social-login p {
+  margin-bottom: 15px;
+  color: #555;
+  font-weight: 500;
+}
+
+.social-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.social-buttons button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.google-btn {
+  background-color: #fff;
+  color: #555;
+  transition: all 0.3s ease;
+}
+
+.google-btn:hover {
+  background-color: #f1f1f1;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.github-btn {
+  background-color: #24292f;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.github-btn:hover {
+  background-color: #1b1f23;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* ----------------------------- */
+/* Animations */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ----------------------------- */
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .signup-container {
+    margin: 40px 25px;
+    padding: 35px 20px;
+  }
+  .signup-container h3 {
+    font-size: 1.5rem;
+  }
+  .name-fields {
+    flex-direction: column;
+  }
+  .react-tel-input .form-control {
+    padding-left: 60px !important;
+    font-size: 0.95rem !important;
+  }
+}

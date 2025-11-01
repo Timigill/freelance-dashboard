@@ -29,14 +29,18 @@ body {
   background-color: #352359 !important;
   border-color: #352359 !important;
 }
+.btn-primary:hover{
+  border-color: #fff !important;
+}
 .btn-outline-primary {
   color: #352359 !important;
-  border-color: #352359 !important;
+  border-color: #352359;
+  background-color: #fff !important;
 }
 .btn-outline-primary:hover {
   background-color: #352359 !important;
   color: #fff !important;
-  border-color: #352359 !important;
+  border-color: #fff !important;
 }
 .card:hover {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -234,6 +238,38 @@ p, .text-muted, .small {
   border: none;
 }
 .fab:active { transform: scale(0.98); }
+
+
+
+
+
+
+
+/* --- Toast animations --- */
+[data-sonner-toast] {
+  opacity: 0;
+  transform: translateX(20px);
+  animation: toast-enter 0.4s ease forwards;
+}
+
+@keyframes toast-enter {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+[data-sonner-toast].leave {
+  animation: toast-exit 0.4s ease forwards;
+}
+
+@keyframes toast-exit {
+  to {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
 
 @media (min-width: 768px) {
   .fab { display: none; }

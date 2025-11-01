@@ -1,0 +1,274 @@
+:root {
+  --brand-dark: #241b36;
+  --brand-light: #8b5cf6;
+  --text-dark: #241b36;
+  --text-light: #6b7280;
+  --surface: #ffffff;
+  --background: #f9fafb;
+}
+
+.landing-container {
+  font-family: "Inter", sans-serif;
+  background-color: var(--background);
+  color: var(--text-dark);
+}
+
+.navbar {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  background-color: var(--surface);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+}
+
+.nav-buttons button {
+  margin-left: 15px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.nav-buttons button.secondary {
+  background-color: transparent;
+  color: var(--brand-dark);
+  border-color: var(--brand-dark);
+}
+
+.nav-buttons button:not(.secondary) {
+  background-color: var(--brand-dark);
+  color: var(--surface);
+}
+
+.hero {
+  padding: 80px 60px;
+  text-align: center;
+}
+
+.hero-content h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.gradient-text {
+  background: linear-gradient(to right, var(--brand-dark), var(--brand-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-content p {
+  font-size: 1.2rem;
+  color: var(--text-light);
+  max-width: 600px;
+  margin: 0 auto 30px;
+}
+
+.hero-buttons button {
+  margin: 0 10px;
+  padding: 12px 30px;
+  font-size: 1rem;
+  border-radius: 8px;
+}
+
+.hero-image {
+  margin-top: 60px;
+}
+
+.hero-image img {
+  max-width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.features {
+  padding: 80px 60px;
+  text-align: center;
+}
+
+.features h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 60px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  background-color: var(--surface);
+  padding: 40px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card .icon {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: var(--brand-dark);
+}
+
+.feature-card h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.feature-card p {
+  color: var(--text-light);
+}
+
+.cta {
+  padding: 80px 60px;
+  text-align: center;
+  background: linear-gradient(to right, var(--brand-dark), #241b36);
+  color: var(--surface);
+}
+
+.cta h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.cta p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  opacity: 0.9;
+}
+
+.cta button {
+  padding: 15px 40px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background-color: var(--surface);
+  color: var(--brand-dark);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cta-buttons button:first-child {
+  background: #fff;
+  color: var(--brand, #1f2937);
+}
+
+.cta-buttons button.secondary {
+  background: transparent;
+  border: 2px solid #fff;
+  color: #fff;
+}
+
+.cta-buttons button:hover {
+  transform: translateY(-3px);
+}
+
+/* Scroll animations */
+.section {
+  opacity: 0;
+  transform: translateY(40px);
+  animation: fadeUp 1s ease forwards;
+}
+
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .navbar {
+    padding: 16px 25px;
+  }
+
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .hero-content {
+    text-align: center;
+  }
+
+  .hero-image img {
+    max-width: 320px;
+  }
+
+  .feature-grid,
+  .steps,
+  .testimonial-grid {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cta {
+    padding: 80px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 14px 20px;
+    display: flex !important;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;  
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+  }
+
+  .logo {
+    font-size: 1.4rem;
+    font-weight: bold !important;
+    color: #23371f;
+  }
+
+  .nav-buttons {
+    display: flex;
+    gap: 0px;
+  }
+
+  .nav-buttons button {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+
+  body {
+    padding-top: 70px;
+  }
+}
+.cta button:hover {
+    transform: scale(1.05);
+}

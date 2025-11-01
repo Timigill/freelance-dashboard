@@ -1,0 +1,190 @@
+/* ----------------------------- */
+/* Container */
+.login-container {
+  max-width: 450px;
+  margin: 60px auto;
+  padding: 40px 30px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.37);
+  animation: fadeInUp 0.7s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Title */
+.login-container h3 {
+  text-align: center;
+  color: var(--brand);
+  margin-bottom: 30px;
+  font-weight: 700;
+  font-size: 1.7rem;
+  letter-spacing: 0.5px;
+}
+
+/* Inputs */
+.login-container form input {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(53, 35, 89, 0.2);
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.25s ease-in-out;
+  background-color: #f9f9f9;
+}
+
+.login-container form input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 12px rgba(53, 35, 89, 0.15);
+  outline: none;
+  background-color: #fff;
+}
+
+/* Checkbox */
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  margin-right: 10px;
+  margin-top: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* Submit button */
+.login-container form button {
+  width: 100%;
+  padding: 6px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 10px;
+  background-color: var(--brand);
+  border: none;
+  color: #fff;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+.login-container form button:hover:not(:disabled) {
+  background-color: #2a1e53;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(53, 35, 89, 0.25);
+}
+
+.login-container form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Message */
+.login-container .message {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 0.95rem;
+  color: var(--brand);
+}
+
+/* Links */
+.login-container .links {
+  margin-top: 25px;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.login-container .links a {
+  color: var(--brand);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-container .links a:hover {
+  text-decoration: underline;
+}
+
+/* Social login */
+.social-login {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.social-login p {
+  margin-bottom: 15px;
+  color: #555;
+  font-weight: 500;
+}
+
+.social-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.social-buttons button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.google-btn {
+  background-color: #fff;
+  color: #555;
+}
+
+.google-btn:hover {
+  background-color: #f1f1f1;
+  transform: scale(1.03);
+}
+
+.github-btn {
+  background-color: #24292f;
+  color: #fff;
+}
+
+.github-btn:hover {
+  background-color: #1b1f23;
+  transform: scale(1.03);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .login-container {
+    margin: 90px 25px;
+    padding: 35px 20px;
+  }
+  .login-container h3 {
+    font-size: 1.5rem;
+  }
+  .social-buttons {
+    flex-direction: column;
+  }
+}

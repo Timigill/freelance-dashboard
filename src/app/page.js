@@ -1,206 +1,140 @@
+"use client";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { FiFolder, FiUsers, FiCreditCard, FiBarChart2 } from "react-icons/fi"; // React icons
 
-'use client'
-import { useState, useEffect, useRef } from 'react'
-import IncomeChart from '@/components/IncomeChart'
-import PieChart from '@/components/PieChart'
-import { BsCalendar3 } from 'react-icons/bs'
-import FloatingActionButton from '@/components/FloatingIcon'
+export default function LandingPage() {
+  const router = useRouter();
 
-/* 📅 Month Picker Button Component */
-function MonthPickerIcon({ selectedMonth, selectedYear, onChange }) {
-  const inputRef = useRef(null)
-
-  const openPicker = () => {
-    if (!inputRef.current) return
-    if (typeof inputRef.current.showPicker === 'function') inputRef.current.showPicker()
-    else { inputRef.current.focus(); inputRef.current.click() }
-  }
-
-  const handleChange = (e) => {
-    const val = e.target.value
-    if (!val) return
-    const [y, m] = val.split('-')
-    onChange(parseInt(m, 10) - 1, parseInt(y, 10))
-  }
+  const features = [
+    {
+      icon: <FiFolder size={36} color="#241b36" />,
+      title: "Project Management",
+      desc: "Organize your workflow and deadlines effortlessly.",
+    },
+    
+    {
+      icon: <FiCreditCard size={36} color="#241b36" />,
+      title: "Invoicing & Payments",
+      desc: "Bill clients and track payments with confidence.",
+    },
+    {
+      icon: <FiBarChart2 size={36} color="#241b36" />,
+      title: "Income Analytics",
+      desc: "Understand your financial growth through smart analytics.",
+    },{
+      icon: <FiUsers size={36} color="#241b36" />,
+      title: "Client CRM",
+      desc: "Maintain strong client relationships in one place.",
+    },
+  ];
 
   return (
-    <>
-      <input
-        ref={inputRef}
-        type="month"
-        value={`${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`}
-        onChange={handleChange}
-        style={{ display: 'none' }}
-      />
-      <button
-        type="button"
-        className="btn btn-link p-1"
-        onClick={openPicker}
-        aria-label="Select month"
-        style={{ color: '#352359', fontSize: '1.05rem' }}
+    <div className="container-fluid p-0" style={{ fontFamily: "Inter, sans-serif" }}>
+      {/* Navbar */}
+      <header
+        className="d-flex justify-content-center align-items-center border-bottom bg-white sticky-top py-3"
+        style={{ zIndex: 100 }}
       >
-        <BsCalendar3 />
-      </button>
-    </>
-  )
-}
+        <Image src="/Lancer.png" alt="Lancer Logo" width={120} height={40} priority />
+      </header>
 
-/* 🧾 Main Dashboard Component */
-export default function HomePage() {
-  const [incomeSources, setIncomeSources] = useState([])
-  const [tasks, setTasks] = useState([])
-  const [clients, setClients] = useState([])
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-  const [monthlyStats, setMonthlyStats] = useState({
-    totalIncome: 0,
-    fixedIncome: 0,
-    taskBasedIncome: 0,
-    freelanceIncome: 0,
-    pendingAmount: 0,
-    completedTasks: 0,
-    pendingTasks: 0
-  })
-  const [monthlySeries, setMonthlySeries] = useState({ labels: [], values: [] })
-
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ]
-
-  /* ✅ Fetch Income based on selected month/year */
-  const fetchIncomeSources = async () => {
-    try {
-      const res = await fetch(`/api/income?month=${selectedMonth + 1}&year=${selectedYear}`)
-      const data = await res.json()
-      setIncomeSources(data)
-
-      const stats = calculateMonthlyIncome(data)
-      setMonthlyStats(prev => ({ ...prev, ...stats }))
-    } catch (error) {
-      console.error('Error fetching income sources:', error)
-    }
-  }
-
-  /* ✅ Fetch Tasks (Static Sample) */
-  const fetchTasks = async () => {
-    const sampleTasks = [
-      { id: 1, name: 'API Integration', status: 'Completed', amount: 15000, dueDate: new Date(2025, selectedMonth, 10), paymentStatus: 'Paid' },
-      { id: 2, name: 'UI Development', status: 'Completed', amount: 12000, dueDate: new Date(2025, selectedMonth, 12), paymentStatus: 'Paid' },
-      { id: 3, name: 'Database Design', status: 'In Progress', amount: 8000, dueDate: new Date(2025, selectedMonth, 18), paymentStatus: 'Unpaid' },
-      { id: 4, name: 'Testing', status: 'Pending', amount: 5000, dueDate: new Date(2025, selectedMonth, 22), paymentStatus: 'Unpaid' }
-    ]
-    setTasks(sampleTasks)
-    calculateTaskStats(sampleTasks)
-  }
-
-  /* ✅ Fetch Clients (Static Sample) */
-  const fetchClients = async () => {
-    const sampleClients = [
-      { _id: '1', name: 'John Smith', company: 'Microsoft' },
-      { _id: '2', name: 'Sarah Johnson', company: 'Google' },
-      { _id: '3', name: 'David Chen', company: 'Apple' },
-      { _id: '4', name: 'Maria Garcia', company: 'Meta' },
-      { _id: '5', name: 'James Wilson', company: 'Amazon' }
-    ]
-    setClients(sampleClients)
-  }
-
-  /* ✅ Calculate Monthly Income */
-  const calculateMonthlyIncome = (sources) => {
-    const stats = { totalIncome: 0, fixedIncome: 0, taskBasedIncome: 0, freelanceIncome: 0 }
-
-    sources.forEach(source => {
-      if (source.isActive) {
-        const amount = Number(source.amount) || 0
-        stats.totalIncome += amount
-        if (source.type === 'Fixed') stats.fixedIncome += amount
-        if (source.type === 'Task') stats.taskBasedIncome += amount
-        if (source.type === 'Freelance') stats.freelanceIncome += amount
-      }
-    })
-    return stats
-  }
-
-  /* ✅ Calculate Task Statistics */
-  const calculateTaskStats = (taskList) => {
-    const stats = { pendingAmount: 0, completedTasks: 0, pendingTasks: 0 }
-
-    const startOfMonth = new Date(selectedYear, selectedMonth, 1)
-    const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0)
-
-    taskList.forEach(task => {
-      const date = new Date(task.dueDate)
-      if (date >= startOfMonth && date <= endOfMonth) {
-        if (task.status === 'Completed') stats.completedTasks++
-        else stats.pendingTasks++
-        if (task.paymentStatus === 'Unpaid') stats.pendingAmount += Number(task.amount) || 0
-      }
-    })
-    setMonthlyStats(prev => ({ ...prev, ...stats }))
-  }
-
-  /* ✅ Fetch Data when month/year changes */
-  useEffect(() => {
-    fetchIncomeSources()
-    fetchTasks()
-    fetchClients()
-  }, [selectedMonth, selectedYear])
-
-  /* ✅ Build Chart Data for Last 6 Months */
-  useEffect(() => {
-    const labels = []
-    const values = []
-
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(selectedYear, selectedMonth - i, 1)
-      const year = d.getFullYear()
-      const month = d.getMonth()
-      labels.push(`${months[month].slice(0, 3)} ${String(year).slice(-2)}`)
-
-      let total = 0
-      incomeSources.forEach(src => { total += Number(src.amount) || 0 })
-      tasks.forEach(task => {
-        const tDate = new Date(task.dueDate)
-        if (tDate.getFullYear() === year && tDate.getMonth() === month) {
-          if (task.status === 'Completed' || task.paymentStatus === 'Paid') total += Number(task.amount) || 0
-        }
-      })
-      values.push(total)
-    }
-
-    setMonthlySeries({ labels, values })
-  }, [incomeSources, tasks, selectedMonth, selectedYear])
-
-  /* ✅ Overview Cards */
-  const overviewData = [
-    { title: 'Total Monthly Income', value: monthlyStats.totalIncome, color: 'primary' },
-    { title: 'Pending Payments', value: monthlyStats.pendingAmount, color: 'warning' },
-    { title: 'Tasks Completed', value: monthlyStats.completedTasks, suffix: ' tasks', color: 'success' },
-    { title: 'Pending Tasks', value: monthlyStats.pendingTasks, suffix: ' tasks', color: 'info' }
-  ]
-
-  /* ✅ UI */
-  return (
-    <div className="dashboard-page container-fluid py-3 px-2">
-
-      {/* 💰 Hero Section */}
-      <div className="hero-card d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <div className="hero-label">This Month</div>
-          <div className="hero-amount">
-            {monthlyStats.totalIncome.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
+      {/* Hero Section */}
+      <motion.section
+        className="container-fluid py-5"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        style={{
+          background: "linear-gradient(135deg, var(--bs-primary), #241b36)",
+          color: "#fff",
+        }}
+      >
+        <div className="container d-flex flex-column flex-lg-row align-items-center justify-content-between">
+          <div className="text-center text-lg-start mb-5 pt-4 mb-lg-0" style={{ maxWidth: "550px" }}>
+            <h1 className="fw-bold mb-3" style={{ fontSize: "2.3rem", lineHeight: "1.3" }}>
+            Elevate and Simplify <br />
+              <span style={{ color: "#eaf2ff" }}>Your Freelancing</span>
+            </h1>
+            <p className="lead mb-4" style={{ color: "rgba(255,255,255,0.85)" , fontSize: "1.1rem"}}>
+              Lancer helps freelancers streamline projects, clients, and income tracking in one dashboard.
+            </p>
+            <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+              <button
+                className="btn btn-light px-4 py-2 fw-semibold"
+                style={{
+                  color: "var(--bs-primary)",
+                  borderRadius: "8px",
+                  boxShadow: "0 3px 10px rgba(255,255,255,0.25)",
+                }}
+                onClick={() => router.push("/signup")}
+              >
+                Get Started Free
+              </button>
+              <button
+                className="btn btn-outline-light px-3 py-2 "
+                style={{ borderRadius: "8px" }}
+                onClick={() => router.push("/login")}
+              >
+                Already have an Account?
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* 📅 Header */}
-      <div className="d-flex justify-content-between mt-2 pt-2 align-items-center mb-3">
-        <div>
-          <h2 className="fw-bold mb-0 fs-5">Income Dashboard</h2>
-          <p className="text-muted small mb-0">
-            Financial overview for {months[selectedMonth]} {selectedYear}
-          </p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.9, delay: 0.2 }}
+            className="text-center"
+          >
+            <Image
+              src="/Overview.webp"
+              alt="Dashboard preview"
+              width={650}
+              height={480}
+              className="img-fluid rounded shadow-lg"
+              style={{ border: "2px solid rgba(255,255,255,0.2)" }}
+            />
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Features Section */}
+    <section className="py-5 bg-light text-center">
+      <div className="container">
+        <h2 className="fw-bold mb-4">Everything You Need to Succeed</h2>
+        <div className="row g-3 justify-content-center">
+          {features.map((feature, i) => (
+            <motion.div
+              key={i}
+              className="col-6 col-md-6 col-lg-6 col-xl-5"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.15 }}
+            >
+              <div
+                className="p-4 bg-white rounded-4 shadow-sm h-100 mx-auto"
+                style={{
+                  maxWidth: "100%",
+                  transition: "transform 0.3s, box-shadow 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-5px)";
+                  e.currentTarget.style.boxShadow = "0 10px 25px rgba(0,0,0,0.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.05)";
+                }}
+              >
+                <div className="mb-2">{feature.icon}</div>
+                <h6 className="fw-semibold mt-2 mb-1">{feature.title}</h6>
+                <p className="text-muted small  mb-0" style={{fontSize:"0.7rem"}}>{feature.desc}</p>
+              </div>
+            </motion.div>
+          ))}
         </div>
         <MonthPickerIcon
           selectedMonth={selectedMonth}
@@ -208,54 +142,46 @@ export default function HomePage() {
           onChange={(m, y) => { setSelectedMonth(m); setSelectedYear(y) }}
         />
       </div>
+    </section>
 
-      {/* 📊 Overview Cards */}
-      <div className="row g-3 mb-4">
-        {overviewData.map((card, idx) => (
-          <div key={idx} className="col-6 col-md-3">
-            <div className={`card border-0 shadow-sm bg-${card.color} text-white h-100`}>
-              <div className="card-body d-flex flex-column align-items-center justify-content-center">
-                <h3 className="mb-1">
-                  {card.value.toLocaleString('en-US', {
-                    style: card.suffix ? 'decimal' : 'currency',
-                    currency: 'USD',
-                    maximumFractionDigits: 0
-                  })}
-                  {card.suffix || ''}
-                </h3>
-                <h6 className="mb-0">{card.title}</h6>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
 
-      {/* 📈 Charts Section */}
-      <div className="row mb-4">
-        <div className="col-md-8">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <h5 className="card-title">Half-Yearly Income Distribution</h5>
-              <div style={{ minHeight: 180 }}>
-                <IncomeChart monthlyData={monthlySeries} />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <h5 className="card-title mb-4">Income by Client</h5>
-              <PieChart data={{
-                labels: clients.map(c => c.company),
-                values: [45000, 38000, 32000, 28000, 22000]
-              }} />
-            </div>
+      {/* CTA Section */}
+      <section
+        className="py-5 text-center text-white"
+        style={{
+          background: "linear-gradient(135deg, #241b36b9, #241b36)",
+          paddingTop: "5rem",
+          paddingBottom: "5rem",
+        }}
+      >
+        <div className="container" style={{ maxWidth: "700px" }}>
+          <motion.h2
+            className="fw-bold mb-3"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{fontSize:"1.5rem!important"}}
+          >
+            Ready to elevate your freelance career?
+          </motion.h2>
+          <p
+            className="mb-4"
+            style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.9rem" }}
+          >
+            Join professionals who use Lancer to take control of their business, track income, and grow faster.
+          </p>
+          <div className="d-flex flex-column flex-sm-row justify-content-center gap-3">
+            <button
+              className="btn btn-light fw-semibold px-4 py-2"
+              style={{ color: "#241b36", borderRadius: "8px" }}
+              onClick={() => router.push("/signup")}
+            >
+              Create Free Account
+            </button>
+           
           </div>
         </div>
-      </div>
-
-      <FloatingActionButton />
+      </section>
     </div>
-  )
+  );
 }
