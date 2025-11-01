@@ -64,7 +64,7 @@ export const authOptions = {
 
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
-  secret: process.env.JWT_SECRET,
+secret: process.env.NEXTAUTH_SECRET,
 
   callbacks: {
     async signIn({ user, account }) {
@@ -90,9 +90,12 @@ export const authOptions = {
     },
 
     async jwt({ token, user }) {
-      if (user) token.id = user.id || user._id;
-      return token;
-    },
+  if (user) {
+    const dbUser = await User.findOne({ email: user.email });
+    token.id = dbUser?._id?.toString();
+  }
+  return token;
+},
 
     async session({ session, token }) {
       if (token?.id) session.user.id = token.id;
