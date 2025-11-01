@@ -13,6 +13,7 @@ export default function TasksPage() {
     paymentStatus: 'all',
     sourceId: 'all'
   })
+
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -26,29 +27,19 @@ export default function TasksPage() {
 
   const params = useSearchParams()
 
-  // ✅ Automatically open modal if "?openModal=true" is in the URL
+  // ✅ Auto open modal if ?openModal=true
   useEffect(() => {
     if (params.get('openModal') === 'true') {
-      setCurrentTask(null)
-      setForm({
-        name: '',
-        description: '',
-        amount: '',
-        sourceId: '',
-        dueDate: '',
-        status: 'Pending',
-        paymentStatus: 'Unpaid',
-        priority: 'Medium'
-      })
+      resetForm()
       setShowModal(true)
     }
   }, [params])
 
-  // ✅ Fetch data on mount
+  // ✅ Fetch data on mount & when filters change
   useEffect(() => {
     fetchTasks()
     fetchIncomeSources()
-  }, [])
+  }, [filters])
 
   const fetchTasks = async () => {
     try {
@@ -59,9 +50,7 @@ export default function TasksPage() {
       if (filters.paymentStatus !== 'all') queryParams.push(`paymentStatus=${filters.paymentStatus}`)
       if (filters.sourceId !== 'all') queryParams.push(`sourceId=${filters.sourceId}`)
 
-      if (queryParams.length > 0) {
-        url += '?' + queryParams.join('&')
-      }
+      if (queryParams.length > 0) url += '?' + queryParams.join('&')
 
       const res = await fetch(url)
       const data = await res.json()
@@ -79,6 +68,20 @@ export default function TasksPage() {
     } catch (error) {
       console.error('Error fetching income sources:', error)
     }
+  }
+
+  const resetForm = () => {
+    setCurrentTask(null)
+    setForm({
+      name: '',
+      description: '',
+      amount: '',
+      sourceId: '',
+      dueDate: '',
+      status: 'Pending',
+      paymentStatus: 'Unpaid',
+      priority: 'Medium'
+    })
   }
 
   const handleSubmit = async (e) => {
@@ -108,7 +111,7 @@ export default function TasksPage() {
       description: task.description || '',
       amount: task.amount,
       sourceId: task.sourceId?._id || '',
-      dueDate: task.dueDate.split('T')[0],
+      dueDate: task.dueDate?.split('T')[0] || '',
       status: task.status,
       paymentStatus: task.paymentStatus,
       priority: task.priority
@@ -144,9 +147,10 @@ export default function TasksPage() {
     }
   }
 
-  const totalAmount = tasks.reduce((sum, task) => sum + task.amount, 0)
-  const pendingAmount = tasks.filter(t => t.paymentStatus === 'Unpaid')
-    .reduce((sum, task) => sum + task.amount, 0)
+  const totalAmount = tasks.reduce((sum, t) => sum + (t.amount || 0), 0)
+  const pendingAmount = tasks
+    .filter(t => t.paymentStatus === 'Unpaid')
+    .reduce((sum, t) => sum + (t.amount || 0), 0)
 
   return (
     <div className="container-fluid py-4">
@@ -154,27 +158,12 @@ export default function TasksPage() {
       <div className="d-flex justify-content-between align-items-center mb-4 flex-nowrap">
         <div>
           <h3 className="fw-bold mb-0 fs-5 fs-md-4">Task Management</h3>
-          <p className="text-muted fs-6 mb-0">
-            Track and manage your tasks and payments
-          </p>
+          <p className="text-muted fs-6 mb-0">Track and manage your tasks and payments</p>
         </div>
 
         <button
           className="btn btn-primary mt-2 mt-md-0"
-          onClick={() => {
-            setCurrentTask(null)
-            setForm({
-              name: '',
-              description: '',
-              amount: '',
-              sourceId: '',
-              dueDate: '',
-              status: 'Pending',
-              paymentStatus: 'Unpaid',
-              priority: 'Medium'
-            })
-            setShowModal(true)
-          }}
+          onClick={() => { resetForm(); setShowModal(true) }}
           style={{ whiteSpace: 'nowrap', fontSize: '0.9rem', padding: '6px 14px' }}
         >
           Add Task
@@ -234,34 +223,49 @@ export default function TasksPage() {
               </tr>
             </thead>
             <tbody>
-              {tasks.map(task => (
-                <tr key={task._id}>
-                  <td>
-                    <div className="fw-semibold">{task.name}</div>
-                    <small className="text-muted">{task.description}</small>
-                  </td>
-                  <td>{task.sourceId?.name || '-'}</td>
-                  <td>${task.amount.toLocaleString()}</td>
-                  <td>{new Date(task.dueDate).toLocaleDateString()}</td>
-                  <td><Badge bg={getPriorityColor(task.priority)}>{task.priority}</Badge></td>
-                  <td><Badge bg={getStatusColor(task.status)}>{task.status}</Badge></td>
-                  <td>
-                    <Badge bg={task.paymentStatus === 'Paid' ? 'success' : 'warning'}>
-                      {task.paymentStatus}
-                    </Badge>
-                  </td>
-                  <td>
-                    <div className="btn-group">
-                      <Button variant="outline-primary" size="sm" onClick={() => handleEdit(task)}>
-                        Edit
-                      </Button>
-                      <Button variant="outline-danger" size="sm" onClick={() => handleDelete(task._id)}>
-                        Delete
-                      </Button>
-                    </div>
+              {tasks.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-4 text-muted">
+                    No tasks found
                   </td>
                 </tr>
-              ))}
+              ) : (
+                tasks.map(task => (
+                  <tr key={task._id || task.name}>
+                    <td>
+                      <div className="fw-semibold">{task.name}</div>
+                      <small className="text-muted">{task.description}</small>
+                    </td>
+                    <td>{task.sourceId?.name || '-'}</td>
+                    <td>${(task.amount || 0).toLocaleString()}</td>
+                    <td>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}</td>
+                    <td><Badge bg={getPriorityColor(task.priority)}>{task.priority}</Badge></td>
+                    <td><Badge bg={getStatusColor(task.status)}>{task.status}</Badge></td>
+                    <td>
+                      <Badge bg={task.paymentStatus === 'Paid' ? 'success' : 'warning'}>
+                        {task.paymentStatus}
+                      </Badge>
+                    </td>
+                    <td>
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => handleEdit(task)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => handleDelete(task._id)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -292,6 +296,7 @@ export default function TasksPage() {
                   <Form.Label>Amount</Form.Label>
                   <Form.Control
                     type="number"
+                    min="0"
                     placeholder="Enter amount"
                     value={form.amount}
                     onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })}
@@ -312,7 +317,7 @@ export default function TasksPage() {
             </Form.Group>
 
             <div className="row">
-              <div className="col-md-6">
+              <div className="col-md-4">
                 <Form.Group className="mb-3">
                   <Form.Label>Income Source</Form.Label>
                   <Form.Select
@@ -327,7 +332,8 @@ export default function TasksPage() {
                   </Form.Select>
                 </Form.Group>
               </div>
-              <div className="col-md-6">
+
+              <div className="col-md-4">
                 <Form.Group className="mb-3">
                   <Form.Label>Due Date</Form.Label>
                   <Form.Control
@@ -338,8 +344,52 @@ export default function TasksPage() {
                   />
                 </Form.Group>
               </div>
+
+              <div className="col-md-4">
+                <Form.Group className="mb-3">
+                  <Form.Label>Priority</Form.Label>
+                  <Form.Select
+                    value={form.priority}
+                    onChange={(e) => setForm({ ...form, priority: e.target.value })}
+                  >
+                    <option>Low</option>
+                    <option>Medium</option>
+                    <option>High</option>
+                  </Form.Select>
+                </Form.Group>
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-md-6">
+                <Form.Group className="mb-3">
+                  <Form.Label>Status</Form.Label>
+                  <Form.Select
+                    value={form.status}
+                    onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  >
+                    <option>Pending</option>
+                    <option>In Progress</option>
+                    <option>Completed</option>
+                  </Form.Select>
+                </Form.Group>
+              </div>
+
+              <div className="col-md-6">
+                <Form.Group className="mb-3">
+                  <Form.Label>Payment Status</Form.Label>
+                  <Form.Select
+                    value={form.paymentStatus}
+                    onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })}
+                  >
+                    <option>Unpaid</option>
+                    <option>Paid</option>
+                  </Form.Select>
+                </Form.Group>
+              </div>
             </div>
           </Modal.Body>
+
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
             <Button variant="primary" type="submit">Save</Button>
