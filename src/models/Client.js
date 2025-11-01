@@ -1,44 +1,20 @@
 import mongoose from 'mongoose'
 
-const ClientSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true,
+const ClientSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    address: { type: String, required: true }, 
+    company: { type: String },
+    phone: { type: String, required: true },
+    category: { type: String, required: true },
+    status: { type: String, default: 'active' },
   },
-  email: {
-    type: String,
-    trim: true,
-  },
-  company: {
-    type: String,
-    trim: true,
-  },
-  phone: {
-    type: String,
-    trim: true,
-  },
-  notes: {
-    type: String,
-    trim: true,
-  },
-  category: {
-    type: String,
-    enum: ['Fixed', 'Salary-Based', 'Freelance', 'Task-Based', 'Uncategorized'],
-    default: 'Uncategorized',
-  },
-  deadline: {
-    type: Date,
-  },
-  status: {
-    type: String,
-    enum: ['active', 'inactive', 'closed'],
-    default: 'active',
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-})
+  { timestamps: true }
+)
 
-export default mongoose.models.Client || mongoose.model('Client', ClientSchema)
+// ✅ Fix model caching in Next.js (ensures schema updates apply properly)
+if (mongoose.models.Client) {
+  delete mongoose.models.Client
+}
+
+export default mongoose.model('Client', ClientSchema)

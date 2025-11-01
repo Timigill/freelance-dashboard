@@ -185,7 +185,6 @@ useEffect(() => {
             >
               <option value="All">All Categories</option>
               <option value="Freelance">Freelance</option>
-              <option value="Fixed">Fixed</option>
               <option value="Salary-Based">Salary-Based</option>
               <option value="Contract">Contract</option>
             </select>
