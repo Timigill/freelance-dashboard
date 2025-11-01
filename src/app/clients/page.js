@@ -1,9 +1,9 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-export default function ClientsPage() {
+function ClientsPageContent() {
   const [clients, setClients] = useState([])
   const [form, setForm] = useState({
     name: '',
@@ -24,7 +24,6 @@ export default function ClientsPage() {
     const modalElement = document.getElementById('clientModal')
     if (!modalElement) return
 
-    let bootstrapModule = null
     let modalInstance = null
 
     const initModal = async () => {
@@ -38,7 +37,6 @@ export default function ClientsPage() {
 
         modalInstance = new Modal(modalElement)
 
-        // ✅ Open automatically if ?openModal=true
         const open = searchParams.get('openModal') === 'true'
         if (open) modalInstance.show()
 
@@ -58,13 +56,12 @@ export default function ClientsPage() {
 
     return () => {
       if (modalElement && modalInstance) {
-        modalElement.removeEventListener('hidden.bs.modal', () => { })
+        modalElement.removeEventListener('hidden.bs.modal', () => {})
         modalInstance.dispose?.()
       }
     }
   }, [searchParams])
 
-  // ✅ Fetch clients
   useEffect(() => {
     fetchClients()
   }, [])
@@ -83,14 +80,15 @@ export default function ClientsPage() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  // ✅ Add or Update Client
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!isValid) return alert('Please fill all fields.')
 
     try {
       const method = editingClientId ? 'PUT' : 'POST'
-      const url = editingClientId ? `/api/clients/${editingClientId}` : '/api/clients'
+      const url = editingClientId
+        ? `/api/clients/${editingClientId}`
+        : '/api/clients'
 
       await fetch(url, {
         method,
@@ -107,7 +105,6 @@ export default function ClientsPage() {
     }
   }
 
-  // ✅ Delete Client
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this client?')) return
     try {
@@ -118,7 +115,6 @@ export default function ClientsPage() {
     }
   }
 
-  // ✅ Edit Client
   const handleEdit = async (client) => {
     setEditingClientId(client._id)
     setForm({
@@ -133,7 +129,6 @@ export default function ClientsPage() {
     if (!modalElement) return
 
     try {
-      // ✅ Dynamically load Bootstrap (safe on SSR)
       const bootstrap = await import('bootstrap/dist/js/bootstrap.bundle.min.js')
       const Modal = bootstrap.Modal || window.bootstrap?.Modal
       if (!Modal) {
@@ -148,8 +143,6 @@ export default function ClientsPage() {
     }
   }
 
-
-  // ✅ Close modal after saving
   useEffect(() => {
     if (shouldCloseModal) {
       const btn = document.getElementById('closeModalBtn')
@@ -158,7 +151,6 @@ export default function ClientsPage() {
     }
   }, [shouldCloseModal])
 
-  // ✅ Filter + sort
   const filteredAndSortedClients = clients
     .filter((c) => categoryFilter === 'All' || c.category === categoryFilter)
     .sort((a, b) =>
@@ -169,7 +161,6 @@ export default function ClientsPage() {
 
   return (
     <div className="container-fluid py-4">
-      {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-nowrap">
         <div>
           <h3 className="fw-bold mb-0 fs-5 fs-md-4">Client Management</h3>
@@ -189,7 +180,6 @@ export default function ClientsPage() {
         </button>
       </div>
 
-      {/* Summary Cards */}
       <div className="row row-cols-2 row-cols-lg-5 g-3">
         <Link href="/clients/all" className="col text-decoration-none">
           <div
@@ -246,7 +236,6 @@ export default function ClientsPage() {
         </Link>
       </div>
 
-      {/* Client Table */}
       <div className="card shadow-sm mt-4">
         <div className="card-header fw-semibold d-flex justify-content-between align-items-center">
           <span>Client List</span>
@@ -333,7 +322,6 @@ export default function ClientsPage() {
         </div>
       </div>
 
-      {/* Modal */}
       <div
         className="modal fade"
         id="clientModal"
@@ -369,7 +357,9 @@ export default function ClientsPage() {
                         onChange={handleChange}
                         className="form-control"
                         placeholder={`Enter ${field}`}
-                        required={['name', 'address', 'phone'].includes(field)}
+                        required={['name', 'address', 'phone'].includes(
+                          field
+                        )}
                       />
                     </div>
                   ))}
@@ -414,5 +404,13 @@ export default function ClientsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ClientsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ClientsPageContent />
+    </Suspense>
   )
 }

@@ -1,9 +1,9 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Modal, Button, Form, Badge } from 'react-bootstrap'
 
-export default function TasksPage() {
+function TasksPageContent() {
   const [tasks, setTasks] = useState([])
   const [incomeSources, setIncomeSources] = useState([])
   const [showModal, setShowModal] = useState(false)
@@ -397,5 +397,13 @@ export default function TasksPage() {
         </Form>
       </Modal>
     </div>
+  )
+}
+
+export default function TasksPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TasksPageContent />
+    </Suspense>
   )
 }
