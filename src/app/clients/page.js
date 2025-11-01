@@ -2,58 +2,80 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Modal } from 'bootstrap' // ensures modal works in Next.js SSR
 
 export default function ClientsPage() {
   const [clients, setClients] = useState([])
   const [form, setForm] = useState({
-    name: "",
-    address: "",
-    company: "",
-    phone: "",
-    category: "",
+    name: '',
+    address: '',
+    company: '',
+    phone: '',
+    category: '',
   })
+  const [editingClientId, setEditingClientId] = useState(null)
   const [shouldCloseModal, setShouldCloseModal] = useState(false)
-  const [sortOrder, setSortOrder] = useState("newest")
-  const [categoryFilter, setCategoryFilter] = useState("All")
+  const [sortOrder, setSortOrder] = useState('newest')
+  const [categoryFilter, setCategoryFilter] = useState('All')
 
-  const isValid = Object.values(form).every((f) => f.trim() !== "")
-  const searchParams = useSearchParams() // ✅ for ?openModal=true check
+  const isValid = Object.values(form).every((f) => f.trim() !== '')
+  const searchParams = useSearchParams()
 
-// ✅ Auto-open modal & clean up backdrop properly
-useEffect(() => {
-  const open = searchParams.get('openModal') === 'true'
-  const modalElement = document.getElementById('clientModal')
-  if (!modalElement) return
+  useEffect(() => {
+    const modalElement = document.getElementById('clientModal')
+    if (!modalElement) return
 
-  const modal = new Modal(modalElement)
+    let bootstrapModule = null
+    let modalInstance = null
 
-  if (open) modal.show()
+    const initModal = async () => {
+      try {
+        const bootstrap = await import('bootstrap/dist/js/bootstrap.bundle.min.js')
+        const Modal = bootstrap.Modal || window.bootstrap?.Modal
+        if (!Modal) {
+          console.warn('Bootstrap Modal not available yet.')
+          return
+        }
 
-  // ✅ Cleanup when modal hides — remove stuck backdrop
-  const handleHidden = () => {
-    document.body.classList.remove('modal-open')
-    document.body.style.removeProperty('padding-right')
-    const backdrops = document.querySelectorAll('.modal-backdrop')
-    backdrops.forEach(el => el.remove())
-  }
+        modalInstance = new Modal(modalElement)
 
-  modalElement.addEventListener('hidden.bs.modal', handleHidden)
-  return () => modalElement.removeEventListener('hidden.bs.modal', handleHidden)
-}, [searchParams])
+        // ✅ Open automatically if ?openModal=true
+        const open = searchParams.get('openModal') === 'true'
+        if (open) modalInstance.show()
 
-  // ✅ 2. Fetch clients
+        const handleHidden = () => {
+          document.body.classList.remove('modal-open')
+          document.body.style.removeProperty('padding-right')
+          document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
+        }
+
+        modalElement.addEventListener('hidden.bs.modal', handleHidden)
+      } catch (err) {
+        console.error('Error initializing modal:', err)
+      }
+    }
+
+    initModal()
+
+    return () => {
+      if (modalElement && modalInstance) {
+        modalElement.removeEventListener('hidden.bs.modal', () => { })
+        modalInstance.dispose?.()
+      }
+    }
+  }, [searchParams])
+
+  // ✅ Fetch clients
   useEffect(() => {
     fetchClients()
   }, [])
 
   const fetchClients = async () => {
     try {
-      const res = await fetch("/api/clients")
+      const res = await fetch('/api/clients')
       const data = await res.json()
       setClients(data)
     } catch (err) {
-      console.error("Error fetching clients:", err)
+      console.error('Error fetching clients:', err)
     }
   }
 
@@ -61,38 +83,86 @@ useEffect(() => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
+  // ✅ Add or Update Client
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!isValid) return alert("Please fill all fields.")
+    if (!isValid) return alert('Please fill all fields.')
 
     try {
-      await fetch("/api/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const method = editingClientId ? 'PUT' : 'POST'
+      const url = editingClientId ? `/api/clients/${editingClientId}` : '/api/clients'
+
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      setForm({ name: "", address: "", company: "", phone: "", category: "" })
+
+      setForm({ name: '', address: '', company: '', phone: '', category: '' })
+      setEditingClientId(null)
       fetchClients()
       setShouldCloseModal(true)
     } catch (err) {
-      console.error("Error adding client:", err)
+      console.error('Error saving client:', err)
     }
   }
 
-  // ✅ 3. Close modal after saving
+  // ✅ Delete Client
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this client?')) return
+    try {
+      await fetch(`/api/clients/${id}`, { method: 'DELETE' })
+      setClients((prev) => prev.filter((c) => c._id !== id))
+    } catch (err) {
+      console.error('Error deleting client:', err)
+    }
+  }
+
+  // ✅ Edit Client
+  const handleEdit = async (client) => {
+    setEditingClientId(client._id)
+    setForm({
+      name: client.name || '',
+      address: client.address || '',
+      company: client.company || '',
+      phone: client.phone || '',
+      category: client.category || '',
+    })
+
+    const modalElement = document.getElementById('clientModal')
+    if (!modalElement) return
+
+    try {
+      // ✅ Dynamically load Bootstrap (safe on SSR)
+      const bootstrap = await import('bootstrap/dist/js/bootstrap.bundle.min.js')
+      const Modal = bootstrap.Modal || window.bootstrap?.Modal
+      if (!Modal) {
+        console.warn('Bootstrap Modal not available yet.')
+        return
+      }
+
+      const modal = new Modal(modalElement)
+      modal.show()
+    } catch (err) {
+      console.error('Error opening modal for edit:', err)
+    }
+  }
+
+
+  // ✅ Close modal after saving
   useEffect(() => {
     if (shouldCloseModal) {
-      const btn = document.getElementById("closeModalBtn")
+      const btn = document.getElementById('closeModalBtn')
       if (btn) btn.click()
       setShouldCloseModal(false)
     }
   }, [shouldCloseModal])
 
-  // ✅ 4. Filter + sort
+  // ✅ Filter + sort
   const filteredAndSortedClients = clients
-    .filter((c) => categoryFilter === "All" || c.category === categoryFilter)
+    .filter((c) => categoryFilter === 'All' || c.category === categoryFilter)
     .sort((a, b) =>
-      sortOrder === "newest"
+      sortOrder === 'newest'
         ? new Date(b.createdAt) - new Date(a.createdAt)
         : new Date(a.createdAt) - new Date(b.createdAt)
     )
@@ -112,11 +182,8 @@ useEffect(() => {
           className="btn btn-primary mt-2 mt-md-0"
           data-bs-toggle="modal"
           data-bs-target="#clientModal"
-          style={{
-            whiteSpace: "nowrap",
-            fontSize: "0.9rem",
-            padding: "6px 14px",
-          }}
+          onClick={() => setEditingClientId(null)}
+          style={{ whiteSpace: 'nowrap', fontSize: '0.9rem', padding: '6px 14px' }}
         >
           Add Client
         </button>
@@ -125,7 +192,10 @@ useEffect(() => {
       {/* Summary Cards */}
       <div className="row row-cols-2 row-cols-lg-5 g-3">
         <Link href="/clients/all" className="col text-decoration-none">
-          <div className="card bg-primary text-white shadow-sm h-100 text-center" style={{ cursor: "pointer", minHeight: "130px" }}>
+          <div
+            className="card bg-primary text-white shadow-sm h-100 text-center"
+            style={{ cursor: 'pointer', minHeight: '130px' }}
+          >
             <div className="card-body d-flex flex-column justify-content-center align-items-center">
               <h6 className="mb-1">Total Clients</h6>
               <h3 className="fw-bold">{clients.length}</h3>
@@ -134,28 +204,43 @@ useEffect(() => {
         </Link>
 
         <Link href="/clients/active" className="col text-decoration-none">
-          <div className="card bg-info text-white shadow-sm h-100 text-center" style={{ cursor: "pointer", minHeight: "130px" }}>
+          <div
+            className="card bg-info text-white shadow-sm h-100 text-center"
+            style={{ cursor: 'pointer', minHeight: '130px' }}
+          >
             <div className="card-body d-flex flex-column justify-content-center align-items-center">
               <h6 className="mb-1">Active Clients</h6>
-              <h4 className="fw-bold">{clients.filter((c) => c.status === "active").length}</h4>
+              <h4 className="fw-bold">
+                {clients.filter((c) => c.status === 'active').length}
+              </h4>
             </div>
           </div>
         </Link>
 
         <Link href="/clients/inactive" className="col text-decoration-none">
-          <div className="card bg-danger text-white shadow-sm h-100 text-center" style={{ cursor: "pointer", minHeight: "130px" }}>
+          <div
+            className="card bg-danger text-white shadow-sm h-100 text-center"
+            style={{ cursor: 'pointer', minHeight: '130px' }}
+          >
             <div className="card-body d-flex flex-column justify-content-center align-items-center">
               <h6 className="mb-1">Inactive Clients</h6>
-              <h4 className="fw-bold">{clients.filter((c) => c.status === "inactive").length}</h4>
+              <h4 className="fw-bold">
+                {clients.filter((c) => c.status === 'inactive').length}
+              </h4>
             </div>
           </div>
         </Link>
 
         <Link href="/clients/closed" className="col text-decoration-none">
-          <div className="card bg-secondary text-white shadow-sm h-100 text-center" style={{ cursor: "pointer", minHeight: "130px" }}>
+          <div
+            className="card bg-secondary text-white shadow-sm h-100 text-center"
+            style={{ cursor: 'pointer', minHeight: '130px' }}
+          >
             <div className="card-body d-flex flex-column justify-content-center align-items-center">
               <h6 className="mb-1">Closed Clients</h6>
-              <h4 className="fw-bold">{clients.filter((c) => c.status === "closed").length}</h4>
+              <h4 className="fw-bold">
+                {clients.filter((c) => c.status === 'closed').length}
+              </h4>
             </div>
           </div>
         </Link>
@@ -213,11 +298,25 @@ useEffect(() => {
                       <td>{client.company || '—'}</td>
                       <td>{client.phone || '—'}</td>
                       <td>{client.category || 'Uncategorized'}</td>
-                      <td><small className="text-muted">{new Date(client.createdAt).toLocaleDateString()}</small></td>
+                      <td>
+                        <small className="text-muted">
+                          {new Date(client.createdAt).toLocaleDateString()}
+                        </small>
+                      </td>
                       <td>{client.address || '—'}</td>
                       <td>
-                        <button className="btn btn-sm btn-outline-primary me-2">Delete</button>
-                        <button className="btn btn-sm btn-outline-secondary">Edit</button>
+                        <button
+                          className="btn btn-sm btn-outline-danger me-2"
+                          onClick={() => handleDelete(client._id)}
+                        >
+                          Delete
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => handleEdit(client)}
+                        >
+                          Edit
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -234,29 +333,43 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Add Client Modal */}
-      <div className="modal fade" id="clientModal" tabIndex="-1" aria-labelledby="clientModalLabel" aria-hidden="true">
+      {/* Modal */}
+      <div
+        className="modal fade"
+        id="clientModal"
+        tabIndex="-1"
+        aria-labelledby="clientModalLabel"
+        aria-hidden="true"
+      >
         <div className="modal-dialog modal-lg modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="clientModalLabel">Add New Client</h5>
-              <button id="closeModalBtn" type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <h5 className="modal-title" id="clientModalLabel">
+                {editingClientId ? 'Edit Client' : 'Add New Client'}
+              </h5>
+              <button
+                id="closeModalBtn"
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
             </div>
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="row">
-                  {["name", "address", "company", "phone"].map((field, i) => (
-                    <div className="col-md-6 mb-3" key={i}>
+                  {['name', 'address', 'company', 'phone'].map((field) => (
+                    <div className="col-md-6 mb-3" key={field}>
                       <label className="form-label text-capitalize">{field}</label>
                       <input
-                        type={field === "phone" ? "tel" : "text"}
+                        type={field === 'phone' ? 'tel' : 'text'}
                         name={field}
                         value={form[field]}
                         onChange={handleChange}
                         className="form-control"
                         placeholder={`Enter ${field}`}
-                        required={["phone", "name", "address"].includes(field)}
+                        required={['name', 'address', 'phone'].includes(field)}
                       />
                     </div>
                   ))}
@@ -265,7 +378,7 @@ useEffect(() => {
                     <label className="form-label">Category</label>
                     <select
                       name="category"
-                      value={form.category || ""}
+                      value={form.category || ''}
                       onChange={handleChange}
                       className="form-select"
                       required
@@ -281,8 +394,20 @@ useEffect(() => {
               </div>
 
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={!isValid}>Save Client</button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={!isValid}
+                >
+                  {editingClientId ? 'Update Client' : 'Save Client'}
+                </button>
               </div>
             </form>
           </div>
