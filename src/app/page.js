@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { FiFolder, FiUsers, FiCreditCard, FiBarChart2 } from "react-icons/fi"; // React icons
+import MonthPickerIcon from "@/components/MonthPickerIcon";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -136,11 +137,7 @@ export default function LandingPage() {
             </motion.div>
           ))}
         </div>
-        <MonthPickerIcon
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          onChange={(m, y) => { setSelectedMonth(m); setSelectedYear(y) }}
-        />
+        
       </div>
     </section>
 

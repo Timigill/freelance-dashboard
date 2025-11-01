@@ -6,53 +6,7 @@ import IncomeChart from "@/components/IncomeChart";
 import PieChart from "@/components/PieChart";
 import { BsPlusLg, BsCalendar3 } from "react-icons/bs";
 
-function MonthPickerIcon({ selectedMonth, selectedYear, onChange }) {
-  const inputRef = useRef(null);
-
-  const openPicker = () => {
-    if (!inputRef.current) return;
-    if (typeof inputRef.current.showPicker === "function") {
-      inputRef.current.showPicker();
-    } else {
-      inputRef.current.focus();
-      inputRef.current.click();
-    }
-  };
-
-  const handleChange = (e) => {
-    const val = e.target.value;
-    if (!val) return;
-    const [y, m] = val.split("-");
-    onChange(parseInt(m, 10) - 1, parseInt(y, 10));
-  };
-
-  const valueStr = `${selectedYear}-${String(selectedMonth + 1).padStart(
-    2,
-    "0"
-  )}`;
-
-  return (
-    <>
-      <input
-        ref={inputRef}
-        type="month"
-        value={valueStr}
-        onChange={handleChange}
-        style={{ display: "none" }}
-        aria-hidden="true"
-      />
-      <button
-        type="button"
-        className="btn btn-link p-1"
-        onClick={openPicker}
-        aria-label="Select month"
-        style={{ color: "var(--bs-primary)", fontSize: "1.05rem" }}
-      >
-        <BsCalendar3 />
-      </button>
-    </>
-  );
-}
+import MonthPickerIcon from "@/components/MonthPickerIcon";
 
 export default function HomePage() {
   // ----------------- AUTHENTICATION -----------------
@@ -421,7 +375,7 @@ if (!session || status !== "authenticated") {
 
       <div className="row g-3 mb-4">
         {overviewData.map((card, index) => (
-          <div key={index} className="col-md-3">
+          <div key={index} className="col-6 col-md-6">
             <div
               className={`card border-0 shadow-sm bg-${card.color} text-white h-100`}
             >
