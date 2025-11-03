@@ -30,10 +30,17 @@ export const authOptions = {
 
         // ✅ Check if it's an email or phone number
         if (emailOrPhone.includes("@")) {
-          user = await User.findOne({ email: emailOrPhone.toLowerCase() });
+          // ✅ Case-insensitive email lookup
+          const normalizedEmail = emailOrPhone.trim().toLowerCase();
+          user = await User.findOne({
+            email: { $regex: new RegExp(`^${normalizedEmail}$`, "i") },
+          });
         } else {
           try {
             const phoneNumber = parsePhoneNumber(emailOrPhone, "PK");
+            if (!phoneNumber.isValid()) {
+              throw new Error("Invalid phone number format");
+            }
             user = await User.findOne({ phone: phoneNumber.number });
           } catch {
             throw new Error("Invalid phone number format");
@@ -64,7 +71,7 @@ export const authOptions = {
 
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
-secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET,
 
   callbacks: {
     async signIn({ user, account }) {
@@ -90,12 +97,12 @@ secret: process.env.NEXTAUTH_SECRET,
     },
 
     async jwt({ token, user }) {
-  if (user) {
-    const dbUser = await User.findOne({ email: user.email });
-    token.id = dbUser?._id?.toString();
-  }
-  return token;
-},
+      if (user) {
+        const dbUser = await User.findOne({ email: user.email });
+        token.id = dbUser?._id?.toString();
+      }
+      return token;
+    },
 
     async session({ session, token }) {
       if (token?.id) session.user.id = token.id;

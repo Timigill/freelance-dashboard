@@ -10,16 +10,29 @@ export async function POST(req) {
     const { emailOrPhone, password } = await req.json();
     await dbConnect();
 
-    let query;
+    if (!emailOrPhone || !password) {
+      return NextResponse.json(
+        { error: "Email/Phone and password are required" },
+        { status: 400 }
+      );
+    }
+
+    let query = {};
 
     if (emailOrPhone.includes("@")) {
-      // Email login
-      query = { email: emailOrPhone.toLowerCase() };
+      // ✅ Case-insensitive email match (always works)
+      query = { email: { $regex: new RegExp(`^${emailOrPhone.trim()}$`, "i") } };
     } else {
-      // Phone login
+      // ✅ Handle phone number login
       try {
-        const phoneNumber = parsePhoneNumber(emailOrPhone, "PK"); // default PK
-        query = { phone: phoneNumber.number }; // standardized format e.g. +923017697832
+        const phoneNumber = parsePhoneNumber(emailOrPhone, "PK");
+        if (!phoneNumber.isValid()) {
+          return NextResponse.json(
+            { error: "Invalid phone number" },
+            { status: 400 }
+          );
+        }
+        query = { phone: phoneNumber.number };
       } catch {
         return NextResponse.json(
           { error: "Invalid phone number" },
@@ -28,6 +41,7 @@ export async function POST(req) {
       }
     }
 
+    // ✅ Fetch user by either phone or email (case-insensitive)
     const user = await User.findOne(query);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -55,7 +69,7 @@ export async function POST(req) {
     response.cookies.set("token", token, {
       httpOnly: true,
       path: "/",
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
     return response;
