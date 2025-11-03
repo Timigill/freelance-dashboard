@@ -20,10 +20,8 @@ export async function POST(req) {
     let query = {};
 
     if (emailOrPhone.includes("@")) {
-      // ✅ Case-insensitive email match (always works)
       query = { email: { $regex: new RegExp(`^${emailOrPhone.trim()}$`, "i") } };
     } else {
-      // ✅ Handle phone number login
       try {
         const phoneNumber = parsePhoneNumber(emailOrPhone, "PK");
         if (!phoneNumber.isValid()) {
@@ -41,7 +39,6 @@ export async function POST(req) {
       }
     }
 
-    // ✅ Fetch user by either phone or email (case-insensitive)
     const user = await User.findOne(query);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });

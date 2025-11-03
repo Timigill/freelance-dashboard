@@ -28,9 +28,7 @@ export const authOptions = {
         const { emailOrPhone, password } = credentials;
         let user;
 
-        // ✅ Check if it's an email or phone number
         if (emailOrPhone.includes("@")) {
-          // ✅ Case-insensitive email lookup
           const normalizedEmail = emailOrPhone.trim().toLowerCase();
           user = await User.findOne({
             email: { $regex: new RegExp(`^${normalizedEmail}$`, "i") },
