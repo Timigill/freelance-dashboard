@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { BsGithub } from "react-icons/bs";
 import { signIn } from "next-auth/react";
-import toast from "react-hot-toast"; // ✅ added
+import toast from "react-hot-toast";
 import "./login.css";
 
 export default function LoginPage() {
@@ -12,6 +13,7 @@ export default function LoginPage() {
     password: "",
     remember: false,
   });
+   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [callbackUrl, setCallbackUrl] = useState("/dashboard");
 
@@ -48,9 +50,9 @@ export default function LoginPage() {
     } else {
       toast.success("Login successful!"); // ✅ show success
       if (result?.url) {
-  const url = new URL(result.url);
-  window.location.href = `${window.location.origin}${url.pathname}`;
-}
+        const url = new URL(result.url);
+        window.location.href = `${window.location.origin}${url.pathname}`;
+      }
     }
 
     setLoading(false);
@@ -70,15 +72,23 @@ export default function LoginPage() {
           aria-label="Email or Phone Number"
         />
 
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-          aria-label="Password"
-        />
+        <div className="password-field">
+          <input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            aria-label="Password"
+          />
+          <span
+            className="toggle-password"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </span>
+        </div>
 
         <div className="checkbox-wrapper">
           <input

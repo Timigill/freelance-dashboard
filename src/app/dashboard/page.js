@@ -279,7 +279,7 @@ if (status === "loading") {
   return (
     <div
       className="d-flex justify-content-center align-items-center"
-      style={{ height: "70vh" }}
+      style={{ height: "80vh" }}
     >
       <div className="spinner-border text-primary" role="status">
         <span className="visually-hidden">Loading...</span>
@@ -290,10 +290,11 @@ if (status === "loading") {
 }
 
 if (!session || status !== "authenticated") {
+  
   return (
     <div
       className="d-flex flex-column justify-content-center align-items-center"
-      style={{ height: "70vh" }}
+      style={{ height: "80vh" }}
     >
       <div
         className="card p-4 text-center"

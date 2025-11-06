@@ -41,6 +41,31 @@
   outline: none;
   background-color: #fff;
 }
+/* Password field styling */
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 42px; /* space for the icon */
+}
+
+.toggle-password {
+  position: absolute;
+  right: 18px;
+  top: 35%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #666;
+  font-size: 1.1rem;
+  transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+  color: var(--brand);
+}
+
 
 /* Checkbox */
 .checkbox-wrapper {

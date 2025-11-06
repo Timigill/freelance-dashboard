@@ -135,6 +135,33 @@
   color: #777 !important;
   font-weight: 500;
 }
+
+
+/* Password Field with Toggle Icon */
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 42px; 
+}
+
+.toggle-password {
+  position: absolute;
+  right: 18px;
+  top: 35%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #666;
+  font-size: 1.1rem;
+  transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+  color: var(--brand);
+}
+
 /* ----------------------------- */
 /* Checkbox */
 .checkbox-wrapper {
