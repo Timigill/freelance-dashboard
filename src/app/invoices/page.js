@@ -9,7 +9,6 @@ export default function InvoicesPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingIndex, setEditingIndex] = useState(null)
   const [form, setForm] = useState({
-    id: '',
     client: '',
     amount: '',
     status: 'Pending',
@@ -23,7 +22,7 @@ export default function InvoicesPage() {
       try {
         const res = await fetch('/api/invoices')
         const data = await res.json()
-        setInvoices(data)
+        setInvoices(Array.isArray(data) ? data : [])
       } catch (error) {
         console.error('Error fetching invoices:', error)
       } finally {
@@ -34,8 +33,12 @@ export default function InvoicesPage() {
   }, [])
 
   /** ✅ Filter invoices by status */
-  const filtered = invoices.filter(i => status === 'All' || i.status === status)
-  const total = filtered.reduce((acc, i) => acc + Number(i.amount), 0)
+  const filtered = Array.isArray(invoices)
+    ? invoices.filter(i => status === 'All' || i.status === status)
+    : []
+
+  /** ✅ Compute total amount */
+  const total = filtered.reduce((acc, i) => acc + Number(i.amount || 0), 0)
 
   /** ✅ Summary counts */
   const summary = {
@@ -49,17 +52,23 @@ export default function InvoicesPage() {
   /** ✅ Add or Edit Invoice */
   const handleSave = async (e) => {
     e.preventDefault()
-    if (!form.id || !form.client || !form.amount) {
+
+    if (!form.client || !form.amount) {
       alert('Please fill all required fields')
       return
     }
 
     try {
       const method = editingIndex !== null ? 'PUT' : 'POST'
+      const body =
+        editingIndex !== null
+          ? { ...form, _id: invoices[editingIndex]._id }
+          : form
+
       const res = await fetch('/api/invoices', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       })
 
       if (!res.ok) throw new Error('Failed to save invoice')
@@ -68,7 +77,7 @@ export default function InvoicesPage() {
       setInvoices(updated)
       handleClose()
     } catch (error) {
-      console.error(error)
+      console.error('Error saving invoice:', error)
       alert('Error saving invoice.')
     }
   }
@@ -76,7 +85,7 @@ export default function InvoicesPage() {
   /** ✅ Edit */
   const handleEdit = (index) => {
     setEditingIndex(index)
-    setForm(invoices[index])
+    setForm({ ...invoices[index] })
     setShowModal(true)
   }
 
@@ -88,7 +97,8 @@ export default function InvoicesPage() {
       const res = await fetch(`/api/invoices/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to delete invoice')
 
-      setInvoices(invoices.filter((_, i) => i !== index))
+      const updated = await res.json()
+      setInvoices(updated)
     } catch (error) {
       console.error(error)
       alert('Error deleting invoice.')
@@ -100,7 +110,6 @@ export default function InvoicesPage() {
     setShowModal(false)
     setEditingIndex(null)
     setForm({
-      id: '',
       client: '',
       amount: '',
       status: 'Pending',
@@ -113,7 +122,9 @@ export default function InvoicesPage() {
   const downloadInvoices = () => {
     const csv = [
       ['Invoice ID', 'Client', 'Amount', 'Status', 'Paid', 'Remaining'].join(','),
-      ...filtered.map(i => [i.id, i.client, i.amount, i.status, i.paid || '-', i.remaining || '-'].join(',')),
+      ...filtered.map(i =>
+        [i.id, i.client, i.amount, i.status, i.paid || '-', i.remaining || '-'].join(',')
+      ),
     ].join('\n')
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -143,21 +154,20 @@ export default function InvoicesPage() {
             label === 'Paid'
               ? 'success'
               : label === 'Pending'
-              ? 'warning text-dark'
-              : label === 'Overdue'
-              ? 'danger'
-              : label === 'Partially Paid'
-              ? 'info text-dark'
-              : 'primary'
+                ? 'warning text-dark'
+                : label === 'Overdue'
+                  ? 'danger'
+                  : label === 'Partially Paid'
+                    ? 'info text-dark'
+                    : 'primary'
 
           return (
             <div
               key={i}
-              className={`col-6 col-md-3 d-flex justify-content-center ${
-                Object.entries(summary).length % 2 !== 0 && i === Object.entries(summary).length - 1
-                  ? 'mx-auto'
-                  : ''
-              }`}
+              className={`col-6 col-md-3 d-flex justify-content-center ${Object.entries(summary).length % 2 !== 0 && i === Object.entries(summary).length - 1
+                ? 'mx-auto'
+                : ''
+                }`}
             >
               <div
                 className={`card text-center text-white bg-${bg} shadow-sm w-100`}
@@ -214,15 +224,14 @@ export default function InvoicesPage() {
                 <td>{inv.amount}</td>
                 <td>
                   <span
-                    className={`badge bg-${
-                      inv.status === 'Paid'
-                        ? 'success'
-                        : inv.status === 'Pending'
+                    className={`badge bg-${inv.status === 'Paid'
+                      ? 'success'
+                      : inv.status === 'Pending'
                         ? 'warning text-dark'
                         : inv.status === 'Overdue'
-                        ? 'danger'
-                        : 'info text-dark'
-                    }`}
+                          ? 'danger'
+                          : 'info text-dark'
+                      }`}
                   >
                     {inv.status}
                   </span>
@@ -254,15 +263,7 @@ export default function InvoicesPage() {
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSave}>
-            <Form.Group className="mb-3">
-              <Form.Label>Invoice ID</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter invoice ID"
-                value={form.id}
-                onChange={(e) => setForm({ ...form, id: e.target.value })}
-              />
-            </Form.Group>
+            {/* Removed Invoice ID input since it is auto-generated */}
             <Form.Group className="mb-3">
               <Form.Label>Client Name</Form.Label>
               <Form.Control

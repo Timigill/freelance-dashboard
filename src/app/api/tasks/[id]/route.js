@@ -9,7 +9,7 @@ const isValidId = (id) => mongoose.Types.ObjectId.isValid(id)
 export async function GET(request, { params }) {
   try {
     await dbConnect()
-    const { id } = params
+    const { id } = await params
 
     if (!isValidId(id)) {
       return NextResponse.json({ error: true, message: 'Invalid Task ID' }, { status: 400 })
@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     await dbConnect()
-    const { id } = params
+    const { id } = await params
 
     if (!isValidId(id)) {
       return NextResponse.json({ error: true, message: 'Invalid Task ID' }, { status: 400 })
@@ -50,7 +50,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     await dbConnect()
-    const { id } = params
+    const { id } = await params
 
     if (!isValidId(id)) {
       return NextResponse.json({ error: true, message: 'Invalid Task ID' }, { status: 400 })

@@ -6,7 +6,7 @@ import Client from '@/models/Client'
 export async function DELETE(req, { params }) {
   try {
     await dbConnect()
-    const { id } = params
+    const { id } = await params 
     await Client.findByIdAndDelete(id)
     return NextResponse.json({ message: 'Client deleted successfully' }, { status: 200 })
   } catch (err) {
@@ -19,7 +19,7 @@ export async function DELETE(req, { params }) {
 export async function PUT(req, { params }) {
   try {
     await dbConnect()
-    const { id } = params
+    const { id } = await params
     const body = await req.json()
     const updatedClient = await Client.findByIdAndUpdate(id, body, { new: true })
     return NextResponse.json(updatedClient, { status: 200 })

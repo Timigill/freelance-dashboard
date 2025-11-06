@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server'
 import { dbConnect } from '@/lib/dbConnect'
 import IncomeSource from '@/models/IncomeSource'
 
-// GET /api/income/[id] - Get specific income source
+// ✅ GET /api/income/[id] - Get specific income source
 export async function GET(request, { params }) {
   try {
     await dbConnect()
-    const incomeSource = await IncomeSource.findById(params.id)
+    const { id } = await params
+    const incomeSource = await IncomeSource.findById(id)
     if (!incomeSource) {
       return NextResponse.json({ error: 'Income source not found' }, { status: 404 })
     }
@@ -16,13 +17,14 @@ export async function GET(request, { params }) {
   }
 }
 
-// PUT /api/income/[id] - Update income source
+// ✅ PUT /api/income/[id] - Update income source
 export async function PUT(request, { params }) {
   try {
     await dbConnect()
+    const { id } = await params 
     const body = await request.json()
     const incomeSource = await IncomeSource.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: body },
       { new: true, runValidators: true }
     )
@@ -35,11 +37,12 @@ export async function PUT(request, { params }) {
   }
 }
 
-// DELETE /api/income/[id] - Delete income source
+// ✅ DELETE /api/income/[id] - Delete income source
 export async function DELETE(request, { params }) {
   try {
     await dbConnect()
-    const incomeSource = await IncomeSource.findByIdAndDelete(params.id)
+    const { id } = await params 
+    const incomeSource = await IncomeSource.findByIdAndDelete(id)
     if (!incomeSource) {
       return NextResponse.json({ error: 'Income source not found' }, { status: 404 })
     }
