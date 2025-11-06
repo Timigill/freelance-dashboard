@@ -7,18 +7,13 @@ import { dbConnect } from "@/lib/dbConnect";
 
 export async function POST(req) {
   try {
-    const { name, email, password, phone } = await req.json(); // ✅ phone included
+    const { name, email, password, phone } = await req.json();
     await dbConnect();
 
-    // Validation
     if (!name || !email || !password || !phone) {
-      return NextResponse.json(
-        { error: "All fields are required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
     }
 
-    // ✅ Simple validation for international format
     if (!/^\+\d{10,15}$/.test(phone)) {
       return NextResponse.json(
         { error: "Invalid phone number format. Use +CountryCode format." },
@@ -26,35 +21,32 @@ export async function POST(req) {
       );
     }
 
-    const existingUser = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existingUser = await User.findOne({
+      email: { $regex: new RegExp(`^${normalizedEmail}$`, "i") },
+    });
+
     if (existingUser) {
-      return NextResponse.json(
-        { error: "User already exists" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "User already exists" }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
       name,
-      email,
-      phone, // ✅ saved here
+      email: normalizedEmail,
+      phone,
       password: hashedPassword,
       isVerified: false,
     });
 
     await newUser.save();
 
-    // ✅ Generate JWT for verification
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "1d",
-    });
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-    newUser.verificationToken = token;
-    await newUser.save();
+    await User.updateOne({ _id: newUser._id }, { verificationToken: token });
 
-    // ✅ Send verification email
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -67,7 +59,7 @@ export async function POST(req) {
 
     await transporter.sendMail({
       from: `"Freelance Dashboard" <${process.env.EMAIL_USER}>`,
-      to: email,
+      to: normalizedEmail,
       subject: "Verify your email",
       html: `
         <p>Hi ${name},</p>
@@ -81,9 +73,6 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("Signup error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
