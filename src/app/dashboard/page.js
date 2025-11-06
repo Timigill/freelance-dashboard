@@ -130,14 +130,32 @@ export default function HomePage() {
   }, [incomeSources, tasks, selectedMonth, selectedYear]);
 
   const fetchClients = async () => {
-    const sampleClients = [
-      { _id: "1", name: "John Smith", company: "Microsoft" },
-      { _id: "2", name: "Sarah Johnson", company: "Google" },
-      { _id: "3", name: "David Chen", company: "Apple" },
-      { _id: "4", name: "Maria Garcia", company: "Meta" },
-      { _id: "5", name: "James Wilson", company: "Amazon" },
-    ];
-    setClients(sampleClients);
+    try {
+      const res = await fetch("/api/clients");
+      const data = await res.json();
+      setClients(data); // save in state
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+    }
+  };
+
+  // function to compute total paid income per client
+  const getPieChartData = () => {
+    const clientMap = {};
+
+    incomeSources.forEach((src) => {
+      const client = src.clientName || "Unknown";
+      const totalPaid =
+        src.payments?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
+
+      if (!clientMap[client]) clientMap[client] = 0;
+      clientMap[client] += totalPaid;
+    });
+
+    return {
+      labels: Object.keys(clientMap),
+      values: Object.values(clientMap),
+    };
   };
 
   const fetchIncomeSources = async () => {
@@ -434,12 +452,7 @@ export default function HomePage() {
           <div className="card shadow-sm h-100">
             <div className="card-body">
               <h5 className="card-title mb-4">Income by Client</h5>
-              <PieChart
-                data={{
-                  labels: ["Microsoft", "Google", "Apple", "Meta", "Amazon"],
-                  values: [45000, 38000, 32000, 28000, 22000],
-                }}
-              />
+              <PieChart data={getPieChartData()} />
             </div>
           </div>
         </div>
