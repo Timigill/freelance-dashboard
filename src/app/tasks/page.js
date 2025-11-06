@@ -1,156 +1,243 @@
-'use client'
-import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { Modal, Button, Form, Badge } from 'react-bootstrap'
+"use client";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
+import { Modal, Button, Form, Badge } from "react-bootstrap";
 
 function TasksPageContent() {
-  const [tasks, setTasks] = useState([])
-  const [incomeSources, setIncomeSources] = useState([])
-  const [showModal, setShowModal] = useState(false)
-  const [currentTask, setCurrentTask] = useState(null)
+  const [tasks, setTasks] = useState([]);
+  const [incomeSources, setIncomeSources] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [currentTask, setCurrentTask] = useState(null);
   const [filters, setFilters] = useState({
-    status: 'all',
-    paymentStatus: 'all',
-    sourceId: 'all'
-  })
+    status: "all",
+    paymentStatus: "all",
+    sourceId: "all",
+  });
 
   const [form, setForm] = useState({
-    name: '',
-    description: '',
-    amount: '',
-    sourceId: '',
-    dueDate: '',
-    status: 'Pending',
-    paymentStatus: 'Unpaid',
-    priority: 'Medium'
-  })
+    name: "",
+    description: "",
+    amount: "",
+    sourceId: "",
+    dueDate: "",
+    status: "Pending",
+    paymentStatus: "Unpaid",
+    priority: "Medium",
+  });
 
-  const params = useSearchParams()
+  const params = useSearchParams();
 
   // ✅ Auto open modal if ?openModal=true
   useEffect(() => {
-    if (params.get('openModal') === 'true') {
-      resetForm()
-      setShowModal(true)
+    if (params.get("openModal") === "true") {
+      resetForm();
+      setShowModal(true);
     }
-  }, [params])
+  }, [params]);
 
   // ✅ Fetch data on mount & when filters change
   useEffect(() => {
-    fetchTasks()
-    fetchIncomeSources()
-  }, [filters])
+    fetchTasks();
+    fetchIncomeSources();
+  }, [filters]);
 
   const fetchTasks = async () => {
     try {
-      let url = '/api/tasks'
-      const queryParams = []
+      let url = "/api/tasks";
+      const queryParams = [];
 
-      if (filters.status !== 'all') queryParams.push(`status=${filters.status}`)
-      if (filters.paymentStatus !== 'all') queryParams.push(`paymentStatus=${filters.paymentStatus}`)
-      if (filters.sourceId !== 'all') queryParams.push(`sourceId=${filters.sourceId}`)
+      if (filters.status !== "all")
+        queryParams.push(`status=${filters.status}`);
+      if (filters.paymentStatus !== "all")
+        queryParams.push(`paymentStatus=${filters.paymentStatus}`);
+      if (filters.sourceId !== "all")
+        queryParams.push(`sourceId=${filters.sourceId}`);
 
-      if (queryParams.length > 0) url += '?' + queryParams.join('&')
+      if (queryParams.length > 0) url += "?" + queryParams.join("&");
 
-      const res = await fetch(url)
-      const data = await res.json()
-      setTasks(data)
+      const res = await fetch(url);
+      const data = await res.json();
+      setTasks(data);
     } catch (error) {
-      console.error('Error fetching tasks:', error)
+      console.error("Error fetching tasks:", error);
     }
-  }
+  };
 
   const fetchIncomeSources = async () => {
     try {
-      const res = await fetch('/api/income')
-      const data = await res.json()
-      setIncomeSources(data)
+      const res = await fetch("/api/income");
+      const data = await res.json();
+      console.log("Fetched income sources:", data);
+
+      setIncomeSources(data);
     } catch (error) {
-      console.error('Error fetching income sources:', error)
+      console.error("Error fetching income sources:", error);
     }
-  }
+  };
 
   const resetForm = () => {
-    setCurrentTask(null)
+    setCurrentTask(null);
     setForm({
-      name: '',
-      description: '',
-      amount: '',
-      sourceId: '',
-      dueDate: '',
-      status: 'Pending',
-      paymentStatus: 'Unpaid',
-      priority: 'Medium'
-    })
-  }
+      name: "",
+      description: "",
+      amount: "",
+      sourceId: "",
+      dueDate: "",
+      status: "Pending",
+      paymentStatus: "Unpaid",
+      priority: "Medium",
+    });
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const url = currentTask ? `/api/tasks/${currentTask._id}` : '/api/tasks'
-      const method = currentTask ? 'PUT' : 'POST'
+      const url = currentTask ? `/api/tasks/${currentTask._id}` : "/api/tasks";
+      const method = currentTask ? "PUT" : "POST";
 
       await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-      setShowModal(false)
-      setCurrentTask(null)
-      fetchTasks()
+      setShowModal(false);
+      setCurrentTask(null);
+      fetchTasks();
     } catch (error) {
-      console.error('Error saving task:', error)
+      console.error("Error saving task:", error);
     }
-  }
+  };
 
   const handleEdit = (task) => {
-    setCurrentTask(task)
+    setCurrentTask(task);
     setForm({
       name: task.name,
-      description: task.description || '',
+      description: task.description || "",
       amount: task.amount,
-      sourceId: task.sourceId?._id || '',
-      dueDate: task.dueDate?.split('T')[0] || '',
+      sourceId: task.sourceId?._id || "",
+      dueDate: task.dueDate?.split("T")[0] || "",
       status: task.status,
       paymentStatus: task.paymentStatus,
-      priority: task.priority
-    })
-    setShowModal(true)
-  }
+      priority: task.priority,
+    });
+    setShowModal(true);
+  };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this task?')) return
+    let confirmResolve;
+
+    // Show a custom toast with real JSX (not HTML string)
+    const ConfirmToast = () => (
+      <div
+           style={{
+      background: "#352359",
+      color: "white",
+      padding: "15px 20px",
+      borderRadius: "10px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "10px",
+      width: "300px",
+      maxWidth: "90vw",
+      marginTop: "14rem",
+    }}
+      >
+        <p style={{ margin: 0, fontWeight: 500 }}>
+          Do you want to delete this task?
+        </p>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            onClick={() => {
+              toast.dismiss();
+              confirmResolve(true);
+            }}
+            style={{
+              background: "#dc3545",
+              color: "#fff",
+              border: "none",
+              padding: "6px 16px",
+              borderRadius: "6px",
+              cursor: "pointer",
+            }}
+          >
+            Yes
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss();
+              confirmResolve(false);
+            }}
+            style={{
+              background: "#6c757d",
+              color: "#fff",
+              border: "none",
+              padding: "6px 22px",
+              borderRadius: "6px",
+              cursor: "pointer",
+            }}
+          >
+            No
+          </button>
+        </div>
+      </div>
+    );
+
+    // Wrap toast in a promise
+    const confirmPromise = new Promise((resolve) => {
+      confirmResolve = resolve;
+      toast.custom(<ConfirmToast />, {
+        duration: 10000,
+        position: "top-center",
+      });
+    });
+
     try {
-      await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
-      fetchTasks()
-    } catch (error) {
-      console.error('Error deleting task:', error)
+      const confirmed = await confirmPromise;
+      if (!confirmed) return;
+
+      const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete task");
+
+      fetchTasks();
+      toast.success("Task deleted successfully!");
+    } catch (err) {
+      toast.error("Error deleting task");
     }
-  }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Pending': return 'warning'
-      case 'In Progress': return 'info'
-      case 'Completed': return 'success'
-      default: return 'secondary'
+      case "Pending":
+        return "warning";
+      case "In Progress":
+        return "info";
+      case "Completed":
+        return "success";
+      default:
+        return "secondary";
     }
-  }
+  };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'High': return 'danger'
-      case 'Medium': return 'warning'
-      case 'Low': return 'info'
-      default: return 'secondary'
+      case "High":
+        return "danger";
+      case "Medium":
+        return "warning";
+      case "Low":
+        return "info";
+      default:
+        return "secondary";
     }
-  }
+  };
 
-  const totalAmount = tasks.reduce((sum, t) => sum + (t.amount || 0), 0)
+  const totalAmount = tasks.reduce((sum, t) => sum + (t.amount || 0), 0);
   const pendingAmount = tasks
-    .filter(t => t.paymentStatus === 'Unpaid')
-    .reduce((sum, t) => sum + (t.amount || 0), 0)
+    .filter((t) => t.paymentStatus === "Unpaid")
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
 
   return (
     <div className="container-fluid py-4">
@@ -158,13 +245,22 @@ function TasksPageContent() {
       <div className="d-flex justify-content-between align-items-center mb-4 flex-nowrap">
         <div>
           <h3 className="fw-bold mb-0 fs-5 fs-md-4">Task Management</h3>
-          <p className="text-muted fs-6 mb-0">Track and manage your tasks and payments</p>
+          <p className="text-muted fs-6 mb-0">
+            Track and manage your tasks and payments
+          </p>
         </div>
 
         <button
           className="btn btn-primary mt-2 mt-md-0"
-          onClick={() => { resetForm(); setShowModal(true) }}
-          style={{ whiteSpace: 'nowrap', fontSize: '0.9rem', padding: '6px 14px' }}
+          onClick={() => {
+            resetForm();
+            setShowModal(true);
+          }}
+          style={{
+            whiteSpace: "nowrap",
+            fontSize: "0.9rem",
+            padding: "6px 14px",
+          }}
         >
           Add Task
         </button>
@@ -192,7 +288,7 @@ function TasksPageContent() {
           <div className="card bg-success text-white text-center h-100">
             <div className="card-body">
               <h6>Active Tasks</h6>
-              <h3>{tasks.filter(t => t.status !== 'Completed').length}</h3>
+              <h3>{tasks.filter((t) => t.status !== "Completed").length}</h3>
             </div>
           </div>
         </div>
@@ -200,7 +296,7 @@ function TasksPageContent() {
           <div className="card bg-info text-white text-center h-100">
             <div className="card-body">
               <h6>Completed Tasks</h6>
-              <h3>{tasks.filter(t => t.status === 'Completed').length}</h3>
+              <h3>{tasks.filter((t) => t.status === "Completed").length}</h3>
             </div>
           </div>
         </div>
@@ -230,38 +326,125 @@ function TasksPageContent() {
                   </td>
                 </tr>
               ) : (
-                tasks.map(task => (
+                tasks.map((task) => (
                   <tr key={task._id || task.name}>
                     <td>
                       <div className="fw-semibold">{task.name}</div>
                       <small className="text-muted">{task.description}</small>
                     </td>
-                    <td>{task.sourceId?.name || '-'}</td>
+                    <td>{task.sourceId?.name || "-"}</td>
                     <td>${(task.amount || 0).toLocaleString()}</td>
-                    <td>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}</td>
-                    <td><Badge bg={getPriorityColor(task.priority)}>{task.priority}</Badge></td>
-                    <td><Badge bg={getStatusColor(task.status)}>{task.status}</Badge></td>
                     <td>
-                      <Badge bg={task.paymentStatus === 'Paid' ? 'success' : 'warning'}>
-                        {task.paymentStatus}
-                      </Badge>
+                      {task.dueDate
+                        ? new Date(task.dueDate).toLocaleDateString()
+                        : "-"}
                     </td>
                     <td>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        className="me-2"
-                        onClick={() => handleEdit(task)}
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "0.45em 0.7em",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          lineHeight: 1,
+                          textAlign: "center",
+                          whiteSpace: "nowrap",
+                          verticalAlign: "baseline",
+                          border: "1px solid #352359",
+                          borderRadius: "0.25rem",
+                          color: "#352359",
+                          backgroundColor: "transparent",
+                          transition: "all 0.2s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#352359";
+                          e.currentTarget.style.color = "#fff";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.color = "#352359";
+                        }}
                       >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleDelete(task._id)}
+                        {task.priority} {/* or task.status */}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "0.45em 0.7em",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          lineHeight: 1,
+                          textAlign: "center",
+                          whiteSpace: "nowrap",
+                          verticalAlign: "baseline",
+                          border: "1px solid #352359",
+                          borderRadius: "0.25rem",
+                          color: "#352359",
+                          backgroundColor: "transparent",
+                          transition: "all 0.2s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#352359";
+                          e.currentTarget.style.color = "#fff";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.color = "#352359";
+                        }}
                       >
-                        Delete
-                      </Button>
+                        {task.status} {/* or task.status */}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "0.45em 0.7em",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          lineHeight: 1,
+                          textAlign: "center",
+                          whiteSpace: "nowrap",
+                          verticalAlign: "baseline",
+                          border: "1px solid #352359",
+                          borderRadius: "0.25rem",
+                          color: "#352359",
+                          backgroundColor: "transparent",
+                          transition: "all 0.2s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#352359";
+                          e.currentTarget.style.color = "#fff";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.color = "#352359";
+                        }}
+                      >
+                        {task.paymentStatus}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="d-flex flex-column flex-sm-row gap-2">
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => handleEdit(task)}
+                        >
+                          Edit
+                        </Button>
+                        <button
+                          onClick={() => handleDelete(task._id)}
+                          className="btn btn-danger btn-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -274,7 +457,7 @@ function TasksPageContent() {
       {/* Add/Edit Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>{currentTask ? 'Edit' : 'Add'} Task</Modal.Title>
+          <Modal.Title>{currentTask ? "Edit" : "Add"} Task</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
@@ -299,7 +482,12 @@ function TasksPageContent() {
                     min="0"
                     placeholder="Enter amount"
                     value={form.amount}
-                    onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        amount: parseFloat(e.target.value) || 0,
+                      })
+                    }
                     required
                   />
                 </Form.Group>
@@ -312,7 +500,9 @@ function TasksPageContent() {
                 as="textarea"
                 rows={3}
                 value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
               />
             </Form.Group>
 
@@ -322,12 +512,16 @@ function TasksPageContent() {
                   <Form.Label>Income Source</Form.Label>
                   <Form.Select
                     value={form.sourceId}
-                    onChange={(e) => setForm({ ...form, sourceId: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, sourceId: e.target.value })
+                    }
                     required
                   >
                     <option value="">Select Source</option>
-                    {incomeSources.map(src => (
-                      <option key={src._id} value={src._id}>{src.name}</option>
+                    {incomeSources.map((src) => (
+                      <option key={src._id} value={src._id}>
+                        {src.name}
+                      </option>
                     ))}
                   </Form.Select>
                 </Form.Group>
@@ -339,7 +533,9 @@ function TasksPageContent() {
                   <Form.Control
                     type="date"
                     value={form.dueDate}
-                    onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, dueDate: e.target.value })
+                    }
                     required
                   />
                 </Form.Group>
@@ -350,7 +546,9 @@ function TasksPageContent() {
                   <Form.Label>Priority</Form.Label>
                   <Form.Select
                     value={form.priority}
-                    onChange={(e) => setForm({ ...form, priority: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, priority: e.target.value })
+                    }
                   >
                     <option>Low</option>
                     <option>Medium</option>
@@ -366,7 +564,9 @@ function TasksPageContent() {
                   <Form.Label>Status</Form.Label>
                   <Form.Select
                     value={form.status}
-                    onChange={(e) => setForm({ ...form, status: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, status: e.target.value })
+                    }
                   >
                     <option>Pending</option>
                     <option>In Progress</option>
@@ -380,7 +580,9 @@ function TasksPageContent() {
                   <Form.Label>Payment Status</Form.Label>
                   <Form.Select
                     value={form.paymentStatus}
-                    onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, paymentStatus: e.target.value })
+                    }
                   >
                     <option>Unpaid</option>
                     <option>Paid</option>
@@ -391,13 +593,17 @@ function TasksPageContent() {
           </Modal.Body>
 
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-            <Button variant="primary" type="submit">Save</Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit">
+              Save
+            </Button>
           </Modal.Footer>
         </Form>
       </Modal>
     </div>
-  )
+  );
 }
 
 export default function TasksPage() {
@@ -405,5 +611,5 @@ export default function TasksPage() {
     <Suspense fallback={<div>Loading...</div>}>
       <TasksPageContent />
     </Suspense>
-  )
+  );
 }

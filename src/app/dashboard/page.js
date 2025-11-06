@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
+import Link from "next/link";
 import IncomeChart from "@/components/IncomeChart";
 import PieChart from "@/components/PieChart";
 import { BsPlusLg, BsCalendar3 } from "react-icons/bs";
@@ -14,6 +15,10 @@ export default function HomePage() {
   const [user, setUser] = useState(null);
 
   // ----------------- STATES -----------------
+  // inside HomePage component
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+
   const [incomeSources, setIncomeSources] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [clients, setClients] = useState([]);
@@ -275,72 +280,77 @@ export default function HomePage() {
 
   // ----------------- RENDER -----------------
 
-if (status === "loading") {
-  return (
-    <div
-      className="d-flex justify-content-center align-items-center"
-      style={{ height: "80vh" }}
-    >
-      <div className="spinner-border text-primary" role="status">
-        <span className="visually-hidden">Loading...</span>
-      </div>
-      <span className="ms-2 fw-semibold">Loading your dashboard...</span>
-    </div>
-  );
-}
-
-if (!session || status !== "authenticated") {
-  
-  return (
-    <div
-      className="d-flex flex-column justify-content-center align-items-center"
-      style={{ height: "80vh" }}
-    >
+  if (status === "loading") {
+    return (
       <div
-        className="card p-4 text-center"
-        style={{
-          maxWidth: "400px",
-          borderRadius: "12px",
-          boxShadow: "0 8px 25px rgba(0, 0, 0, 0.15)",
-          transition: "transform 0.3s, box-shadow 0.3s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-4px)";
-          e.currentTarget.style.boxShadow = "0 12px 35px rgba(0, 0, 0, 0.45)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "translateY(0)";
-          e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.15)";
-        }}
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "80vh" }}
       >
-        <h4 className="mb-3" style={{ color: "var(--bs-primary)" }}>Access Denied</h4>
-        <p className="text-muted mb-4 " style={{fontSize:"18px"}}>
-          You must be logged in to access the dashboard.
-        </p>
-        <a
-          href="/login"
-          className="btn btn-primary px-4 py-2"
-          style={{ transition: "transform 0.2s, box-shadow 0.2s" }}
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <span className="ms-2 fw-semibold">Loading your dashboard...</span>
+      </div>
+    );
+  }
+
+  if (!session || status !== "authenticated") {
+    return (
+      <div
+        className="d-flex flex-column justify-content-center align-items-center"
+        style={{ height: "80vh" }}
+      >
+        <div
+          className="card p-4 text-center"
+          style={{
+            maxWidth: "400px",
+            borderRadius: "12px",
+            boxShadow: "0 8px 25px rgba(0, 0, 0, 0.15)",
+            transition: "transform 0.3s, box-shadow 0.3s",
+          }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "scale(1.02)";
+            e.currentTarget.style.transform = "translateY(-4px)";
+            e.currentTarget.style.boxShadow = "0 12px 35px rgba(0, 0, 0, 0.45)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "scale(1)";
-            e.currentTarget.style.boxShadow = "none";
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.15)";
           }}
         >
-          Go to Login
-        </a>
+          <h4 className="mb-3" style={{ color: "var(--bs-primary)" }}>
+            Access Denied
+          </h4>
+          <p className="text-muted mb-4 " style={{ fontSize: "18px" }}>
+            You must be logged in to access the dashboard.
+          </p>
+          <a
+            href="/login"
+            className="btn btn-primary px-4 py-2"
+            style={{ transition: "transform 0.2s, box-shadow 0.2s" }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "scale(1.02)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            Go to Login
+          </a>
+        </div>
       </div>
-    </div>
-  );
-}
-
-
+    );
+  }
 
   return (
     <div className="dashboard-page container-fluid py-3 px-2">
-      <div className="hero-card d-flex justify-content-between align-items-center" style={{ background: 'linear-gradient(135deg, var(--bs-primary), #241b36)', color: '#fff' }}>
+      <div
+        className="hero-card d-flex justify-content-between align-items-center"
+        style={{
+          background: "linear-gradient(135deg, var(--bs-primary), #241b36)",
+          color: "#fff",
+        }}
+      >
         <div>
           <div className="hero-label">This Month</div>
           <div className="hero-amount">
@@ -352,8 +362,18 @@ if (!session || status !== "authenticated") {
           </div>
         </div>
         <div className="d-flex gap-2">
-          <button className="btn btn-primary btn-sm">New Invoice</button>
-          <button className="btn btn-outline-primary btn-sm">New Task</button>
+          <Link
+            href="/clients?openModal=true"
+            className="btn btn-primary btn-sm"
+          >
+            New Clients
+          </Link>
+          <Link
+            href="/tasks?openModal=true"
+            className="btn btn-outline-primary btn-sm"
+          >
+            New Task
+          </Link>
         </div>
       </div>
 

@@ -8,7 +8,7 @@ import {
 } from 'react-icons/bs'
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: <BsBarChartLine /> },
+  { href: '/dashboard', label: 'Dashboard', icon: <BsBarChartLine /> },
   { href: '/income', label: 'Income', icon: <BsCashStack /> },
   { href: '/tasks', label: 'Tasks', icon: <BsListTask /> },
   { href: '/clients', label: 'Clients', icon: <BsPeopleFill /> },

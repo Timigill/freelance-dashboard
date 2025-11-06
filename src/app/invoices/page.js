@@ -1,138 +1,230 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { Modal, Button, Form, Spinner } from 'react-bootstrap'
+"use client";
+import { useState, useEffect } from "react";
+import { Modal, Button, Form, Spinner } from "react-bootstrap";
+import { useSearchParams } from "next/navigation";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function InvoicesPage() {
-  const [invoices, setInvoices] = useState([])
-  const [status, setStatus] = useState('All')
-  const [loading, setLoading] = useState(true)
-  const [showModal, setShowModal] = useState(false)
-  const [editingIndex, setEditingIndex] = useState(null)
+  const searchParams = useSearchParams();
+  const openModal = searchParams.get("openModal");
+  const [invoices, setInvoices] = useState([]);
+  const [status, setStatus] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
   const [form, setForm] = useState({
-    client: '',
-    amount: '',
-    status: 'Pending',
-    paid: '',
-    remaining: '',
-  })
+    client: "",
+    amount: "",
+    status: "Pending",
+    paid: "",
+    remaining: "",
+  });
+
+  useEffect(() => {
+    if (openModal === "true") {
+      setShowModal(true);
+    }
+  }, [openModal]);
 
   /** ✅ Fetch invoices from MongoDB API */
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
-        const res = await fetch('/api/invoices')
-        const data = await res.json()
-        setInvoices(Array.isArray(data) ? data : [])
+        const res = await fetch("/api/invoices");
+        const data = await res.json();
+        setInvoices(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error('Error fetching invoices:', error)
+        console.error("Error fetching invoices:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchInvoices()
-  }, [])
+    };
+    fetchInvoices();
+  }, []);
 
   /** ✅ Filter invoices by status */
   const filtered = Array.isArray(invoices)
-    ? invoices.filter(i => status === 'All' || i.status === status)
-    : []
+    ? invoices.filter((i) => status === "All" || i.status === status)
+    : [];
 
   /** ✅ Compute total amount */
-  const total = filtered.reduce((acc, i) => acc + Number(i.amount || 0), 0)
+  const total = filtered.reduce((acc, i) => acc + Number(i.amount || 0), 0);
 
   /** ✅ Summary counts */
   const summary = {
     Total: invoices.length,
-    Paid: invoices.filter(i => i.status === 'Paid').length,
-    Pending: invoices.filter(i => i.status === 'Pending').length,
-    Overdue: invoices.filter(i => i.status === 'Overdue').length,
-    'Partially Paid': invoices.filter(i => i.status === 'Partially Paid').length,
-  }
+    Paid: invoices.filter((i) => i.status === "Paid").length,
+    Pending: invoices.filter((i) => i.status === "Pending").length,
+    Overdue: invoices.filter((i) => i.status === "Overdue").length,
+    "Partially Paid": invoices.filter((i) => i.status === "Partially Paid")
+      .length,
+  };
 
   /** ✅ Add or Edit Invoice */
   const handleSave = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!form.client || !form.amount) {
-      alert('Please fill all required fields')
-      return
+      alert("Please fill all required fields");
+      return;
     }
 
     try {
-      const method = editingIndex !== null ? 'PUT' : 'POST'
+      const method = editingIndex !== null ? "PUT" : "POST";
       const body =
         editingIndex !== null
           ? { ...form, _id: invoices[editingIndex]._id }
-          : form
+          : form;
 
-      const res = await fetch('/api/invoices', {
+      const res = await fetch("/api/invoices", {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-      })
+      });
 
-      if (!res.ok) throw new Error('Failed to save invoice')
+      if (!res.ok) throw new Error("Failed to save invoice");
 
-      const updated = await res.json()
-      setInvoices(updated)
-      handleClose()
+      const updated = await res.json();
+      setInvoices(updated);
+      handleClose();
     } catch (error) {
-      console.error('Error saving invoice:', error)
-      alert('Error saving invoice.')
+      console.error("Error saving invoice:", error);
+      alert("Error saving invoice.");
     }
-  }
+  };
 
   /** ✅ Edit */
   const handleEdit = (index) => {
-    setEditingIndex(index)
-    setForm({ ...invoices[index] })
-    setShowModal(true)
-  }
+    setEditingIndex(index);
+    setForm({ ...invoices[index] });
+    setShowModal(true);
+  };
 
   /** ✅ Delete */
-  const handleDelete = async (index) => {
-    if (!confirm('Are you sure you want to delete this invoice?')) return
-    try {
-      const id = invoices[index]._id
-      const res = await fetch(`/api/invoices/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete invoice')
 
-      const updated = await res.json()
-      setInvoices(updated)
-    } catch (error) {
-      console.error(error)
-      alert('Error deleting invoice.')
+  const handleDelete = async (id) => {
+    let confirmResolve;
+
+    // Custom confirmation toast
+    const ConfirmToast = () => (
+      <div
+        style={{
+          background: "#352359",
+          color: "white",
+          padding: "15px 40px",
+          borderRadius: "10px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "10px",
+          width: "300px",
+          maxWidth: "90vw",
+          marginTop: "14rem",
+        }}
+      >
+        <p style={{ margin: 0, fontWeight: 500 }}>
+          Do you want to delete this invoice?
+        </p>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            onClick={() => {
+              toast.dismiss();
+              confirmResolve(true);
+            }}
+            style={{
+              background: "#dc3545",
+              color: "#fff",
+              border: "none",
+              padding: "6px 16px",
+              borderRadius: "6px",
+              cursor: "pointer",
+            }}
+          >
+            Yes
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss();
+              confirmResolve(false);
+            }}
+            style={{
+              background: "#6c757d",
+              color: "#fff",
+              border: "none",
+              padding: "6px 22px",
+              borderRadius: "6px",
+              cursor: "pointer",
+            }}
+          >
+            No
+          </button>
+        </div>
+      </div>
+    );
+
+    // Wrap toast in a promise
+    const confirmPromise = new Promise((resolve) => {
+      confirmResolve = resolve;
+      toast.custom(<ConfirmToast />, {
+        duration: 10000,
+        position: "top-center",
+      });
+    });
+
+    try {
+      const confirmed = await confirmPromise;
+      if (!confirmed) return;
+
+      const res = await fetch(`/api/invoices/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete invoice");
+
+      // Refresh invoices list
+      const updated = await res.json();
+      setInvoices(updated);
+
+      toast.success("Invoice deleted successfully!");
+    } catch (err) {
+      toast.error("Error deleting invoice");
     }
-  }
+  };
 
   /** ✅ Close Modal */
   const handleClose = () => {
-    setShowModal(false)
-    setEditingIndex(null)
+    setShowModal(false);
+    setEditingIndex(null);
     setForm({
-      client: '',
-      amount: '',
-      status: 'Pending',
-      paid: '',
-      remaining: '',
-    })
-  }
+      client: "",
+      amount: "",
+      status: "Pending",
+      paid: "",
+      remaining: "",
+    });
+  };
 
   /** ✅ CSV Download */
   const downloadInvoices = () => {
     const csv = [
-      ['Invoice ID', 'Client', 'Amount', 'Status', 'Paid', 'Remaining'].join(','),
-      ...filtered.map(i =>
-        [i.id, i.client, i.amount, i.status, i.paid || '-', i.remaining || '-'].join(',')
+      ["Invoice ID", "Client", "Amount", "Status", "Paid", "Remaining"].join(
+        ","
       ),
-    ].join('\n')
+      ...filtered.map((i) =>
+        [
+          i.id,
+          i.client,
+          i.amount,
+          i.status,
+          i.paid || "-",
+          i.remaining || "-",
+        ].join(",")
+      ),
+    ].join("\n");
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `invoices_${status}.csv`
-    link.click()
-  }
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `invoices_${status}.csv`;
+    link.click();
+  };
 
   if (loading) {
     return (
@@ -140,39 +232,46 @@ export default function InvoicesPage() {
         <Spinner animation="border" />
         <p>Loading invoices...</p>
       </div>
-    )
+    );
   }
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4 fw-bold fs-5 fs-md-4 text-center">Invoices Dashboard</h2>
+      <h2 className="mb-4 fw-bold fs-5 fs-md-4 text-center">
+        Invoices Dashboard
+      </h2>
 
       {/* ✅ Summary Cards */}
       <div className="row g-3 mb-4">
         {Object.entries(summary).map(([label, count], i) => {
           const bg =
-            label === 'Paid'
-              ? 'success'
-              : label === 'Pending'
-                ? 'warning text-dark'
-                : label === 'Overdue'
-                  ? 'danger'
-                  : label === 'Partially Paid'
-                    ? 'info text-dark'
-                    : 'primary'
+            label === "Paid"
+              ? "success"
+              : label === "Pending"
+              ? "warning text-dark"
+              : label === "Overdue"
+              ? "danger"
+              : label === "Partially Paid"
+              ? "info text-dark"
+              : "primary";
 
           return (
             <div
               key={i}
-              className={`col-6 col-md-3 d-flex justify-content-center ${Object.entries(summary).length % 2 !== 0 && i === Object.entries(summary).length - 1
-                ? 'mx-auto'
-                : ''
-                }`}
+              className={`col-6 col-md-3 d-flex justify-content-center ${
+                Object.entries(summary).length % 2 !== 0 &&
+                i === Object.entries(summary).length - 1
+                  ? "mx-auto"
+                  : ""
+              }`}
             >
               <div
                 className={`card text-center text-white bg-${bg} shadow-sm w-100`}
-                style={{ cursor: label !== 'Total' ? 'pointer' : 'default', maxWidth: '220px' }}
-                onClick={() => label !== 'Total' && setStatus(label)}
+                style={{
+                  cursor: label !== "Total" ? "pointer" : "default",
+                  maxWidth: "220px",
+                }}
+                onClick={() => label !== "Total" && setStatus(label)}
               >
                 <div className="card-body">
                   <h6>{label}</h6>
@@ -180,15 +279,17 @@ export default function InvoicesPage() {
                 </div>
               </div>
             </div>
-          )
+          );
         })}
       </div>
 
       {/* ✅ Buttons */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
-        <h4 className="mb-0">{status === 'All' ? 'All Invoices' : `${status} Invoices`}</h4>
+        <h4 className="mb-0">
+          {status === "All" ? "All Invoices" : `${status} Invoices`}
+        </h4>
         <div className="d-flex flex-wrap gap-2 w-100 justify-content-start justify-content-md-end">
-          <Button variant="outline-secondary" onClick={() => setStatus('All')}>
+          <Button variant="outline-secondary" onClick={() => setStatus("All")}>
             Show All
           </Button>
           <Button variant="outline-primary" onClick={() => setShowModal(true)}>
@@ -224,26 +325,46 @@ export default function InvoicesPage() {
                 <td>{inv.amount}</td>
                 <td>
                   <span
-                    className={`badge bg-${inv.status === 'Paid'
-                      ? 'success'
-                      : inv.status === 'Pending'
-                        ? 'warning text-dark'
-                        : inv.status === 'Overdue'
-                          ? 'danger'
-                          : 'info text-dark'
-                      }`}
+                    className="d-inline-block text-center text-truncate"
+                    style={{
+                      maxWidth: "80px", // adjust for small screens
+                      padding: "4px 8px",
+                      border: "1px solid #3523594d",
+                      borderRadius: "6px",
+                      color: "#352359",
+                      cursor: "default",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = "#352359";
+                      e.target.style.color = "#fff"; // lowercase
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "transparent";
+                      e.target.style.color = "#352359"; // reset to original
+                    }}
                   >
                     {inv.status}
                   </span>
                 </td>
-                <td>{inv.status === 'Partially Paid' ? inv.paid : '-'}</td>
-                <td>{inv.status === 'Partially Paid' ? inv.remaining : '-'}</td>
+
+                <td>{inv.status === "Partially Paid" ? inv.paid : "-"}</td>
+                <td>{inv.status === "Partially Paid" ? inv.remaining : "-"}</td>
                 <td>
-                  <div className="d-flex justify-content-center gap-2 flex-wrap">
-                    <Button size="sm" variant="outline-primary" onClick={() => handleEdit(index)}>
+                  <div className="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline-primary"
+                      onClick={() => handleEdit(index)}
+                      className="w-100 w-sm-auto"
+                    >
                       Edit
                     </Button>
-                    <Button size="sm" variant="outline-danger" onClick={() => handleDelete(index)}>
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      onClick={() => handleDelete(inv._id)}
+                      className="w-100 w-sm-auto"
+                    >
                       Delete
                     </Button>
                   </div>
@@ -259,7 +380,9 @@ export default function InvoicesPage() {
       {/* ✅ Modal Form */}
       <Modal show={showModal} onHide={handleClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{editingIndex !== null ? 'Edit Invoice' : 'Add Invoice'}</Modal.Title>
+          <Modal.Title>
+            {editingIndex !== null ? "Edit Invoice" : "Add Invoice"}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSave}>
@@ -295,7 +418,7 @@ export default function InvoicesPage() {
               </Form.Select>
             </Form.Group>
 
-            {form.status === 'Partially Paid' && (
+            {form.status === "Partially Paid" && (
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <Form.Label>Amount Paid ($)</Form.Label>
@@ -312,23 +435,29 @@ export default function InvoicesPage() {
                     type="number"
                     placeholder="Enter remaining amount"
                     value={form.remaining}
-                    onChange={(e) => setForm({ ...form, remaining: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, remaining: e.target.value })
+                    }
                   />
                 </div>
               </div>
             )}
 
             <div className="text-end">
-              <Button variant="secondary" className="me-2" onClick={handleClose}>
+              <Button
+                variant="secondary"
+                className="me-2"
+                onClick={handleClose}
+              >
                 Cancel
               </Button>
               <Button variant="primary" type="submit">
-                {editingIndex !== null ? 'Update' : 'Add'}
+                {editingIndex !== null ? "Update" : "Add"}
               </Button>
             </div>
           </Form>
         </Modal.Body>
       </Modal>
     </div>
-  )
+  );
 }
