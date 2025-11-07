@@ -61,8 +61,8 @@ function ClientsPageContent() {
 
     return () => {
       if (modalElement && modalInstance) {
-        modalElement.removeEventListener("hidden.bs.modal", () => {});
-        modalInstance.dispose?.();
+        modalElement.removeEventListener('hidden.bs.modal', () => { })
+        modalInstance.dispose?.()
       }
     };
   }, [searchParams]);
@@ -376,10 +376,22 @@ function ClientsPageContent() {
                 {filteredAndSortedClients.length > 0 ? (
                   filteredAndSortedClients.map((client) => (
                     <tr key={client._id}>
-                      <td>{client.name}</td>
-                      <td>{client.company || "—"}</td>
-                      <td>{client.phone || "—"}</td>
-                      <td>{client.category || "Uncategorized"}</td>
+                      <td>
+                        <Link href={`/clients/${client._id}`} className="text-decoration-none fw-semibold">
+                          {client.name}
+                        </Link>
+                      </td>
+                      <td>
+                        {client.company ? (
+                          <Link href={`/clients/${client._id}`} className="text-decoration-none">
+                            {client.company}
+                          </Link>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td>{client.phone || '—'}</td>
+                      <td>{client.category || 'Uncategorized'}</td>
                       <td>
                         <small className="text-muted">
                           {new Date(client.createdAt).toLocaleDateString()}
