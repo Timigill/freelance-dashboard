@@ -3,14 +3,20 @@ import { dbConnect } from '@/lib/dbConnect'
 import Task from '@/models/Task'
 import mongoose from 'mongoose'
 
-// GET /api/tasks?sourceId=...&status=...&paymentStatus=...
+// Helper to cast string to ObjectId if valid
+const castObjectId = (id) => (mongoose.Types.ObjectId.isValid(id) ? id : null)
+
 export async function GET(request) {
   try {
     await dbConnect()
     const { searchParams } = new URL(request.url)
     const query = {}
 
-    if (searchParams.has('sourceId')) query.sourceId = searchParams.get('sourceId')
+    // Only set filters if valid
+    if (searchParams.has('sourceId')) {
+      const id = castObjectId(searchParams.get('sourceId'))
+      if (id) query.sourceId = id
+    }
     if (searchParams.has('status')) query.status = searchParams.get('status')
     if (searchParams.has('paymentStatus')) query.paymentStatus = searchParams.get('paymentStatus')
 
@@ -19,25 +25,24 @@ export async function GET(request) {
       .sort({ dueDate: 1 })
 
     return NextResponse.json(tasks)
-  } catch (error) {
-    return NextResponse.json({ error: true, message: error.message }, { status: 500 })
+  } catch (err) {
+    return NextResponse.json({ error: true, message: err.message }, { status: 500 })
   }
 }
 
-// POST /api/tasks
 export async function POST(request) {
   try {
     await dbConnect()
     const body = await request.json()
 
-    // Basic validation
-    if (!body.name || !body.dueDate) {
-      return NextResponse.json({ error: true, message: 'Task name and dueDate are required' }, { status: 400 })
+    if (!body.name || !body.dueDate || !body.sourceId) {
+      return NextResponse.json({ error: true, message: 'Task name, dueDate and sourceId are required' }, { status: 400 })
     }
 
     const task = await Task.create(body)
+    await task.populate('sourceId', 'name type').populate('clientId', 'name email')
     return NextResponse.json(task, { status: 201 })
-  } catch (error) {
-    return NextResponse.json({ error: true, message: error.message }, { status: 500 })
+  } catch (err) {
+    return NextResponse.json({ error: true, message: err.message }, { status: 500 })
   }
 }

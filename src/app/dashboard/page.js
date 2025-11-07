@@ -419,7 +419,7 @@ export default function HomePage() {
               className={`card border-0 shadow-sm bg-${card.color} text-white h-100`}
             >
               <div className="card-body text-center">
-                <h3 className="mb-1">
+                <h3 className="mb-1 fw-bold">
                   {card.value.toLocaleString("en-US", {
                     style: card.suffix ? "decimal" : "currency",
                     currency: "USD",
@@ -427,7 +427,21 @@ export default function HomePage() {
                   })}
                   {card.suffix || ""}
                 </h3>
-                <h6 className="mb-0 text-white">{card.title}</h6>
+                <h6
+                  className="mb-0"
+                  style={{
+                    color:
+                      card.color === "warning"
+                        ? "#352359" // dark text for yellow
+                        : card.color === "info"
+                        ? "#352359" // soft white for light blue
+                        : "#352359", // default muted white for darker cards
+                    opacity: 0.9,
+                    fontWeight: 500,
+                  }}
+                >
+                  {card.title}
+                </h6>
               </div>
             </div>
           </div>

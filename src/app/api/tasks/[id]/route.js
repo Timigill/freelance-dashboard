@@ -3,58 +3,19 @@ import { dbConnect } from '@/lib/dbConnect'
 import Task from '@/models/Task'
 import mongoose from 'mongoose'
 
-// Helper: Validate ObjectId
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id)
 
-export async function GET(request, { params }) {
+export async function DELETE(req, context) {
   try {
-    await dbConnect()
-    const { id } = await params
+    // params is a Promise in Next.js 16 App Router
+    const params = await context.params  
+    const { id } = params
 
     if (!isValidId(id)) {
       return NextResponse.json({ error: true, message: 'Invalid Task ID' }, { status: 400 })
     }
 
-    const task = await Task.findById(id).populate('sourceId', 'name type')
-    if (!task) {
-      return NextResponse.json({ error: true, message: 'Task not found' }, { status: 404 })
-    }
-    return NextResponse.json(task)
-  } catch (error) {
-    return NextResponse.json({ error: true, message: error.message }, { status: 500 })
-  }
-}
-
-export async function PUT(request, { params }) {
-  try {
     await dbConnect()
-    const { id } = await params
-
-    if (!isValidId(id)) {
-      return NextResponse.json({ error: true, message: 'Invalid Task ID' }, { status: 400 })
-    }
-
-    const body = await request.json()
-    const task = await Task.findByIdAndUpdate(id, { $set: body }, { new: true, runValidators: true })
-      .populate('sourceId', 'name type')
-
-    if (!task) {
-      return NextResponse.json({ error: true, message: 'Task not found' }, { status: 404 })
-    }
-    return NextResponse.json(task)
-  } catch (error) {
-    return NextResponse.json({ error: true, message: error.message }, { status: 500 })
-  }
-}
-
-export async function DELETE(request, { params }) {
-  try {
-    await dbConnect()
-    const { id } = await params
-
-    if (!isValidId(id)) {
-      return NextResponse.json({ error: true, message: 'Invalid Task ID' }, { status: 400 })
-    }
 
     const task = await Task.findByIdAndDelete(id)
     if (!task) {
@@ -62,7 +23,9 @@ export async function DELETE(request, { params }) {
     }
 
     return NextResponse.json({ message: 'Task deleted successfully' })
-  } catch (error) {
-    return NextResponse.json({ error: true, message: error.message }, { status: 500 })
+  } catch (err) {
+    return NextResponse.json({ error: true, message: err.message }, { status: 500 })
   }
 }
+
+

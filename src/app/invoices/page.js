@@ -21,12 +21,10 @@ export default function InvoicesPage() {
   });
 
   useEffect(() => {
-    if (openModal === "true") {
-      setShowModal(true);
-    }
+    if (openModal === "true") setShowModal(true);
   }, [openModal]);
 
-  /** ✅ Fetch invoices from MongoDB API */
+  /** ✅ Fetch invoices */
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
@@ -42,12 +40,12 @@ export default function InvoicesPage() {
     fetchInvoices();
   }, []);
 
-  /** ✅ Filter invoices by status */
-  const filtered = Array.isArray(invoices)
-    ? invoices.filter((i) => status === "All" || i.status === status)
-    : [];
+  /** ✅ Filtered invoices */
+  const filtered =
+    Array.isArray(invoices) &&
+    invoices.filter((i) => status === "All" || i.status === status);
 
-  /** ✅ Compute total amount */
+  /** ✅ Total amount */
   const total = filtered.reduce((acc, i) => acc + Number(i.amount || 0), 0);
 
   /** ✅ Summary counts */
@@ -69,12 +67,28 @@ export default function InvoicesPage() {
       return;
     }
 
+    // ✅ Correct logic for Paid / Remaining
+    let updatedForm = { ...form };
+
+    const total = Number(updatedForm.amount) || 0;
+    const paid = Number(updatedForm.paid) || 0;
+
+    if (updatedForm.status === "Paid") {
+      updatedForm.paid = total;
+      updatedForm.remaining = 0;
+    } else if (updatedForm.status === "Partially Paid") {
+      updatedForm.remaining = Math.max(total - paid, 0);
+    } else {
+      updatedForm.paid = 0;
+      updatedForm.remaining = total;
+    }
+
     try {
       const method = editingIndex !== null ? "PUT" : "POST";
       const body =
         editingIndex !== null
-          ? { ...form, _id: invoices[editingIndex]._id }
-          : form;
+          ? { ...updatedForm, _id: invoices[editingIndex]._id }
+          : updatedForm;
 
       const res = await fetch("/api/invoices", {
         method,
@@ -87,9 +101,10 @@ export default function InvoicesPage() {
       const updated = await res.json();
       setInvoices(updated);
       handleClose();
+      toast.success("Invoice saved successfully!");
     } catch (error) {
       console.error("Error saving invoice:", error);
-      alert("Error saving invoice.");
+      toast.error("Error saving invoice");
     }
   };
 
@@ -101,73 +116,102 @@ export default function InvoicesPage() {
   };
 
   /** ✅ Delete */
-
-  const handleDelete = async (id) => {
+ const handleDelete = async (id) => {
     let confirmResolve;
 
-    // Custom confirmation toast
+    // ✅ Custom full-screen confirmation toast with dimmed background
     const ConfirmToast = () => (
       <div
         style={{
-          background: "#352359",
-          color: "white",
-          padding: "15px 40px",
-          borderRadius: "10px",
+          position: "fixed",
+          width: "100vw",
+          top: "-20px",
+          bottom: "-20px",
+          height: "100vh",
+          background: "rgba(0, 0, 0, 0.5)", // dim background
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
-          gap: "10px",
-          width: "300px",
-          maxWidth: "90vw",
-          marginTop: "14rem",
+          justifyContent: "center",
+          zIndex: 9999,
+          backdropFilter: "blur(2px)", // optional soft blur
         }}
       >
-        <p style={{ margin: 0, fontWeight: 500 }}>
-          Do you want to delete this invoice?
-        </p>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            onClick={() => {
-              toast.dismiss();
-              confirmResolve(true);
-            }}
+        <div
+          style={{
+            background: "#352359",
+            color: "white",
+            padding: "20px 24px",
+            borderRadius: "12px",
+            width: "300px",
+            maxWidth: "90vw",
+            textAlign: "center",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+          }}
+        >
+          <p
             style={{
-              background: "#dc3545",
-              color: "#fff",
-              border: "none",
-              padding: "6px 16px",
-              borderRadius: "6px",
-              cursor: "pointer",
+              marginBottom: "16px",
+              fontWeight: 500,
+              fontSize: "0.95rem",
             }}
           >
-            Yes
-          </button>
-          <button
-            onClick={() => {
-              toast.dismiss();
-              confirmResolve(false);
-            }}
-            style={{
-              background: "#6c757d",
-              color: "#fff",
-              border: "none",
-              padding: "6px 22px",
-              borderRadius: "6px",
-              cursor: "pointer",
-            }}
+            Do you want to delete this task?
+          </p>
+
+          <div
+            style={{ display: "flex", gap: "10px", justifyContent: "center" }}
           >
-            No
-          </button>
+            <button
+              onClick={() => {
+                toast.dismiss();
+                confirmResolve(true);
+              }}
+              style={{
+                background: "#dc3545",
+                color: "#fff",
+                border: "none",
+                padding: "8px 18px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+              }}
+            >
+              Yes
+            </button>
+
+            <button
+              onClick={() => {
+                toast.dismiss();
+                confirmResolve(false);
+              }}
+              style={{
+                background: "#6c757d",
+                color: "#fff",
+                border: "none",
+                padding: "8px 18px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+              }}
+            >
+              No
+            </button>
+          </div>
         </div>
       </div>
     );
 
-    // Wrap toast in a promise
+    // Promise wrapper
     const confirmPromise = new Promise((resolve) => {
       confirmResolve = resolve;
       toast.custom(<ConfirmToast />, {
         duration: 10000,
         position: "top-center",
+        style: {
+          background: "transparent",
+          boxShadow: "none",
+          padding: 0,
+        },
       });
     });
 
@@ -175,16 +219,13 @@ export default function InvoicesPage() {
       const confirmed = await confirmPromise;
       if (!confirmed) return;
 
-      const res = await fetch(`/api/invoices/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete invoice");
+      const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete task");
 
-      // Refresh invoices list
-      const updated = await res.json();
-      setInvoices(updated);
-
-      toast.success("Invoice deleted successfully!");
+      fetchTasks();
+      toast.success("Task deleted successfully!");
     } catch (err) {
-      toast.error("Error deleting invoice");
+      toast.error("Error deleting task");
     }
   };
 
@@ -237,45 +278,47 @@ export default function InvoicesPage() {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4 fw-bold fs-5 fs-md-4 text-center">
-        Invoices Dashboard
-      </h2>
+      <Toaster />
+      <h2 className="mb-4 fw-bold fs-5 text-center">Invoices Dashboard</h2>
 
       {/* ✅ Summary Cards */}
-      <div className="row g-3 mb-4">
+      <div className="row g-3 mb-4 justify-content-center">
         {Object.entries(summary).map(([label, count], i) => {
-          const bg =
+          const colorClass =
             label === "Paid"
-              ? "success"
+              ? "bg-success text-white"
               : label === "Pending"
-              ? "warning text-dark"
+              ? "bg-warning text-dark"
               : label === "Overdue"
-              ? "danger"
+              ? "bg-danger text-white"
               : label === "Partially Paid"
-              ? "info text-dark"
-              : "primary";
+              ? "bg-info text-dark"
+              : "bg-primary text-white";
 
           return (
             <div
               key={i}
-              className={`col-6 col-md-3 d-flex justify-content-center ${
-                Object.entries(summary).length % 2 !== 0 &&
-                i === Object.entries(summary).length - 1
-                  ? "mx-auto"
-                  : ""
-              }`}
+              className="col-6 col-md-3 d-flex justify-content-center"
+              style={{ maxWidth: "220px" }}
             >
               <div
-                className={`card text-center text-white bg-${bg} shadow-sm w-100`}
+                className={`card text-center shadow-sm w-100 ${colorClass}`}
                 style={{
                   cursor: label !== "Total" ? "pointer" : "default",
-                  maxWidth: "220px",
+                  transition: "transform 0.15s ease",
                 }}
                 onClick={() => label !== "Total" && setStatus(label)}
+                onMouseEnter={(e) => {
+                  if (label !== "Total")
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
               >
-                <div className="card-body">
-                  <h6>{label}</h6>
-                  <h3>{count}</h3>
+                <div className="card-body py-3">
+                  <h6 className="mb-1 fw-semibold">{label}</h6>
+                  <h3 className="mb-0 fw-bold">{count}</h3>
                 </div>
               </div>
             </div>
@@ -307,9 +350,9 @@ export default function InvoicesPage() {
           <thead className="table-light">
             <tr>
               <th>#</th>
-              <th>Invoice ID</th>
+              <th>INV-ID</th>
               <th>Client</th>
-              <th>Amount ($)</th>
+              <th>Amount</th>
               <th>Status</th>
               <th>Paid</th>
               <th>Remaining</th>
@@ -320,42 +363,18 @@ export default function InvoicesPage() {
             {filtered.map((inv, index) => (
               <tr key={index}>
                 <td>{index + 1}</td>
-                <td>{inv.id}</td>
+                <td>{`INV-${String(index + 1).padStart(2, "0")}`}</td>
                 <td>{inv.client}</td>
                 <td>{inv.amount}</td>
-                <td>
-                  <span
-                    className="d-inline-block text-center text-truncate"
-                    style={{
-                      maxWidth: "80px", // adjust for small screens
-                      padding: "4px 8px",
-                      border: "1px solid #3523594d",
-                      borderRadius: "6px",
-                      color: "#352359",
-                      cursor: "default",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = "#352359";
-                      e.target.style.color = "#fff"; // lowercase
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = "transparent";
-                      e.target.style.color = "#352359"; // reset to original
-                    }}
-                  >
-                    {inv.status}
-                  </span>
-                </td>
-
-                <td>{inv.status === "Partially Paid" ? inv.paid : "-"}</td>
-                <td>{inv.status === "Partially Paid" ? inv.remaining : "-"}</td>
+                <td>{inv.status}</td>
+                <td>{inv.paid}</td>
+                <td>{inv.remaining}</td>
                 <td>
                   <div className="d-flex flex-column flex-sm-row justify-content-center gap-2">
                     <Button
                       size="sm"
                       variant="outline-primary"
                       onClick={() => handleEdit(index)}
-                      className="w-100 w-sm-auto"
                     >
                       Edit
                     </Button>
@@ -363,7 +382,6 @@ export default function InvoicesPage() {
                       size="sm"
                       variant="outline-danger"
                       onClick={() => handleDelete(inv._id)}
-                      className="w-100 w-sm-auto"
                     >
                       Delete
                     </Button>
@@ -375,7 +393,7 @@ export default function InvoicesPage() {
         </table>
       </div>
 
-      <div className="mt-3 text-end fw-bold">Total: ${total}</div>
+      <div className="mt-3 text-end fw-bold pb-3 pb-md-3">Total: ${total}</div>
 
       {/* ✅ Modal Form */}
       <Modal show={showModal} onHide={handleClose} centered>
@@ -386,7 +404,6 @@ export default function InvoicesPage() {
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSave}>
-            {/* Removed Invoice ID input since it is auto-generated */}
             <Form.Group className="mb-3">
               <Form.Label>Client Name</Form.Label>
               <Form.Control
@@ -396,6 +413,7 @@ export default function InvoicesPage() {
                 onChange={(e) => setForm({ ...form, client: e.target.value })}
               />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Amount ($)</Form.Label>
               <Form.Control
@@ -405,6 +423,7 @@ export default function InvoicesPage() {
                 onChange={(e) => setForm({ ...form, amount: e.target.value })}
               />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Status</Form.Label>
               <Form.Select
@@ -433,11 +452,9 @@ export default function InvoicesPage() {
                   <Form.Label>Remaining ($)</Form.Label>
                   <Form.Control
                     type="number"
-                    placeholder="Enter remaining amount"
-                    value={form.remaining}
-                    onChange={(e) =>
-                      setForm({ ...form, remaining: e.target.value })
-                    }
+                    placeholder="Auto-calculated"
+                    value={form.remaining !== undefined ? form.remaining : ""}
+                    readOnly
                   />
                 </div>
               </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "react-hot-toast";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -9,25 +10,22 @@ import DashboardShell from "../components/DashboardShell";
 import BootstrapClient from "../components/BootstrapClient";
 
 export default function RootLayout({ children }) {
+  const pathname = usePathname();
   const [isDashboard, setIsDashboard] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const path = window.location.pathname;
+    const dashboardRoutes = [
+      "/dashboard",
+      "/clients",
+      "/projects",
+      "/settings",
+      "/income",
+      "/invoices",
+      "/tasks",
+    ];
 
-      //  Define which routes should use the dashboard layout
-      const dashboardRoutes = [
-        "/dashboard",
-        "/clients",
-        "/projects",
-        "/settings",
-        "/profile",
-      ];
-
-      //  Check if current path starts with any dashboard route
-      setIsDashboard(dashboardRoutes.some((r) => path.startsWith(r)));
-    }
-  }, []);
+    setIsDashboard(dashboardRoutes.some((r) => pathname.startsWith(r)));
+  }, [pathname]); // 👈 re-run when path changes
 
   return (
     <html lang="en">
@@ -35,10 +33,9 @@ export default function RootLayout({ children }) {
         <SessionProvider>
           <BootstrapClient />
 
-          {/*  Use dashboard layout only for dashboard pages */}
+          {/* ✅ Automatically show Topbar + Sidebar for dashboard pages */}
           {isDashboard ? <DashboardShell>{children}</DashboardShell> : children}
 
-          {/*  Global Toaster */}
           <Toaster
             position="top-center"
             toastOptions={{

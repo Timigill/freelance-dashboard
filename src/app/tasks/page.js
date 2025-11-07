@@ -58,9 +58,13 @@ function TasksPageContent() {
 
       const res = await fetch(url);
       const data = await res.json();
-      setTasks(data);
+      console.log("Fetched tasks:", data);
+
+      // Make sure tasks is always an array
+      setTasks(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching tasks:", error);
+      setTasks([]); // fallback
     }
   };
 
@@ -125,86 +129,107 @@ function TasksPageContent() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
-    let confirmResolve;
+  const handleDelete = async (taskId) => {
+    if (!taskId) {
+      toast.error("Invalid task ID");
+      return;
+    }
 
-    // Show a custom toast with real JSX (not HTML string)
-    const ConfirmToast = () => (
-      <div
-           style={{
-      background: "#352359",
-      color: "white",
-      padding: "15px 20px",
-      borderRadius: "10px",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "10px",
-      width: "300px",
-      maxWidth: "90vw",
-      marginTop: "14rem",
-    }}
-      >
-        <p style={{ margin: 0, fontWeight: 500 }}>
-          Do you want to delete this task?
-        </p>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            onClick={() => {
-              toast.dismiss();
-              confirmResolve(true);
-            }}
+    // Show confirmation toast
+    const confirmed = await new Promise((resolve) => {
+      const ConfirmToast = ({ id }) => (
+        <div
+          style={{
+            position: "fixed",
+            width: "100vw",
+            marginTop:"-20px",
+            height: "100vh",
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            backdropFilter: "blur(2px)",
+          }}
+        >
+          <div
             style={{
-              background: "#dc3545",
+              background: "#352359",
               color: "#fff",
-              border: "none",
-              padding: "6px 16px",
-              borderRadius: "6px",
-              cursor: "pointer",
+              padding: "20px 24px",
+              borderRadius: "12px",
+              width: "320px",
+              maxWidth: "90vw",
+              textAlign: "center",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
             }}
           >
-            Yes
-          </button>
-          <button
-            onClick={() => {
-              toast.dismiss();
-              confirmResolve(false);
-            }}
-            style={{
-              background: "#6c757d",
-              color: "#fff",
-              border: "none",
-              padding: "6px 22px",
-              borderRadius: "6px",
-              cursor: "pointer",
-            }}
-          >
-            No
-          </button>
+            <p style={{ marginBottom: "16px", fontWeight: 500 }}>
+              Are you sure you want to delete this task?
+            </p>
+
+            <div
+              style={{ display: "flex", justifyContent: "center", gap: "10px" }}
+            >
+              <button
+                onClick={() => {
+                  toast.dismiss(id); // close toast on confirm
+                  resolve(true);
+                }}
+                style={{
+                  background: "#dc3545",
+                  color: "#fff",
+                  border: "none",
+                  padding: "8px 18px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                }}
+              >
+                Yes
+              </button>
+
+              <button
+                onClick={() => {
+                  toast.dismiss(id); // close toast on cancel
+                  resolve(false);
+                }}
+                style={{
+                  background: "#6c757d",
+                  color: "#fff",
+                  border: "none",
+                  padding: "8px 18px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                }}
+              >
+                No
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    );
+      );
 
-    // Wrap toast in a promise
-    const confirmPromise = new Promise((resolve) => {
-      confirmResolve = resolve;
-      toast.custom(<ConfirmToast />, {
-        duration: 10000,
+      toast.custom((t) => <ConfirmToast id={t.id} />, {
+        duration: Infinity,
         position: "top-center",
       });
     });
 
+    if (!confirmed) return;
+
     try {
-      const confirmed = await confirmPromise;
-      if (!confirmed) return;
+      const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+      const data = await res.json();
 
-      const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete task");
+      if (!res.ok) throw new Error(data?.message || "Failed to delete task");
 
-      fetchTasks();
       toast.success("Task deleted successfully!");
+      fetchTasks(); // refresh table
     } catch (err) {
-      toast.error("Error deleting task");
+      console.error("Delete error:", err);
+      toast.error(err.message || "Error deleting task");
     }
   };
 
@@ -234,10 +259,15 @@ function TasksPageContent() {
     }
   };
 
-  const totalAmount = tasks.reduce((sum, t) => sum + (t.amount || 0), 0);
-  const pendingAmount = tasks
-    .filter((t) => t.paymentStatus === "Unpaid")
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const totalAmount = Array.isArray(tasks)
+    ? tasks.reduce((sum, t) => sum + (t.amount || 0), 0)
+    : 0;
+
+  const pendingAmount = Array.isArray(tasks)
+    ? tasks
+        .filter((t) => t.paymentStatus === "Unpaid")
+        .reduce((sum, t) => sum + (t.amount || 0), 0)
+    : 0;
 
   return (
     <div className="container-fluid py-4">
@@ -350,7 +380,7 @@ function TasksPageContent() {
                           textAlign: "center",
                           whiteSpace: "nowrap",
                           verticalAlign: "baseline",
-                          border: "1px solid #352359",
+                          border: "none",
                           borderRadius: "0.25rem",
                           color: "#352359",
                           backgroundColor: "transparent",
@@ -380,7 +410,7 @@ function TasksPageContent() {
                           textAlign: "center",
                           whiteSpace: "nowrap",
                           verticalAlign: "baseline",
-                          border: "1px solid #352359",
+                          border: "none",
                           borderRadius: "0.25rem",
                           color: "#352359",
                           backgroundColor: "transparent",
@@ -410,7 +440,7 @@ function TasksPageContent() {
                           textAlign: "center",
                           whiteSpace: "nowrap",
                           verticalAlign: "baseline",
-                          border: "1px solid #352359",
+                          border: "none",
                           borderRadius: "0.25rem",
                           color: "#352359",
                           backgroundColor: "transparent",

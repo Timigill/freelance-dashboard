@@ -1,5 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { FiFolder, FiUsers, FiCreditCard, FiBarChart2 } from "react-icons/fi"; // React icons
@@ -7,6 +9,23 @@ import MonthPickerIcon from "@/components/MonthPickerIcon";
 
 export default function LandingPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/dashboard"); // or "/" if dashboard is the root
+    }
+  }, [status, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   const features = [
     {
@@ -14,7 +33,7 @@ export default function LandingPage() {
       title: "Project Management",
       desc: "Organize your workflow and deadlines effortlessly.",
     },
-    
+
     {
       icon: <FiCreditCard size={36} color="#241b36" />,
       title: "Invoicing & Payments",
@@ -24,7 +43,8 @@ export default function LandingPage() {
       icon: <FiBarChart2 size={36} color="#241b36" />,
       title: "Income Analytics",
       desc: "Understand your financial growth through smart analytics.",
-    },{
+    },
+    {
       icon: <FiUsers size={36} color="#241b36" />,
       title: "Client CRM",
       desc: "Maintain strong client relationships in one place.",
@@ -32,13 +52,22 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="container-fluid p-0" style={{ fontFamily: "Inter, sans-serif" }}>
+    <div
+      className="container-fluid p-0"
+      style={{ fontFamily: "Inter, sans-serif" }}
+    >
       {/* Navbar */}
       <header
         className="d-flex justify-content-center align-items-center border-bottom bg-white sticky-top py-3"
         style={{ zIndex: 100 }}
       >
-        <Image src="/Lancer.png" alt="Lancer Logo" width={120} height={40} priority />
+        <Image
+          src="/Lancer.png"
+          alt="Lancer Logo"
+          width={120}
+          height={40}
+          priority
+        />
       </header>
 
       {/* Hero Section */}
@@ -53,13 +82,23 @@ export default function LandingPage() {
         }}
       >
         <div className="container d-flex flex-column flex-lg-row align-items-center justify-content-between">
-          <div className="text-center text-lg-start mb-5 pt-4 mb-lg-0" style={{ maxWidth: "550px" }}>
-            <h1 className="fw-bold mb-3" style={{ fontSize: "2.3rem", lineHeight: "1.3" }}>
-            Elevate and Simplify <br />
+          <div
+            className="text-center text-lg-start mb-5 pt-4 mb-lg-0"
+            style={{ maxWidth: "550px" }}
+          >
+            <h1
+              className="fw-bold mb-3"
+              style={{ fontSize: "2.3rem", lineHeight: "1.3" }}
+            >
+              Elevate and Simplify <br />
               <span style={{ color: "#eaf2ff" }}>Your Freelancing</span>
             </h1>
-            <p className="lead mb-4" style={{ color: "rgba(255,255,255,0.85)" , fontSize: "1.1rem"}}>
-              Lancer helps freelancers streamline projects, clients, and income tracking in one dashboard.
+            <p
+              className="lead mb-4"
+              style={{ color: "rgba(255,255,255,0.85)", fontSize: "1.1rem" }}
+            >
+              Lancer helps freelancers streamline projects, clients, and income
+              tracking in one dashboard.
             </p>
             <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
               <button
@@ -102,45 +141,50 @@ export default function LandingPage() {
       </motion.section>
 
       {/* Features Section */}
-    <section className="py-5 bg-light text-center">
-      <div className="container">
-        <h2 className="fw-bold mb-4">Everything You Need to Succeed</h2>
-        <div className="row g-3 justify-content-center">
-          {features.map((feature, i) => (
-            <motion.div
-              key={i}
-              className="col-6 col-md-6 col-lg-6 col-xl-5"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.15 }}
-            >
-              <div
-                className="p-4 bg-white rounded-4 shadow-sm h-100 mx-auto"
-                style={{
-                  maxWidth: "100%",
-                  transition: "transform 0.3s, box-shadow 0.3s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-5px)";
-                  e.currentTarget.style.boxShadow = "0 10px 25px rgba(0,0,0,0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.05)";
-                }}
+      <section className="py-5 bg-light text-center">
+        <div className="container">
+          <h2 className="fw-bold mb-4">Everything You Need to Succeed</h2>
+          <div className="row g-3 justify-content-center">
+            {features.map((feature, i) => (
+              <motion.div
+                key={i}
+                className="col-6 col-md-6 col-lg-6 col-xl-5"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.15 }}
               >
-                <div className="mb-2">{feature.icon}</div>
-                <h6 className="fw-semibold mt-2 mb-1">{feature.title}</h6>
-                <p className="text-muted small  mb-0" style={{fontSize:"0.7rem"}}>{feature.desc}</p>
-              </div>
-            </motion.div>
-          ))}
+                <div
+                  className="p-4 bg-white rounded-4 shadow-sm h-100 mx-auto"
+                  style={{
+                    maxWidth: "100%",
+                    transition: "transform 0.3s, box-shadow 0.3s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-5px)";
+                    e.currentTarget.style.boxShadow =
+                      "0 10px 25px rgba(0,0,0,0.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 12px rgba(0,0,0,0.05)";
+                  }}
+                >
+                  <div className="mb-2">{feature.icon}</div>
+                  <h6 className="fw-semibold mt-2 mb-1">{feature.title}</h6>
+                  <p
+                    className="text-muted small  mb-0"
+                    style={{ fontSize: "0.7rem" }}
+                  >
+                    {feature.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
-        
-      </div>
-    </section>
-
+      </section>
 
       {/* CTA Section */}
       <section
@@ -157,7 +201,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            style={{fontSize:"1.5rem!important"}}
+            style={{ fontSize: "1.5rem!important" }}
           >
             Ready to elevate your freelance career?
           </motion.h2>
@@ -165,7 +209,8 @@ export default function LandingPage() {
             className="mb-4"
             style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.9rem" }}
           >
-            Join professionals who use Lancer to take control of their business, track income, and grow faster.
+            Join professionals who use Lancer to take control of their business,
+            track income, and grow faster.
           </p>
           <div className="d-flex flex-column flex-sm-row justify-content-center gap-3">
             <button
@@ -175,7 +220,6 @@ export default function LandingPage() {
             >
               Create Free Account
             </button>
-           
           </div>
         </div>
       </section>

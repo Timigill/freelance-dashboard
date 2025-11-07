@@ -129,89 +129,133 @@ function IncomePageContent() {
   const handleDelete = async (id) => {
     let confirmResolve;
 
+    // ✅ Custom full-screen confirmation toast with dimmed background
     const ConfirmToast = () => (
       <div
         style={{
-          background: "#352359",
-          color: "white",
-          padding: "15px 40px",
-          borderRadius: "10px",
+          position: "fixed",
+          width: "100vw",
+          top: "-20px",
+          bottom: "-20px",
+          height: "100vh",
+          background: "rgba(0, 0, 0, 0.5)", // dim background
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
-          gap: "10px",
-          width: "300px",
-          maxWidth: "90vw",
-          marginTop: "15rem",
+          justifyContent: "center",
+          zIndex: 9999,
+          backdropFilter: "blur(2px)", // optional soft blur
         }}
       >
-        <p style={{ margin: 0, fontWeight: 500 }}>
-          Do you want to delete this income source?
-        </p>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            onClick={() => {
-              toast.dismiss();
-              confirmResolve(true);
-            }}
+        <div
+          style={{
+            background: "#352359",
+            color: "white",
+            padding: "20px 24px",
+            borderRadius: "12px",
+            width: "300px",
+            maxWidth: "90vw",
+            textAlign: "center",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+          }}
+        >
+          <p
             style={{
-              background: "#dc3545",
-              color: "#fff",
-              border: "none",
-              padding: "6px 16px",
-              borderRadius: "6px",
-              cursor: "pointer",
+              marginBottom: "16px",
+              fontWeight: 500,
+              fontSize: "0.95rem",
             }}
           >
-            Yes
-          </button>
-          <button
-            onClick={() => {
-              toast.dismiss();
-              confirmResolve(false);
-            }}
-            style={{
-              background: "#6c757d",
-              color: "#fff",
-              border: "none",
-              padding: "6px 22px",
-              borderRadius: "6px",
-              cursor: "pointer",
-            }}
+            Do you want to delete this task?
+          </p>
+
+          <div
+            style={{ display: "flex", gap: "10px", justifyContent: "center" }}
           >
-            No
-          </button>
+            <button
+              onClick={() => {
+                toast.dismiss();
+                confirmResolve(true);
+              }}
+              style={{
+                background: "#dc3545",
+                color: "#fff",
+                border: "none",
+                padding: "8px 18px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+              }}
+            >
+              Yes
+            </button>
+
+            <button
+              onClick={() => {
+                toast.dismiss();
+                confirmResolve(false);
+              }}
+              style={{
+                background: "#6c757d",
+                color: "#fff",
+                border: "none",
+                padding: "8px 18px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+              }}
+            >
+              No
+            </button>
+          </div>
         </div>
       </div>
     );
 
+    // Promise wrapper
     const confirmPromise = new Promise((resolve) => {
       confirmResolve = resolve;
+      toast.custom(<ConfirmToast />, {
+        duration: 10000,
+        position: "top-center",
+        style: {
+          background: "transparent",
+          boxShadow: "none",
+          padding: 0,
+        },
+      });
     });
-    toast.custom(<ConfirmToast />, { duration: 10000, position: "top-center" });
 
     try {
       const confirmed = await confirmPromise;
       if (!confirmed) return;
 
-      const res = await fetch(`/api/income/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete");
+      const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete task");
 
-      fetchIncomeSources();
-      toast.success("Income source deleted successfully!");
-    } catch (error) {
-      toast.error("Error deleting income source");
-      console.error(error);
+      fetchTasks();
+      toast.success("Task deleted successfully!");
+    } catch (err) {
+      toast.error("Error deleting task");
     }
   };
 
   // ✅ Filter logic
+  // show all sources (for the table)
   const filteredSources =
     filter === "all"
       ? incomeSources
       : incomeSources.filter((source) => source.type === filter);
 
-  const totalIncome = filteredSources.reduce(
+  // only active sources (for cards)
+  const activeSources =
+    filter === "all"
+      ? incomeSources.filter((source) => source.isActive)
+      : incomeSources.filter(
+          (source) => source.type === filter && source.isActive
+        );
+
+  // total income based on active sources only
+  const totalIncome = activeSources.reduce(
     (sum, source) => sum + (source.amount || 0),
     0
   );
@@ -275,9 +319,9 @@ function IncomePageContent() {
           <div className="card bg-success text-white h-100 text-center">
             <div className="card-body d-flex flex-column justify-content-center">
               <h6 className="mb-2" style={{ color: "var(--bs-primary)" }}>
-                Active Sources
+                {filter === "all" ? "Active Sources" : `${filter} Active`}
               </h6>
-              <h3 className="mb-0">{incomeSources.length}</h3>
+              <h3 className="mb-0">{activeSources.length}</h3>
             </div>
           </div>
         </div>
@@ -348,9 +392,19 @@ function IncomePageContent() {
                     <td>${source.amount.toLocaleString()}</td>
                     <td>{source.frequency}</td>
                     <td>
-                      <Badge bg={source.isActive ? "success" : "secondary"}>
-                        {source.isActive ? "Active" : "Inactive"}
-                      </Badge>
+                      <span
+                        style={{
+                          color: source.isActive ? "#352359" : "#352359",
+                          // background:"#35235922",
+                          // padding: "4px 10px",
+                          // borderRadius: "4px",
+                          fontWeight: 500,
+                          fontSize: "0.9rem",
+                          letterSpacing: "0.3px",
+                        }}
+                      >
+                        {source.isActive ? "Active" : "InActive"}
+                      </span>
                     </td>
                     <td>
                       <div className="d-flex flex-column flex-sm-row gap-2">

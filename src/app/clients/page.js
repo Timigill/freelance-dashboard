@@ -110,29 +110,38 @@ function ClientsPageContent() {
     }
   };
 
-  const handleDelete = async (id) => {
-    let confirmResolve;
+ const handleDelete = async (id) => {
+  let confirmResolve;
 
-    const ConfirmToast = () => (
+  // Custom confirmation toast
+  const ConfirmToast = () => (
+    <div
+      style={{
+        position: "fixed",
+        width: "100vw",
+        height: "100vh",
+        top: 0,
+        left: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backdropFilter: "blur(2px)",
+        background: "rgba(0,0,0,0.4)",
+        zIndex: 9999,
+      }}
+    >
       <div
         style={{
           background: "#352359",
-          color: "white",
-          padding: "15px 40px",
-          borderRadius: "10px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "10px",
+          color: "#fff",
+          padding: "20px",
+          borderRadius: "12px",
+          textAlign: "center",
           width: "300px",
-          maxWidth: "90vw",
-          marginTop: "15rem",
         }}
       >
-        <p style={{ margin: 0, fontWeight: 500 }}>
-          Do you want to delete this client?
-        </p>
-        <div style={{ display: "flex", gap: "8px" }}>
+        <p>Do you want to delete this client?</p>
+        <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
           <button
             onClick={() => {
               toast.dismiss();
@@ -142,7 +151,7 @@ function ClientsPageContent() {
               background: "#dc3545",
               color: "#fff",
               border: "none",
-              padding: "6px 16px",
+              padding: "8px 14px",
               borderRadius: "6px",
               cursor: "pointer",
             }}
@@ -158,7 +167,7 @@ function ClientsPageContent() {
               background: "#6c757d",
               color: "#fff",
               border: "none",
-              padding: "6px 22px",
+              padding: "8px 14px",
               borderRadius: "6px",
               cursor: "pointer",
             }}
@@ -167,32 +176,29 @@ function ClientsPageContent() {
           </button>
         </div>
       </div>
-    );
+    </div>
+  );
 
-    // Wrap the confirmation in a promise
-    const confirmPromise = new Promise((resolve) => {
-      confirmResolve = resolve;
-      toast.custom(<ConfirmToast />, {
-        duration: 10000,
-        position: "top-center",
-      });
-    });
+  // Wrap confirmation in a promise
+  const confirmPromise = new Promise((resolve) => {
+    confirmResolve = resolve;
+    toast.custom(<ConfirmToast />);
+  });
 
-    try {
-      const confirmed = await confirmPromise;
-      if (!confirmed) return;
+  try {
+    const confirmed = await confirmPromise;
+    if (!confirmed) return;
 
-      const res = await fetch(`/api/clients/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete client");
+    const res = await fetch(`/api/clients/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Failed to delete client");
 
-      // ✅ Update the UI instantly
-      setClients((prev) => prev.filter((c) => c._id !== id));
-      toast.success("Client deleted successfully!");
-    } catch (err) {
-      console.error("Error deleting client:", err);
-      toast.error("Error deleting client");
-    }
-  };
+    fetchClients(); // Refresh client list
+    toast.success("Client deleted successfully!");
+  } catch (err) {
+    toast.error(err.message || "Error deleting client");
+  }
+};
+
 
   const handleEdit = async (client) => {
     setEditingClientId(client._id);
@@ -265,60 +271,62 @@ function ClientsPageContent() {
         </button>
       </div>
 
-      <div className="row row-cols-2 row-cols-lg-5 g-3">
-        <Link href="/clients/all" className="col text-decoration-none">
-          <div
-            className="card bg-primary text-white shadow-sm h-100 text-center"
-            style={{ cursor: "pointer", minHeight: "130px" }}
-          >
-            <div className="card-body d-flex flex-column justify-content-center align-items-center">
-              <h6 className="mb-1">Total Clients</h6>
-              <h3 className="fw-bold">{clients.length}</h3>
+      <div className="container px-3 px-md-4" style={{ maxWidth: "1100px" }}>
+        <div className="row row-cols-2 row-cols-lg-5 g-3 justify-content-center">
+          <Link href="/clients/all" className="col text-decoration-none">
+            <div
+              className="card bg-primary text-white shadow-sm h-100 text-center"
+              style={{ cursor: "pointer", minHeight: "120px" }}
+            >
+              <div className="card-body d-flex flex-column justify-content-center align-items-center py-2">
+                <h6 className="mb-1">Total Clients</h6>
+                <h3 className="fw-bold mb-0">{clients.length}</h3>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
 
-        <Link href="/clients/active" className="col text-decoration-none">
-          <div
-            className="card bg-info text-white shadow-sm h-100 text-center"
-            style={{ cursor: "pointer", minHeight: "130px" }}
-          >
-            <div className="card-body d-flex flex-column justify-content-center align-items-center">
-              <h6 className="mb-1">Active Clients</h6>
-              <h4 className="fw-bold">
-                {clients.filter((c) => c.status === "active").length}
-              </h4>
+          <Link href="/clients/active" className="col text-decoration-none">
+            <div
+              className="card bg-info text-white shadow-sm h-100 text-center"
+              style={{ cursor: "pointer", minHeight: "120px" }}
+            >
+              <div className="card-body d-flex flex-column justify-content-center align-items-center py-2">
+                <h6 className="mb-1">Active Clients</h6>
+                <h4 className="fw-bold mb-0">
+                  {clients.filter((c) => c.status === "active").length}
+                </h4>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
 
-        <Link href="/clients/inactive" className="col text-decoration-none">
-          <div
-            className="card bg-danger text-white shadow-sm h-100 text-center"
-            style={{ cursor: "pointer", minHeight: "130px" }}
-          >
-            <div className="card-body d-flex flex-column justify-content-center align-items-center">
-              <h6 className="mb-1">Inactive Clients</h6>
-              <h4 className="fw-bold">
-                {clients.filter((c) => c.status === "inactive").length}
-              </h4>
+          <Link href="/clients/inactive" className="col text-decoration-none">
+            <div
+              className="card bg-danger text-white shadow-sm h-100 text-center"
+              style={{ cursor: "pointer", minHeight: "120px" }}
+            >
+              <div className="card-body d-flex flex-column justify-content-center align-items-center py-2">
+                <h6 className="mb-1">Inactive Clients</h6>
+                <h4 className="fw-bold mb-0">
+                  {clients.filter((c) => c.status === "inactive").length}
+                </h4>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
 
-        <Link href="/clients/closed" className="col text-decoration-none">
-          <div
-            className="card bg-secondary text-white shadow-sm h-100 text-center"
-            style={{ cursor: "pointer", minHeight: "130px" }}
-          >
-            <div className="card-body d-flex flex-column justify-content-center align-items-center">
-              <h6 className="mb-1">Closed Clients</h6>
-              <h4 className="fw-bold">
-                {clients.filter((c) => c.status === "closed").length}
-              </h4>
+          <Link href="/clients/closed" className="col text-decoration-none">
+            <div
+              className="card bg-secondary text-white shadow-sm h-100 text-center"
+              style={{ cursor: "pointer", minHeight: "120px" }}
+            >
+              <div className="card-body d-flex flex-column justify-content-center align-items-center py-2">
+                <h6 className="mb-1">Closed Clients</h6>
+                <h4 className="fw-bold mb-0">
+                  {clients.filter((c) => c.status === "closed").length}
+                </h4>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+        </div>
       </div>
 
       <div className="card shadow-sm mt-4">
