@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import { useSearchParams } from "next/navigation";
-import toast from "react-hot-toast";
-
+import toast, { Toaster } from "react-hot-toast";
 export default function InvoicesPage() {
   const searchParams = useSearchParams();
   const openModal = searchParams.get("openModal");
@@ -119,7 +118,7 @@ export default function InvoicesPage() {
       const updated = await res.json();
       setInvoices(updated);
       handleClose();
-    toast.success("Invoice saved successfully!");
+      toast.success("Invoice saved successfully!");
     } catch (error) {
       console.error("Error saving invoice:", error);
       toast.error("Error saving invoice");
@@ -137,7 +136,7 @@ export default function InvoicesPage() {
   };
 
   /** ✅ Delete */
- const handleDelete = async (id) => {
+  const handleDelete = async (id) => {
     let confirmResolve;
 
     // ✅ Custom full-screen confirmation toast with dimmed background
@@ -399,9 +398,24 @@ export default function InvoicesPage() {
                 <td>{`INV-${String(index + 1).padStart(2, "0")}`}</td>
                 <td>{inv.client}</td>
                 <td>{inv.amount}</td>
-                <td>{inv.status}</td>
-                <td>{inv.paid}</td>
-                <td>{inv.remaining}</td>
+                <td>
+                  <span
+                    className="d-inline-block text-center text-truncate"
+                    style={{
+                      maxWidth: "80px",
+                      padding: "4px 8px",
+                      border: "1px solid #3523594d",
+                      borderRadius: "6px",
+                      color: "#352359",
+                      cursor: "default",
+                    }}
+                  >
+                    {inv.status}
+                  </span>
+                </td>
+                <td>{inv.paid || "-"}</td>
+                <td>{inv.remaining || "-"}</td>
+                <td>
                   <div className="d-flex flex-column flex-sm-row justify-content-center gap-2">
                     <Button
                       size="sm"
@@ -418,31 +432,6 @@ export default function InvoicesPage() {
                       Delete
                     </Button>
                   </div>
-                <td>
-                  <span
-                    className="d-inline-block text-center text-truncate"
-                    style={{
-                      maxWidth: "80px",
-                      padding: "4px 8px",
-                      border: "1px solid #3523594d",
-                      borderRadius: "6px",
-                      color: "#352359",
-                      cursor: "default",
-                    }}
-                  >
-                    {inv.status}
-                  </span>
-                </td>
-                <td>{inv.status === "Partially Paid" ? inv.paid : "-"}</td>
-                <td>{inv.status === "Partially Paid" ? inv.remaining : "-"}</td>
-                <td>
-                  <Button
-                    size="sm"
-                    variant="outline-primary"
-                    onClick={() => handleEdit(index)}
-                  >
-                    Edit
-                  </Button>
                 </td>
               </tr>
             ))}
@@ -508,9 +497,7 @@ export default function InvoicesPage() {
                     type="number"
                     placeholder="Enter paid amount"
                     value={form.paid}
-                    onChange={(e) =>
-                      setForm({ ...form, paid: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, paid: e.target.value })}
                   />
                 </div>
                 <div className="col-md-6 mb-3">
@@ -543,12 +530,6 @@ export default function InvoicesPage() {
     </div>
   );
 }
-
-
-
-
-
-
 
 // "use client";
 // import { useState, useEffect } from "react";
