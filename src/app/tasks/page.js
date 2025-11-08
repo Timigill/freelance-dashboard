@@ -129,109 +129,101 @@ function TasksPageContent() {
     setShowModal(true);
   };
 
-  const handleDelete = async (taskId) => {
-    if (!taskId) {
-      toast.error("Invalid task ID");
-      return;
-    }
+const handleDelete = async (taskId) => {
+  if (!taskId) return toast.error("Invalid task ID");
 
-    // Show confirmation toast
-    const confirmed = await new Promise((resolve) => {
-      const ConfirmToast = ({ id }) => (
+  const confirmed = await new Promise((resolve) => {
+    let dismissed = false; // flag to stop multiple resolves
+
+    const ConfirmToast = ({ id }) => (
+      <div
+        style={{
+          position: "fixed",
+          marginTop: "-20px",
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: "rgba(0,0,0,0.4)",
+          zIndex: 9999,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <div
           style={{
-            position: "fixed",
-            width: "100vw",
-            marginTop:"-20px",
-            height: "100vh",
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-            backdropFilter: "blur(2px)",
+            backgroundColor: "#352359",
+            color: "#fff",
+            padding: "20px 30px",
+            borderRadius: "10px",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+            maxWidth: "340px",
+            textAlign: "center",
           }}
         >
-          <div
-            style={{
-              background: "#352359",
-              color: "#fff",
-              padding: "20px 24px",
-              borderRadius: "12px",
-              width: "320px",
-              maxWidth: "90vw",
-              textAlign: "center",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-            }}
-          >
-            <p style={{ marginBottom: "16px", fontWeight: 500 }}>
-              Are you sure you want to delete this task?
-            </p>
-
-            <div
-              style={{ display: "flex", justifyContent: "center", gap: "10px" }}
-            >
-              <button
-                onClick={() => {
-                  toast.dismiss(id); // close toast on confirm
-                  resolve(true);
-                }}
-                style={{
-                  background: "#dc3545",
-                  color: "#fff",
-                  border: "none",
-                  padding: "8px 18px",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "0.85rem",
-                }}
-              >
-                Yes
-              </button>
-
-              <button
-                onClick={() => {
-                  toast.dismiss(id); // close toast on cancel
+          <h5 className="mb-3">Confirm Delete</h5>
+          <p style={{ fontSize: "0.9rem" }}>
+            Are you sure you want to delete this task?
+          </p>
+          <div className="d-flex justify-content-center gap-3 mt-3">
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => {
+                if (!dismissed) {
+                  dismissed = true;
+                  toast.dismiss(id);
                   resolve(false);
-                }}
-                style={{
-                  background: "#6c757d",
-                  color: "#fff",
-                  border: "none",
-                  padding: "8px 18px",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "0.85rem",
-                }}
-              >
-                No
-              </button>
-            </div>
+                }
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => {
+                if (!dismissed) {
+                  dismissed = true;
+                  toast.dismiss(id);
+                  resolve(true);
+                }
+              }}
+            >
+              Delete
+            </button>
           </div>
         </div>
-      );
+      </div>
+    );
 
-      toast.custom((t) => <ConfirmToast id={t.id} />, {
-        duration: Infinity,
-        position: "top-center",
-      });
+    const toastId = toast.custom((t) => <ConfirmToast id={t.id} />, {
+      duration: Infinity,
+      position: "top-center",
     });
 
-    if (!confirmed) return;
+    // clean auto-close fallback
+    setTimeout(() => {
+      if (!dismissed) {
+        dismissed = true;
+        toast.dismiss(toastId);
+        resolve(false);
+      }
+    }, 4000);
+  });
 
-    try {
-      const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
-      const data = await res.json();
+  if (!confirmed) return;
 
-      if (!res.ok) throw new Error(data?.message || "Failed to delete task");
+  try {
+    const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.message || "Failed to delete task");
 
-      toast.success("Task deleted successfully!");
-      fetchTasks(); // refresh table
-    } catch (err) {
-      console.error("Delete error:", err);
-      toast.error(err.message || "Error deleting task");
-    }
-  };
+    toast.success("Task deleted successfully!");
+    fetchTasks();
+  } catch (err) {
+    console.error("Delete error:", err);
+    toast.error("Error deleting task");
+  }
+};
+
 
   const getStatusColor = (status) => {
     switch (status) {

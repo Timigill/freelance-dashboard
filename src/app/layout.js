@@ -25,7 +25,7 @@ export default function RootLayout({ children }) {
     ];
 
     setIsDashboard(dashboardRoutes.some((r) => pathname.startsWith(r)));
-  }, [pathname]); // 👈 re-run when path changes
+  }, [pathname]); 
 
   return (
     <html lang="en">
@@ -39,7 +39,7 @@ export default function RootLayout({ children }) {
           <Toaster
             position="top-center"
             toastOptions={{
-              duration: 3500,
+              duration: 2000,
               style: {
                 background: "#1f29379f",
                 color: "#fff",

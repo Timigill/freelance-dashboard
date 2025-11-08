@@ -61,8 +61,8 @@ function ClientsPageContent() {
 
     return () => {
       if (modalElement && modalInstance) {
-        modalElement.removeEventListener('hidden.bs.modal', () => { })
-        modalInstance.dispose?.()
+        modalElement.removeEventListener("hidden.bs.modal", () => {});
+        modalInstance.dispose?.();
       }
     };
   }, [searchParams]);
@@ -110,95 +110,100 @@ function ClientsPageContent() {
     }
   };
 
- const handleDelete = async (id) => {
-  let confirmResolve;
+  const handleDelete = async (taskId) => {
+    if (!taskId) return toast.error("Invalid task ID");
 
-  // Custom confirmation toast
-  const ConfirmToast = () => (
-    <div
-      style={{
-        position: "fixed",
-        width: "100vw",
-        height: "100vh",
-        top: 0,
-        left: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backdropFilter: "blur(2px)",
-        background: "rgba(0,0,0,0.4)",
-        zIndex: 9999,
-      }}
-    >
-      <div
-        style={{
-          background: "#352359",
-          color: "#fff",
-          padding: "20px",
-          borderRadius: "12px",
-          textAlign: "center",
-          width: "300px",
-        }}
-      >
-        <p>Do you want to delete this client?</p>
-        <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-          <button
-            onClick={() => {
-              toast.dismiss();
-              confirmResolve(true);
-            }}
+    const confirmed = await new Promise((resolve) => {
+      let dismissed = false; // flag to stop multiple resolves
+
+      const ConfirmToast = ({ id }) => (
+        <div
+          style={{
+            position: "fixed",
+            marginTop: "-20px",
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0,0,0,0.4)",
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div
             style={{
-              background: "#dc3545",
+              backgroundColor: "#352359",
               color: "#fff",
-              border: "none",
-              padding: "8px 14px",
-              borderRadius: "6px",
-              cursor: "pointer",
+              padding: "20px 30px",
+              borderRadius: "10px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+              maxWidth: "340px",
+              textAlign: "center",
             }}
           >
-            Yes
-          </button>
-          <button
-            onClick={() => {
-              toast.dismiss();
-              confirmResolve(false);
-            }}
-            style={{
-              background: "#6c757d",
-              color: "#fff",
-              border: "none",
-              padding: "8px 14px",
-              borderRadius: "6px",
-              cursor: "pointer",
-            }}
-          >
-            No
-          </button>
+            <h5 className="mb-3">Confirm Delete</h5>
+            <p style={{ fontSize: "0.9rem" }}>
+              Are you sure you want to delete this task?
+            </p>
+            <div className="d-flex justify-content-center gap-3 mt-3">
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => {
+                  if (!dismissed) {
+                    dismissed = true;
+                    toast.dismiss(id);
+                    resolve(false);
+                  }
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger btn-sm"
+                onClick={() => {
+                  if (!dismissed) {
+                    dismissed = true;
+                    toast.dismiss(id);
+                    resolve(true);
+                  }
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  );
+      );
 
-  // Wrap confirmation in a promise
-  const confirmPromise = new Promise((resolve) => {
-    confirmResolve = resolve;
-    toast.custom(<ConfirmToast />);
-  });
+      const toastId = toast.custom((t) => <ConfirmToast id={t.id} />, {
+        duration: Infinity,
+        position: "top-center",
+      });
 
-  try {
-    const confirmed = await confirmPromise;
+      // clean auto-close fallback
+      setTimeout(() => {
+        if (!dismissed) {
+          dismissed = true;
+          toast.dismiss(toastId);
+          resolve(false);
+        }
+      }, 4000);
+    });
+
     if (!confirmed) return;
 
-    const res = await fetch(`/api/clients/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Failed to delete client");
+    try {
+      const res = await fetch(`/api/clients/${taskId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || "Failed to delete task");
 
-    fetchClients(); // Refresh client list
-    toast.success("Client deleted successfully!");
-  } catch (err) {
-    toast.error(err.message || "Error deleting client");
-  }
-};
-
+      toast.success("Client deleted successfully!");
+      fetchClients();
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error("Error deleting task");
+    }
+  };
 
   const handleEdit = async (client) => {
     setEditingClientId(client._id);
@@ -377,21 +382,29 @@ function ClientsPageContent() {
                   filteredAndSortedClients.map((client) => (
                     <tr key={client._id}>
                       <td>
-                        <Link href={`/clients/${client._id}`} className="text-decoration-none fw-semibold">
+                        <Link
+                          href={`/clients/${client._id}`}
+                          className="text-decoration-none fw-semibold"
+                          style={{ color: "#000" }}
+                        >
                           {client.name}
                         </Link>
                       </td>
                       <td>
                         {client.company ? (
-                          <Link href={`/clients/${client._id}`} className="text-decoration-none">
+                          <Link
+                            href={`/clients/${client._id}`}
+                            className="text-decoration-none"
+                            style={{ color: "#000" }}
+                          >
                             {client.company}
                           </Link>
                         ) : (
-                          '—'
+                          "—"
                         )}
                       </td>
-                      <td>{client.phone || '—'}</td>
-                      <td>{client.category || 'Uncategorized'}</td>
+                      <td>{client.phone || "—"}</td>
+                      <td>{client.category || "Uncategorized"}</td>
                       <td>
                         <small className="text-muted">
                           {new Date(client.createdAt).toLocaleDateString()}
