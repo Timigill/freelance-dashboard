@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema(
     resetTokenExpiry: Date,
     verificationToken: String,
     provider: { type: String, default: "credentials" },
+      bio: { type: String, default: "" },          
+    profilePic: { type: String, default: null },
   },
   { timestamps: true }
 );

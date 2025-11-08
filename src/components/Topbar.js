@@ -2,7 +2,12 @@
 import { useEffect, useState, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
-import { BsBell, BsPersonCircle, BsBoxArrowRight, BsGear } from "react-icons/bs";
+import {
+  BsBell,
+  BsPersonCircle,
+  BsBoxArrowRight,
+  BsGear,
+} from "react-icons/bs";
 
 export default function Topbar() {
   const { data: session, status } = useSession();
@@ -10,6 +15,25 @@ export default function Topbar() {
   const [isMobile, setIsMobile] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`/api/users/${session.user.id}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to fetch user");
+        setUser(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchUser();
+  }, [session?.user?.id]);
 
   // ✅ Close dropdown when clicking outside
   useEffect(() => {
@@ -40,6 +64,8 @@ export default function Topbar() {
 
   const userName = session?.user?.name || "User";
   const userEmail = session?.user?.email || "";
+  const profileInitial = userName.charAt(0).toUpperCase();
+  const profilePic = user?.profilePic || null;
 
   return (
     <header
@@ -117,8 +143,23 @@ export default function Topbar() {
                         fontWeight: 600,
                       }}
                     >
-                      {userName.charAt(0).toUpperCase()}
+                      {profilePic ? (
+                        <img
+                          src={profilePic}
+                          alt={userName}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            
+                          }}
+                        />
+                      ) : (
+                        profileInitial
+                      )}
                     </div>
+
                     <div className="ms-2">
                       <div
                         className="fw-semibold"

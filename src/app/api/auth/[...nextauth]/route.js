@@ -97,13 +97,17 @@ export const authOptions = {
     async jwt({ token, user }) {
       if (user) {
         const dbUser = await User.findOne({ email: user.email });
-        token.id = dbUser?._id?.toString();
+        if (dbUser) {
+          token.id = dbUser._id.toString();
+        }
       }
       return token;
     },
 
     async session({ session, token }) {
-      if (token?.id) session.user.id = token.id;
+      if (token?.id) {
+        session.user.id = token.id;
+      }
       return session;
     },
   },
