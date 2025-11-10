@@ -1,17 +1,17 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { Modal, Button, Form, Badge } from "react-bootstrap";
+import { Modal, Button, Form } from "react-bootstrap";
 import toast from "react-hot-toast";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 function IncomePageContent() {
   const [incomeSources, setIncomeSources] = useState([]);
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const [clients, setClients] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [currentSource, setCurrentSource] = useState(null);
   const [filter, setFilter] = useState("all");
+  const searchParams = useSearchParams();
+
   const [form, setForm] = useState({
     name: "",
     amount: "",
@@ -21,27 +21,29 @@ function IncomePageContent() {
     clientName: "",
   });
 
-  // ✅ Fetch income sources
+  // Fetch income sources
   const fetchIncomeSources = async () => {
     try {
       const res = await fetch("/api/income");
       if (!res.ok) throw new Error("Failed to fetch income sources");
       const data = await res.json();
       setIncomeSources(data);
-    } catch (error) {
-      console.error("Error fetching income sources:", error);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error fetching income sources");
     }
   };
 
-  // ✅ Fetch clients
+  // Fetch clients
   const fetchClients = async () => {
     try {
       const res = await fetch("/api/clients");
       if (!res.ok) throw new Error("Failed to fetch clients");
       const data = await res.json();
       setClients(data);
-    } catch (error) {
-      console.error("Error fetching clients:", error);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error fetching clients");
     }
   };
 
@@ -50,7 +52,7 @@ function IncomePageContent() {
     fetchClients();
   }, []);
 
-  // ✅ Auto-open modal if ?openModal=true
+  // Auto-open modal if ?openModal=true
   useEffect(() => {
     if (searchParams.get("openModal") === "true") {
       setCurrentSource(null);
@@ -66,12 +68,13 @@ function IncomePageContent() {
     }
   }, [searchParams]);
 
-  // ✅ Save or update
+  // Handle add/edit submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       let updatedForm = { ...form };
 
+      // Auto-fill clientName if missing
       if (updatedForm.clientId && !updatedForm.clientName) {
         const selected = clients.find((c) => c._id === updatedForm.clientId);
         if (selected)
@@ -80,20 +83,26 @@ function IncomePageContent() {
             : selected.name;
       }
 
-      if (typeof updatedForm.amount === "string") {
-        updatedForm.amount = parseFloat(updatedForm.amount) || 0;
+      updatedForm.amount =
+        typeof updatedForm.amount === "string"
+          ? parseFloat(updatedForm.amount) || 0
+          : updatedForm.amount;
+
+      if (currentSource) {
+        // PUT (update)
+        await fetch("/api/income", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...updatedForm, _id: currentSource._id }), // include _id in body
+        });
+      } else {
+        // POST (new)
+        await fetch("/api/income", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedForm),
+        });
       }
-
-      const url = currentSource
-        ? `/api/income/${currentSource._id}`
-        : "/api/income";
-      const method = currentSource ? "PUT" : "POST";
-
-      await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedForm),
-      });
 
       setShowModal(false);
       setCurrentSource(null);
@@ -105,13 +114,16 @@ function IncomePageContent() {
         clientId: "",
         clientName: "",
       });
+
       fetchIncomeSources();
-    } catch (error) {
-      console.error("Error saving income source:", error);
+      toast.success("Income source saved successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error saving income source");
     }
   };
 
-  // ✅ Edit
+  // Edit
   const handleEdit = (source) => {
     setCurrentSource(source);
     setForm({
@@ -125,11 +137,10 @@ function IncomePageContent() {
     setShowModal(true);
   };
 
-  // ✅ Delete
+  // Delete
   const handleDelete = async (id) => {
     let confirmResolve;
 
-    // ✅ Custom full-screen confirmation toast with dimmed background
     const ConfirmToast = () => (
       <div
         style={{
@@ -138,12 +149,12 @@ function IncomePageContent() {
           top: "-20px",
           bottom: "-20px",
           height: "100vh",
-          background: "rgba(0, 0, 0, 0.5)", // dim background
+          background: "rgba(0, 0, 0, 0.5)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           zIndex: 9999,
-          backdropFilter: "blur(2px)", // optional soft blur
+          backdropFilter: "blur(2px)",
         }}
       >
         <div
@@ -165,9 +176,8 @@ function IncomePageContent() {
               fontSize: "0.95rem",
             }}
           >
-            Do you want to delete this task?
+            Do you want to delete this income source?
           </p>
-
           <div
             style={{ display: "flex", gap: "10px", justifyContent: "center" }}
           >
@@ -188,7 +198,6 @@ function IncomePageContent() {
             >
               Yes
             </button>
-
             <button
               onClick={() => {
                 toast.dismiss();
@@ -211,17 +220,12 @@ function IncomePageContent() {
       </div>
     );
 
-    // Promise wrapper
     const confirmPromise = new Promise((resolve) => {
       confirmResolve = resolve;
       toast.custom(<ConfirmToast />, {
         duration: 10000,
         position: "top-center",
-        style: {
-          background: "transparent",
-          boxShadow: "none",
-          padding: 0,
-        },
+        style: { background: "transparent", boxShadow: "none", padding: 0 },
       });
     });
 
@@ -229,34 +233,30 @@ function IncomePageContent() {
       const confirmed = await confirmPromise;
       if (!confirmed) return;
 
-      const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete task");
+      const res = await fetch(`/api/income?id=${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete income source");
 
-      fetchTasks();
-      toast.success("Task deleted successfully!");
+      fetchIncomeSources();
+      toast.success("Income source deleted successfully!");
     } catch (err) {
-      toast.error("Error deleting task");
+      console.error(err);
+      toast.error("Error deleting income source");
     }
   };
 
-  // ✅ Filter logic
-  // show all sources (for the table)
+  // Filtered sources
   const filteredSources =
     filter === "all"
       ? incomeSources
-      : incomeSources.filter((source) => source.type === filter);
+      : incomeSources.filter((s) => s.type === filter);
 
-  // only active sources (for cards)
   const activeSources =
     filter === "all"
-      ? incomeSources.filter((source) => source.isActive)
-      : incomeSources.filter(
-          (source) => source.type === filter && source.isActive
-        );
+      ? incomeSources.filter((s) => s.isActive)
+      : incomeSources.filter((s) => s.type === filter && s.isActive);
 
-  // total income based on active sources only
   const totalIncome = activeSources.reduce(
-    (sum, source) => sum + (source.amount || 0),
+    (sum, s) => sum + (s.amount || 0),
     0
   );
 
@@ -275,7 +275,6 @@ function IncomePageContent() {
             Manage your income streams and track earnings
           </p>
         </div>
-
         <button
           className="btn mt-2 mt-md-0"
           style={{
@@ -314,7 +313,6 @@ function IncomePageContent() {
             </div>
           </div>
         </div>
-
         <div className="col-6 col-md-4">
           <div className="card bg-success text-white h-100 text-center">
             <div className="card-body d-flex flex-column justify-content-center">
@@ -325,7 +323,6 @@ function IncomePageContent() {
             </div>
           </div>
         </div>
-
         <div className="col-6 col-md-4 d-flex justify-content-center justify-content-md-start">
           <div
             className="card bg-info text-white h-100 text-center"
@@ -394,10 +391,7 @@ function IncomePageContent() {
                     <td>
                       <span
                         style={{
-                          color: source.isActive ? "#352359" : "#352359",
-                          // background:"#35235922",
-                          // padding: "4px 10px",
-                          // borderRadius: "4px",
+                          color: "#352359",
                           fontWeight: 500,
                           fontSize: "0.9rem",
                           letterSpacing: "0.3px",
@@ -451,7 +445,6 @@ function IncomePageContent() {
                 required
               />
             </Form.Group>
-
             <Form.Group className="mb-3">
               <Form.Label>Client</Form.Label>
               <Form.Select
@@ -476,7 +469,6 @@ function IncomePageContent() {
                 ))}
               </Form.Select>
             </Form.Group>
-
             <Form.Group className="mb-3">
               <Form.Label>Amount</Form.Label>
               <Form.Control
@@ -491,7 +483,6 @@ function IncomePageContent() {
                 step="0.01"
               />
             </Form.Group>
-
             <Form.Group className="mb-3">
               <Form.Label>Frequency</Form.Label>
               <Form.Select
@@ -507,7 +498,6 @@ function IncomePageContent() {
                 <option value="Yearly">Yearly</option>
               </Form.Select>
             </Form.Group>
-
             <Form.Group className="mb-3">
               <Form.Label>Description</Form.Label>
               <Form.Control

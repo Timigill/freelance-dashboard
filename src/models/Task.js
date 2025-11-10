@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
 
 const TaskSchema = new mongoose.Schema({
   name: {
@@ -13,9 +13,14 @@ const TaskSchema = new mongoose.Schema({
   },
   sourceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'IncomeSource',
+    ref: "IncomeSource",
     required: true,
   },
+  clientId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Client",
+},
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   dueDate: {
     type: Date,
     required: true,
@@ -23,36 +28,40 @@ const TaskSchema = new mongoose.Schema({
   completedDate: Date,
   status: {
     type: String,
-    enum: ['Pending', 'In Progress', 'Completed', 'Paid'],
-    default: 'Pending',
+    enum: ["Pending", "In Progress", "Completed", "Paid"],
+    default: "Pending",
   },
   paymentStatus: {
     type: String,
-    enum: ['Unpaid', 'Partially Paid', 'Paid'],
-    default: 'Unpaid',
+    enum: ["Unpaid", "Partially Paid", "Paid"],
+    default: "Unpaid",
   },
-  payments: [{
-    amount: {
-      type: Number,
-      required: true,
+  payments: [
+    {
+      amount: {
+        type: Number,
+        required: true,
+      },
+      date: {
+        type: Date,
+        required: true,
+      },
+      notes: String,
     },
-    date: {
-      type: Date,
-      required: true,
-    },
-    notes: String,
-  }],
+  ],
   priority: {
     type: String,
-    enum: ['Low', 'Medium', 'High'],
-    default: 'Medium',
+    enum: ["Low", "Medium", "High"],
+    default: "Medium",
   },
   tags: [String],
-  attachments: [{
-    name: String,
-    url: String,
-    type: String,
-  }],
+  attachments: [
+    {
+      name: String,
+      url: String,
+      type: String,
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,
@@ -61,22 +70,25 @@ const TaskSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-})
+});
 
 // Update timestamps on save
-TaskSchema.pre('save', function(next) {
-  this.updatedAt = new Date()
-  next()
-})
+TaskSchema.pre("save", function (next) {
+  this.updatedAt = new Date();
+  next();
+});
 
 // Virtual field for remaining amount
-TaskSchema.virtual('remainingAmount').get(function() {
-  const paidAmount = this.payments.reduce((total, payment) => total + payment.amount, 0)
-  return this.amount - paidAmount
-})
+TaskSchema.virtual("remainingAmount").get(function () {
+  const paidAmount = this.payments.reduce(
+    (total, payment) => total + payment.amount,
+    0
+  );
+  return this.amount - paidAmount;
+});
 
 // Ensure virtuals are included in JSON output
-TaskSchema.set('toJSON', { virtuals: true })
-TaskSchema.set('toObject', { virtuals: true })
+TaskSchema.set("toJSON", { virtuals: true });
+TaskSchema.set("toObject", { virtuals: true });
 
-export default mongoose.models.Task || mongoose.model('Task', TaskSchema)
+export default mongoose.models.Task || mongoose.model("Task", TaskSchema);

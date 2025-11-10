@@ -75,9 +75,11 @@ function ClientsPageContent() {
     try {
       const res = await fetch("/api/clients");
       const data = await res.json();
-      setClients(data);
+      console.log("Clients API returned:", data); // debug log
+      setClients(Array.isArray(data) ? data : []); // safe assignment
     } catch (err) {
       console.error("Error fetching clients:", err);
+      setClients([]); // ensure it's always an array
     }
   };
 
@@ -99,6 +101,7 @@ function ClientsPageContent() {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
+        credentials: "include",
       });
 
       setForm({ name: "", address: "", company: "", phone: "", category: "" });

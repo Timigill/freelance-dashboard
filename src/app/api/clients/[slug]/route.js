@@ -1,54 +1,75 @@
-import { NextResponse } from 'next/server'
-import { dbConnect } from '@/lib/dbConnect'
-import Client from '@/models/Client'
+import { NextResponse } from "next/server";
+import { dbConnect } from "@/lib/dbConnect";
+import Client from "@/models/Client";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../auth/[...nextauth]/route";
 
-// ✅ GET single client by slug (id)
+const getUserIdFromSession = async (req) => {
+  const session = await getServerSession(authOptions);
+  if (!session) throw new Error("Unauthorized");
+  return session.user.id;
+};
+
+// GET single client
 export async function GET(req, context) {
   try {
-    await dbConnect()
-    const { slug } = await context.params  // ✅ await params here
+    await dbConnect();
+    const userId = await getUserIdFromSession(req);
+    const { slug } = context.params;
 
-    const client = await Client.findById(slug)
-    if (!client) {
-      return NextResponse.json({ message: 'Client not found' }, { status: 404 })
-    }
+    const client = await Client.findOne({ _id: slug, userId });
+    if (!client)
+      return NextResponse.json({ message: "Client not found" }, { status: 404 });
 
-    return NextResponse.json(client)
-  } catch (error) {
-    console.error('GET /api/clients/[slug] error:', error)
-    return NextResponse.json({ message: 'Server error' }, { status: 500 })
+    return NextResponse.json(client);
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json(
+      { message: err.message || "Server error" },
+      { status: err.message === "Unauthorized" ? 401 : 500 }
+    );
   }
 }
 
-// ✅ UPDATE client
+// UPDATE client
 export async function PUT(req, context) {
   try {
-    await dbConnect()
-    const { slug } = await context.params  // ✅ same fix here
-    const body = await req.json()
+    await dbConnect();
+    const userId = await getUserIdFromSession(req);
+    const { slug } = context.params;
+    const body = await req.json();
 
-    const updatedClient = await Client.findByIdAndUpdate(slug, body, { new: true })
-    if (!updatedClient) {
-      return NextResponse.json({ message: 'Client not found' }, { status: 404 })
-    }
+    const updatedClient = await Client.findOneAndUpdate({ _id: slug, userId }, body, { new: true });
+    if (!updatedClient)
+      return NextResponse.json({ message: "Client not found" }, { status: 404 });
 
-    return NextResponse.json(updatedClient)
-  } catch (error) {
-    console.error('PUT /api/clients/[slug] error:', error)
-    return NextResponse.json({ message: 'Failed to update client' }, { status: 500 })
+    return NextResponse.json(updatedClient);
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json(
+      { message: err.message || "Failed to update client" },
+      { status: err.message === "Unauthorized" ? 401 : 500 }
+    );
   }
 }
 
-// ✅ DELETE client
+// DELETE client
 export async function DELETE(req, context) {
   try {
-    await dbConnect()
-    const { slug } = await context.params  // ✅ and here too
-    await Client.findByIdAndDelete(slug)
+    await dbConnect();
+    const userId = await getUserIdFromSession(req);
+    const { slug } = context.params;
 
-    return NextResponse.json({ message: 'Client deleted successfully' }, { status: 200 })
-  } catch (error) {
-    console.error('DELETE /api/clients/[slug] error:', error)
-    return NextResponse.json({ message: 'Failed to delete client' }, { status: 500 })
+    const deleted = await Client.findOneAndDelete({ _id: slug, userId });
+    if (!deleted)
+      return NextResponse.json({ message: "Client not found" }, { status: 404 });
+
+    return NextResponse.json({ message: "Client deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json(
+      { message: err.message || "Failed to delete client" },
+      { status: err.message === "Unauthorized" ? 401 : 500 }
+    );
   }
 }

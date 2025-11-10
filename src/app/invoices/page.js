@@ -530,7 +530,7 @@ export default function InvoicesPage() {
     </div>
   );
 }
-
+  
 // "use client";
 // import { useState, useEffect } from "react";
 // import { Modal, Button, Form, Spinner } from "react-bootstrap";

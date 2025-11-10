@@ -2,34 +2,47 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/dbConnect";
 import Client from "@/models/Client";
 import IncomeSource from "@/models/IncomeSource";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]/route";
+
+// Helper to get user ID from NextAuth session
+const getUserIdFromSession = async (req) => {
+  const session = await getServerSession(authOptions);
+  if (!session) throw new Error("Unauthorized");
+  return session.user.id;
+};
 
 // ✅ CREATE a new client
 export async function POST(req) {
   try {
     await dbConnect();
     const body = await req.json();
+    const userId = await getUserIdFromSession(req);
 
-    const newClient = await Client.create(body);
+    const newClient = await Client.create({ ...body, userId });
     return NextResponse.json(newClient, { status: 201 });
   } catch (err) {
     console.error("POST /api/clients error:", err);
     return NextResponse.json(
-      { message: "Failed to create client" },
-      { status: 500 }
+      { message: err.message || "Failed to create client" },
+      { status: err.message === "Unauthorized" ? 401 : 500 }
     );
   }
 }
 
 // ✅ GET all clients with income data
-export async function GET() {
+export async function GET(req) {
   try {
     await dbConnect();
-    const clients = await Client.find().lean();
+    const userId = await getUserIdFromSession(req);
+
+    const clients = await Client.find({ userId }).lean();
 
     const clientIds = clients.map((c) => c._id);
     const incomeSources = await IncomeSource.find({
       clientId: { $in: clientIds },
       isActive: true,
+      userId,
     }).lean();
 
     const incomeMap = {};
@@ -54,8 +67,8 @@ export async function GET() {
   } catch (err) {
     console.error("GET /api/clients error:", err);
     return NextResponse.json(
-      { message: "Failed to fetch clients" },
-      { status: 500 }
+      { message: err.message || "Failed to fetch clients" },
+      { status: err.message === "Unauthorized" ? 401 : 500 }
     );
   }
 }
