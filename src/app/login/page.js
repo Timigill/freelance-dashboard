@@ -13,7 +13,7 @@ export default function LoginPage() {
     password: "",
     remember: false,
   });
-   const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [callbackUrl, setCallbackUrl] = useState("/dashboard");
 
@@ -36,6 +36,12 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!form.remember) {
+      toast.error("You must check 'Remember me' to login.");
+      return; // Stop the login process
+    }
+
     setLoading(true);
 
     const result = await signIn("credentials", {
@@ -46,9 +52,9 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      toast.error(result.error); // ✅ show error
+      toast.error(result.error);
     } else {
-      toast.success("Login successful!"); // ✅ show success
+      toast.success("Login successful!");
       if (result?.url) {
         const url = new URL(result.url);
         window.location.href = `${window.location.origin}${url.pathname}`;
