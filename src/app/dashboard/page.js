@@ -1,3 +1,6 @@
+
+
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -13,12 +16,12 @@ export default function HomePage() {
   // ----------------- AUTHENTICATION -----------------
   const { data: session, status } = useSession();
   const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   // ----------------- STATES -----------------
   // inside HomePage component
   const [showClientModal, setShowClientModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
-
   const [incomeSources, setIncomeSources] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [clients, setClients] = useState([]);
@@ -40,13 +43,22 @@ export default function HomePage() {
 
   // ----------------- EFFECTS -----------------
   useEffect(() => {
-    if (session?.user) {
-      setUser({
-        name: session.user.name || "John Doe",
-        email: session.user.email || "john@example.com",
-      });
-    }
-  }, [session]);
+    if (!session?.user?.id) return setLoadingUser(false);
+
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`/api/users/${session.user.id}`);
+        if (!res.ok) setUser(null);
+        else setUser(await res.json());
+      } catch {
+        setUser(null);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+
+    fetchUser();
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -433,6 +445,26 @@ export default function HomePage() {
             }}
           >
             Go to Login
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div
+        className="d-flex flex-column justify-content-center align-items-center"
+        style={{ height: "80vh" }}
+      >
+        <div className="card p-4 text-center" style={{ maxWidth: "400px" }}>
+          <h4 className="mb-3">Create Your Account</h4>
+          <p className="text-muted mb-4">
+            Your account doesn’t exist yet. Please create one to access the
+            dashboard.
+          </p>
+          <a href="/signup" className="btn btn-primary px-4 py-2">
+            Create Account
           </a>
         </div>
       </div>
