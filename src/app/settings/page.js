@@ -1,27 +1,30 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import toast from "react-hot-toast";
+import "./settings.css"; // import the CSS file
 
 export default function SettingsPage() {
   const { data: session, status } = useSession();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [bio, setBio] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    bio: "",
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [profilePic, setProfilePic] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
 
-  // Always run hooks, only fetch data when session exists
   useEffect(() => {
     if (status !== "authenticated") return;
-
     const userId = session.user?.id;
-    if (!userId) {
-      console.log("Session user ID not found:", session);
-      return;
-    }
+    if (!userId) return;
 
     const fetchUser = async () => {
       try {
@@ -33,23 +36,31 @@ export default function SettingsPage() {
           return;
         }
 
-        setName(data.name || "");
-        setEmail(data.email || "");
-        setBio(data.bio || "");
+        setForm((prev) => ({
+          ...prev,
+          name: data.name || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          bio: data.bio || "",
+        }));
         setPreview(data.profilePic || null);
       } catch (err) {
-        toast.error("Failed to fetch profile");
         console.error(err);
+        toast.error("Failed to fetch profile");
       }
     };
 
     fetchUser();
   }, [status, session]);
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     setProfilePic(file);
 
     const reader = new FileReader();
@@ -61,8 +72,23 @@ export default function SettingsPage() {
     e.preventDefault();
     setLoading(true);
 
+    if (form.newPassword && form.newPassword !== form.confirmPassword) {
+      toast.error("New passwords do not match");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const payload = { name, bio };
+      const payload = {
+        name: form.name,
+        bio: form.bio,
+        phone: form.phone,
+      };
+
+      if (form.oldPassword && form.newPassword) {
+        payload.oldPassword = form.oldPassword;
+        payload.newPassword = form.newPassword;
+      }
 
       if (profilePic) {
         const reader = new FileReader();
@@ -86,6 +112,13 @@ export default function SettingsPage() {
 
       toast.success("Profile updated successfully!");
       if (data.user?.profilePic) setPreview(data.user.profilePic);
+
+      setForm((prev) => ({
+        ...prev,
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
     } catch (err) {
       toast.error(err.message || "Something went wrong");
       console.error(err);
@@ -94,91 +127,139 @@ export default function SettingsPage() {
     }
   };
 
+  if (status === "loading") return <p>Loading session...</p>;
+  if (status === "unauthenticated")
+    return <p>Please login to update your profile.</p>;
+
   return (
-    <div className="container mt-4">
-      <h2>Settings</h2>
+    <div className="settings-container">
+      <h2 className="settings-title">Settings</h2>
 
-      {status === "loading" && <p>Loading session...</p>}
-      {status === "unauthenticated" && (
-        <p>Please login to update your profile.</p>
-      )}
+      <form onSubmit={handleSubmit} className="settings-form">
+        {/* Top Section */}
+        <div className="settings-top">
+          {/* Left */}
+          <div className="settings-left">
+            <div className="input-group">
+              <label>Full Name</label>
+              <input
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-      {status === "authenticated" && (
-        <form onSubmit={handleSubmit} className="mt-4">
-          <div className="mb-3">
-            <label className="form-label">Full Name</label>
-            <input
-              type="text"
-              className="form-control"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+            <div className="input-group">
+              <label>Email</label>
+              <input type="email" name="email" value={form.email} readOnly />
+            </div>
+
+            <div className="input-group">
+              <label>Phone Number</label>
+              <input
+                type="text"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+              />
+            </div>
           </div>
-          <div className="mb-3">
-            <label className="form-label">Email</label>
-            <input
-              type="email"
-              className="form-control"
-              value={email}
-              disabled
-            />
+
+          {/* Right */}
+          <div className="settings-right">
+            <div className="profile-pic-container">
+              <img
+                src={preview || "/default-avatar.png"}
+                alt="Profile"
+                className="profile-pic"
+              />
+            </div>
+            <label className="upload-btn">
+              Change Photo
+              <input type="file" onChange={handleFileChange} hidden />
+            </label>
           </div>
-          <div className="mb-3">
-            <label className="form-label">Bio</label>
-            <textarea
-              className="form-control"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              rows={3}
-            />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Profile Picture</label>
-            {preview && (
-              <div className="mb-2">
-                <img
-                  src={preview}
-                  alt="Preview"
-                  width={120}
-                  height={120}
-                  style={{ borderRadius: "50%", objectFit: "cover" }}
-                />
-              </div>
+        </div>
+
+        {/* Bio */}
+        <div className="input-group">
+          <label>Bio</label>
+          <textarea
+            name="bio"
+            rows={3}
+            value={form.bio}
+            onChange={handleChange}
+          ></textarea>
+        </div>
+
+        {/* Password Section */}
+        <div className="password-section">
+          <h4>Change Password</h4>
+
+          <div className="password-grid">
+            {["oldPassword", "newPassword", "confirmPassword"].map(
+              (field, i) => (
+                <div key={i} className="password-input-group">
+                  <input
+                    type={form[`show${field}`] ? "text" : "password"}
+                    name={field}
+                    placeholder={
+                      field === "oldPassword"
+                        ? "Old Password"
+                        : field === "newPassword"
+                        ? "New Password"
+                        : "Confirm Password"
+                    }
+                    value={form[field]}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedField(field)}
+                    onBlur={(e) => {
+                      if (
+                        e.relatedTarget &&
+                        e.relatedTarget.classList.contains("toggle-password")
+                      ) {
+                        return; // ignore blur if icon clicked
+                      }
+                      setFocusedField(null);
+                    }}
+                    className={focusedField === field ? "active" : ""}
+                  />
+
+                  {/* Toggle Eye Icon */}
+                  <span
+                    className="toggle-password"
+                    tabIndex={0}
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        [`show${field}`]: !prev[`show${field}`],
+                      }))
+                    }
+                  >
+                    {form[`show${field}`] ? <FaEyeSlash /> : <FaEye />}
+                  </span>
+                </div>
+              )
             )}
-            <input
-              type="file"
-              className="form-control"
-              onChange={handleFileChange}
-            />
           </div>
-          <div className="d-flex gap-2">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading}
-            >
-              {loading ? "Saving..." : "Save"}
-            </button>
+        </div>
 
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => {
-                setName(session.user?.name || "");
-                setEmail(session.user?.email || "");
-                setBio("");
-                setProfilePic(null);
-                setPreview(null);
-
-                window.location.href = "/dashboard";
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
+        {/* Buttons */}
+        <div className="button-group">
+          <button
+            type="button"
+            className="cancel-btn"
+            onClick={() => (window.location.href = "/dashboard")}
+          >
+            Cancel
+          </button>
+          <button type="submit" className="save-btn" disabled={loading}>
+            {loading ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

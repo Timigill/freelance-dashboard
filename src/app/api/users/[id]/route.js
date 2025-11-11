@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/dbConnect";
 import User from "@/models/User";
+import bcrypt from "bcryptjs";
 
 // GET user data
 export async function GET(req, { params }) {
   try {
     await dbConnect();
+    const { id } = await params;
 
-    // unwrap params
-    const { id } = await params; // <-- important in Next.js 16 App Router
     const user = await User.findById(id).select("-password");
-
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -26,8 +25,7 @@ export async function GET(req, { params }) {
 export async function PATCH(req, { params }) {
   try {
     await dbConnect();
-
-    const { id } = await params; // <-- unwrap here too
+    const { id } = await params;
     const data = await req.json();
 
     const user = await User.findById(id);
@@ -35,12 +33,23 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Basic profile updates
     if (data.name) user.name = data.name;
     if (data.bio) user.bio = data.bio;
+    if (data.phone) user.phone = data.phone;
     if (data.profilePic) user.profilePic = data.profilePic;
 
-    await user.save();
+    // Handle password change
+    if (data.oldPassword && data.newPassword) {
+      const isMatch = await bcrypt.compare(data.oldPassword, user.password);
+      if (!isMatch) {
+        return NextResponse.json({ error: "Old password is incorrect" }, { status: 400 });
+      }
+      const hashed = await bcrypt.hash(data.newPassword, 10);
+      user.password = hashed;
+    }
 
+    await user.save();
     const updatedUser = user.toObject();
     delete updatedUser.password;
 

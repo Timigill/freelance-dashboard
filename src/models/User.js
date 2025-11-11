@@ -4,8 +4,8 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    phone: { type: String, default: null }, // ✅ optional now
-    password: { type: String }, // optional for OAuth
+    phone: { type: String, default: null }, 
+    password: { type: String }, 
     isVerified: { type: Boolean, default: false },
     resetToken: String,
     resetTokenExpiry: Date,
@@ -17,7 +17,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ force delete old compiled model before re-defining
 delete mongoose.models.User;
 
 export default mongoose.model("User", userSchema);
