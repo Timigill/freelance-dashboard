@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { BsGithub } from "react-icons/bs";
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [callbackUrl, setCallbackUrl] = useState("/dashboard");
+  const router = useRouter();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -48,20 +50,15 @@ export default function LoginPage() {
       redirect: false,
       emailOrPhone: form.emailOrPhone,
       password: form.password,
-      callbackUrl,
     });
 
     if (result?.error) {
       toast.error(result.error);
+      setLoading(false);
     } else {
       toast.success("Login successful!");
-      if (result?.url) {
-        const url = new URL(result.url);
-        window.location.href = `${window.location.origin}${url.pathname}`;
-      }
+      router.push(callbackUrl);
     }
-
-    setLoading(false);
   };
 
   return (
