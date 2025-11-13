@@ -77,11 +77,18 @@
 
 .checkbox-wrapper input[type="checkbox"] {
   margin-right: 10px;
+  accent-color: #352359;
+  cursor: pointer;
   margin-top: 18px;
   width: 18px;
   height: 18px;
 }
 
+.checkbox-wrapper label {
+  margin-left: 8px;
+  cursor: pointer;
+  user-select: none;
+}
 /* Submit button */
 .login-container form button {
   width: 100%;

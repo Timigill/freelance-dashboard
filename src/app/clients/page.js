@@ -12,6 +12,7 @@ function ClientsPageContent() {
     company: "",
     phone: "",
     category: "",
+    status: "active",
   });
   const [editingClientId, setEditingClientId] = useState(null);
   const [shouldCloseModal, setShouldCloseModal] = useState(false);
@@ -89,7 +90,7 @@ function ClientsPageContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isValid) return alert("Please fill all fields.");
+    if (!isValid) return toast.error("Please fill all fields.");
 
     try {
       const method = editingClientId ? "PUT" : "POST";
@@ -97,23 +98,38 @@ function ClientsPageContent() {
         ? `/api/clients/${editingClientId}`
         : "/api/clients";
 
-      await fetch(url, {
+      const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
         credentials: "include",
       });
 
-      setForm({ name: "", address: "", company: "", phone: "", category: "" });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Failed to save client");
+
+      toast.success(editingClientId ? "Client updated!" : "Client added!");
+
+      setForm({
+        name: "",
+        address: "",
+        company: "",
+        phone: "",
+        category: "",
+        status: "active",
+      });
       setEditingClientId(null);
       fetchClients();
       setShouldCloseModal(true);
     } catch (err) {
       console.error("Error saving client:", err);
+      toast.error(err.message);
     }
   };
 
   const handleDelete = async (taskId) => {
+    console.log("Deleting client with id:", taskId);
     if (!taskId) return toast.error("Invalid task ID");
 
     const confirmed = await new Promise((resolve) => {
@@ -126,7 +142,6 @@ function ClientsPageContent() {
             marginTop: "-20px",
             width: "100vw",
             height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.4)",
             zIndex: 9999,
             display: "flex",
             justifyContent: "center",
@@ -135,8 +150,8 @@ function ClientsPageContent() {
         >
           <div
             style={{
-              backgroundColor: "#352359",
-              color: "#fff",
+              backgroundColor: "#fff",
+              color: "#352359",
               padding: "20px 30px",
               borderRadius: "10px",
               boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
@@ -182,15 +197,6 @@ function ClientsPageContent() {
         duration: Infinity,
         position: "top-center",
       });
-
-      // clean auto-close fallback
-      setTimeout(() => {
-        if (!dismissed) {
-          dismissed = true;
-          toast.dismiss(toastId);
-          resolve(false);
-        }
-      }, 4000);
     });
 
     if (!confirmed) return;
@@ -216,6 +222,7 @@ function ClientsPageContent() {
       company: client.company || "",
       phone: client.phone || "",
       category: client.category || "",
+      status: client.status || "active",
     });
 
     const modalElement = document.getElementById("clientModal");
@@ -360,8 +367,8 @@ function ClientsPageContent() {
             >
               <option value="All">All Categories</option>
               <option value="Freelance">Freelance</option>
-              <option value="Salary-Based">Salary-Based</option>
-              <option value="Task-Based">Task-Based</option>
+              <option value="Salary-Based">Fixed Salary</option>
+              <option value="Task-Based">Task-Based Salary</option>
             </select>
           </div>
         </div>
@@ -375,6 +382,7 @@ function ClientsPageContent() {
                   <th>Company</th>
                   <th>Phone</th>
                   <th>Category</th>
+                  <th>Status</th>
                   <th>Joined</th>
                   <th>Address</th>
                   <th>Actions</th>
@@ -408,6 +416,22 @@ function ClientsPageContent() {
                       </td>
                       <td>{client.phone || "—"}</td>
                       <td>{client.category || "Uncategorized"}</td>
+                      <td>
+                        <span
+                          style={{
+                            color:
+                              client.status === "active"
+                                ? "#2c2b2bc9 !important"
+                                : client.status === "inactive"
+                                ? "#2c2b2bff !important"
+                                : "2c2b2bff !important",
+                            fontWeight: "200", // optional
+                          }}
+                        >
+                          {client.status.charAt(0).toUpperCase() +
+                            client.status.slice(1)}
+                        </span>
+                      </td>
                       <td>
                         <small className="text-muted">
                           {new Date(client.createdAt).toLocaleDateString()}
@@ -486,6 +510,20 @@ function ClientsPageContent() {
                       />
                     </div>
                   ))}
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Status</label>
+                    <select
+                      name="status"
+                      value={form.status || "active"}
+                      onChange={handleChange}
+                      className="form-select"
+                      required
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                  </div>
 
                   <div className="col-md-6 mb-3">
                     <label className="form-label">Category</label>
@@ -497,10 +535,9 @@ function ClientsPageContent() {
                       required
                     >
                       <option value="">Select category</option>
-                      <option value="Fixed">Fixed</option>
-                      <option value="Salary-Based">Salary-Based</option>
                       <option value="Freelance">Freelance</option>
-                      <option value="Task-Based">Task-Based</option>
+                      <option value="Salary-Based">Fixed Salary</option>
+                      <option value="Task-Based">Task-Based Salary</option>
                     </select>
                   </div>
                 </div>

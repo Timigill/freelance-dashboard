@@ -18,7 +18,7 @@ export async function GET(req) {
 
     const incomeSources = await IncomeSource.find({ userId })
       .select(
-        "name clientId clientName amount payments isActive frequency createdAt"
+        "name clientId clientName amount payments isActive frequency type createdAt"
       )
       .sort({ createdAt: -1 });
 

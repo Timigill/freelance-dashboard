@@ -1,7 +1,7 @@
 .settings-container {
   max-width: 900px;
   margin: 40px auto;
-  padding: 20px;
+  padding: 20px 2rem;
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.459);
@@ -22,6 +22,7 @@
   gap: 25px;
 }
 
+/* Top Section (desktop: photo + info side by side) */
 .settings-top {
   display: flex;
   justify-content: space-between;
@@ -29,12 +30,7 @@
   flex-wrap: wrap;
 }
 
-.settings-left {
-  flex: 1;
-  min-width: 250px;
-}
-
-.settings-right {
+.settings-photo {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -45,7 +41,6 @@
   width: 130px;
   height: 130px;
   border-radius: 50%;
-  margin-top: 50px;
   overflow: hidden;
   border: 2px solid #352359;
   box-shadow: 0 0 8px rgba(46, 19, 68, 0.692);
@@ -72,23 +67,34 @@
   text-decoration: underline;
 }
 
+.settings-info {
+  flex: 1;
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
 .input-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
+
 .input-group label {
   font-weight: 500;
   color: #352359;
 }
+
 .input-group input,
 .input-group textarea {
   border: 1px solid #ccc;
-  border-radius: 8px !important;
+  border-radius: 8px;
   padding: 10px;
   font-size: 0.95rem;
   transition: 0.3s;
 }
+
 .input-group input:focus,
 .input-group textarea:focus {
   outline: none;
@@ -113,7 +119,7 @@
   gap: 10px;
 }
 .password-grid input {
-  border: 1px solid #ccc !important;
+  border: 1px solid #ccc;
   border-radius: 8px;
   padding: 10px;
   transition: 0.3s;
@@ -127,12 +133,12 @@ input[readonly] {
   color: #000;
   cursor: not-allowed;
 }
+
 /* Password input container */
 .password-input-group {
   position: relative;
 }
 
-/* Password & toggled text input */
 .password-input-group input {
   width: 100%;
   padding-right: 38px;
@@ -141,15 +147,13 @@ input[readonly] {
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-/* Focused or active input */
 .password-input-group input:focus,
 .password-input-group input.active {
   outline: none;
-  border-color: #352359 !important;
+  border-color: #352359;
   box-shadow: 0 0 4px rgba(37, 26, 61, 0.4);
 }
 
-/* Toggle password eye icon */
 .toggle-password {
   position: absolute;
   right: 10px;
@@ -158,30 +162,16 @@ input[readonly] {
   cursor: pointer;
   color: #352359;
   font-size: 1.2rem;
-  opacity: 0; /* start hidden */
+  opacity: 0;
   transition: color 0.2s ease, opacity 0.2s ease;
 }
 
-/* Show icon only when input is focused */
 .password-input-group input.active + .toggle-password {
   opacity: 1;
 }
 
-/* Hover effect on toggle */
 .toggle-password:hover {
   color: #5b3b8a;
-}
-
-/* Fade in animation for icon */
-@keyframes fadeInIcon {
-  from {
-    opacity: 0;
-    transform: translateY(-50%) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(-50%) scale(1);
-  }
 }
 
 .button-group {
@@ -216,37 +206,44 @@ input[readonly] {
   background: #352359cc;
 }
 
-/* Responsive */
+/* Responsive adjustments */
+
+/* Tablet / small screens */
 @media (max-width: 768px) {
-  .settings-container {
-    padding: 15px;
-  }
   .settings-top {
     flex-direction: column;
     align-items: center;
   }
   .profile-pic-container {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 10px;
+  }
+  .settings-info {
+    width: 100%;
+  }
+  .password-grid {
+    grid-template-columns: 1fr; /* stack password fields */
   }
 }
 
-@media (max-width:480px) {
+/* Mobile (480px and below) */
+@media (max-width: 480px) {
   .settings-container {
-    margin: 10px;
-    padding: 10px;
+    margin: 20px 1rem;
+    padding: 20px;
   }
   .settings-title {
-    font-size: 1.5rem !important;
+    font-size: 1.5rem;
   }
   .input-group input,
-  .input-group textarea { 
+  .input-group textarea {
     font-size: 0.9rem;
   }
   .profile-pic-container {
     width: 150px;
     height: 150px;
-    margin: 10px;
+    margin-bottom: 15px;
   }
   .upload-btn {
     font-size: 1rem;
@@ -255,14 +252,20 @@ input[readonly] {
     flex-direction: column;
     align-items: stretch;
   }
-
-  
+  .settings-info {
+    order: 2; /* ensures name/email/phone/bio comes after photo */
+    width: 100%;
+  }
+  .settings-photo {
+    order: 1; /* photo on top */
+    width: 100%;
+    align-items: center;
+  }
 }
-
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(15px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;

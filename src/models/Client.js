@@ -12,10 +12,13 @@ const ClientSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-    }, 
+    },
   },
   { timestamps: true }
 );
+
+// ✅ Add compound index to enforce unique phone per user
+ClientSchema.index({ userId: 1, phone: 1 }, { unique: true });
 
 // ✅ Fix model caching in Next.js (ensures schema updates apply properly)
 if (mongoose.models.Client) {

@@ -149,18 +149,16 @@ function IncomePageContent() {
           top: "-20px",
           bottom: "-20px",
           height: "100vh",
-          background: "rgba(0, 0, 0, 0.5)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           zIndex: 9999,
-          backdropFilter: "blur(2px)",
         }}
       >
         <div
           style={{
-            background: "#352359",
-            color: "white",
+            background: "#fff",
+            color: "#352359",
             padding: "20px 24px",
             borderRadius: "12px",
             width: "300px",
@@ -223,7 +221,7 @@ function IncomePageContent() {
     const confirmPromise = new Promise((resolve) => {
       confirmResolve = resolve;
       toast.custom(<ConfirmToast />, {
-        duration: 10000,
+        duration: 5000,
         position: "top-center",
         style: { background: "transparent", boxShadow: "none", padding: 0 },
       });
@@ -302,38 +300,25 @@ function IncomePageContent() {
       </div>
 
       {/* Summary Cards */}
-      <div className="row mb-4 g-3 justify-content-center justify-content-md-start">
-        <div className="col-6 col-md-4">
+      <div className="row mb-4 g-3 justify-content-center text-center">
+        <div className="col-12 col-md-4">
           <div className="card bg-primary text-white h-100 text-center">
             <div className="card-body d-flex flex-column justify-content-center">
               <h6 className="mb-2" style={{ color: "var(--bs-primary)" }}>
                 Total Monthly Income
               </h6>
-              <h3 className="mb-0">${totalIncome.toLocaleString()}</h3>
+              <h3 className="mb-0">{totalIncome.toLocaleString()}</h3>
             </div>
           </div>
         </div>
-        <div className="col-6 col-md-4">
-          <div className="card bg-success text-white h-100 text-center">
-            <div className="card-body d-flex flex-column justify-content-center">
-              <h6 className="mb-2" style={{ color: "var(--bs-primary)" }}>
-                {filter === "all" ? "Active Sources" : `${filter} Active`}
-              </h6>
-              <h3 className="mb-0">{activeSources.length}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-4 d-flex justify-content-center justify-content-md-start">
-          <div
-            className="card bg-info text-white h-100 text-center"
-            style={{ minWidth: "100%" }}
-          >
+
+        <div className="col-12 col-md-4">
+          <div className="card bg-info text-white h-100 text-center">
             <div className="card-body d-flex flex-column justify-content-center">
               <h6 className="mb-2" style={{ color: "var(--bs-primary)" }}>
                 Average per Source
               </h6>
               <h3 className="mb-0">
-                $
                 {incomeSources.length
                   ? Math.round(
                       totalIncome / incomeSources.length
@@ -375,7 +360,6 @@ function IncomePageContent() {
                   <th>Client</th>
                   <th>Amount</th>
                   <th>Frequency</th>
-                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -386,20 +370,9 @@ function IncomePageContent() {
                     <td>
                       {source.clientName || (source.clientId ? "Client" : "—")}
                     </td>
-                    <td>${source.amount.toLocaleString()}</td>
+                    <td>{source.amount.toLocaleString()}</td>
                     <td>{source.frequency}</td>
-                    <td>
-                      <span
-                        style={{
-                          color: "#352359",
-                          fontWeight: 500,
-                          fontSize: "0.9rem",
-                          letterSpacing: "0.3px",
-                        }}
-                      >
-                        {source.isActive ? "Active" : "InActive"}
-                      </span>
-                    </td>
+
                     <td>
                       <div className="d-flex flex-column flex-sm-row gap-2">
                         <Button

@@ -3,14 +3,9 @@ import { useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import toast, { Toaster } from "react-hot-toast";
 
-// The component now accepts props, including the initial state for the modal
 export default function InvoicesClient({ initialOpenModal }) {
-  // We no longer use useSearchParams() inside this component
-  // const searchParams = useSearchParams();
-  // const openModal = searchParams.get("openModal");
-  
   const [invoices, setInvoices] = useState([]);
-  const [clients, setClients] = useState([]); // ✅ store all existing clients
+  const [clients, setClients] = useState([]);
   const [status, setStatus] = useState("All");
   const [clientSearch, setClientSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -24,15 +19,12 @@ export default function InvoicesClient({ initialOpenModal }) {
     remaining: "",
   });
 
-  /** ✅ Open modal if prop says so */
+  // Open modal if prop says so
   useEffect(() => {
-    // Check the prop instead of the searchParams hook
-    if (initialOpenModal === "true") {
-      setShowModal(true);
-    }
+    if (initialOpenModal === "true") setShowModal(true);
   }, [initialOpenModal]);
 
-  /** ✅ Fetch invoices and clients from DB */
+  // Fetch invoices and clients
   const fetchData = async () => {
     try {
       const [invoiceRes, clientRes] = await Promise.all([
@@ -54,16 +46,20 @@ export default function InvoicesClient({ initialOpenModal }) {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Removed fetchTasks, replacing calls with fetchData
-  const fetchTasks = fetchData; 
+  // Dispatch overdue invoices for Topbar notifications
+  useEffect(() => {
+    const overdueInvoices = invoices.filter((i) => i.status === "Overdue");
+    window.dispatchEvent(
+      new CustomEvent("overdueInvoicesUpdate", { detail: overdueInvoices })
+    );
+  }, [invoices]);
 
-
-  /** ✅ Filter invoices by status and client name */
+  // Filtered invoices
   const filtered = Array.isArray(invoices)
     ? invoices.filter(
         (i) =>
@@ -72,10 +68,10 @@ export default function InvoicesClient({ initialOpenModal }) {
       )
     : [];
 
-  /** ✅ Total amount */
+  // Totals
   const total = filtered.reduce((acc, i) => acc + Number(i.amount || 0), 0);
 
-  /** ✅ Summary counts */
+  // Summary counts
   const summary = {
     Total: invoices.length,
     Paid: invoices.filter((i) => i.status === "Paid").length,
@@ -85,7 +81,7 @@ export default function InvoicesClient({ initialOpenModal }) {
       .length,
   };
 
-  /** ✅ Add or Edit Invoice */
+  // Save (Add/Edit)
   const handleSave = async (e) => {
     e.preventDefault();
 
@@ -94,25 +90,28 @@ export default function InvoicesClient({ initialOpenModal }) {
       return;
     }
 
-    // ✅ Correct logic for Paid / Remaining
+    const totalAmount = Number(form.amount);
+    const paidAmount = Number(form.paid) || 0;
+
+    // Validation
+    if (form.status === "Partially Paid" && paidAmount > totalAmount) {
+      toast.error("Paid amount cannot exceed total amount.");
+      return;
+    }
+
     let updatedForm = { ...form };
-
-    const total = Number(updatedForm.amount) || 0;
-    const paid = Number(updatedForm.paid) || 0;
-
     if (updatedForm.status === "Paid") {
-      updatedForm.paid = total;
+      updatedForm.paid = totalAmount;
       updatedForm.remaining = 0;
     } else if (updatedForm.status === "Partially Paid") {
-      updatedForm.remaining = Math.max(total - paid, 0);
+      updatedForm.remaining = totalAmount - paidAmount;
     } else {
       updatedForm.paid = 0;
-      updatedForm.remaining = total;
+      updatedForm.remaining = totalAmount;
     }
 
     try {
       const method = editingIndex !== null ? "PUT" : "POST";
-      // Note: Assuming your API handles POST/PUT based on whether _id is present.
       const body =
         editingIndex !== null
           ? { ...updatedForm, _id: invoices[editingIndex]._id }
@@ -126,8 +125,7 @@ export default function InvoicesClient({ initialOpenModal }) {
 
       if (!res.ok) throw new Error("Failed to save invoice");
 
-      // We call fetchData to re-sync the state with the database
-      fetchData(); 
+      fetchData();
       handleClose();
       toast.success("Invoice saved successfully!");
     } catch (error) {
@@ -136,44 +134,38 @@ export default function InvoicesClient({ initialOpenModal }) {
     }
   };
 
-  /** ✅ Edit invoice */
+  // Edit invoice
   const handleEdit = (index) => {
     setEditingIndex(index);
     setForm({ ...invoices[index] });
     setShowModal(true);
   };
 
-  /** ✅ Delete */
+  // Delete invoice
   const handleDelete = async (id) => {
     let confirmResolve;
-
-    // ✅ Custom full-screen confirmation toast with dimmed background
     const ConfirmToast = ({ t }) => (
       <div
         style={{
           position: "fixed",
           width: "100vw",
-          top: "-20px",
-          bottom: "-20px",
           height: "100vh",
-          background: "rgba(0, 0, 0, 0.5)", // dim background
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           zIndex: 9999,
-          backdropFilter: "blur(2px)", // optional soft blur
         }}
       >
         <div
           style={{
-            background: "#352359",
-            color: "white",
+            background: "#fff",
+            color: "#352359",
             padding: "20px 24px",
             borderRadius: "12px",
             width: "300px",
             maxWidth: "90vw",
             textAlign: "center",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
           }}
         >
           <p
@@ -185,7 +177,6 @@ export default function InvoicesClient({ initialOpenModal }) {
           >
             Do you want to delete this invoice?
           </p>
-
           <div
             style={{ display: "flex", gap: "10px", justifyContent: "center" }}
           >
@@ -206,7 +197,6 @@ export default function InvoicesClient({ initialOpenModal }) {
             >
               Yes
             </button>
-
             <button
               onClick={() => {
                 toast.dismiss(t.id);
@@ -229,29 +219,19 @@ export default function InvoicesClient({ initialOpenModal }) {
       </div>
     );
 
-    // Promise wrapper
     const confirmPromise = new Promise((resolve) => {
       confirmResolve = resolve;
-      toast.custom((t) => <ConfirmToast t={t} />, {
-        duration: Infinity, // Ensure it stays until action is taken
-        position: "top-center",
-        style: {
-          background: "transparent",
-          boxShadow: "none",
-          padding: 0,
-        },
-      });
+      toast.custom((t) => <ConfirmToast t={t} />, { duration: Infinity });
     });
 
     try {
       const confirmed = await confirmPromise;
       if (!confirmed) return;
 
-      // Note: Changed endpoint from /api/tasks/${id} to /api/invoices/${id} for relevance
-      const res = await fetch(`/api/invoices/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/invoices?id=${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete invoice");
 
-      fetchData(); // Use the existing fetchData function
+      fetchData();
       toast.success("Invoice deleted successfully!");
     } catch (err) {
       console.error("Error deleting invoice:", err);
@@ -259,7 +239,7 @@ export default function InvoicesClient({ initialOpenModal }) {
     }
   };
 
-  /** ✅ Close modal and reset form */
+  // Close modal
   const handleClose = () => {
     setShowModal(false);
     setEditingIndex(null);
@@ -272,7 +252,7 @@ export default function InvoicesClient({ initialOpenModal }) {
     });
   };
 
-  /** ✅ CSV Download */
+  // CSV download
   const downloadInvoices = () => {
     const csv = [
       ["Invoice ID", "Client", "Amount", "Status", "Paid", "Remaining"].join(
@@ -306,12 +286,28 @@ export default function InvoicesClient({ initialOpenModal }) {
     );
   }
 
+  // Helper for status colors
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Paid":
+        return "#d4edda"; // green
+      case "Pending":
+        return "#fff3cd"; // yellow
+      case "Overdue":
+        return "#f8d7da"; // red
+      case "Partially Paid":
+        return "#d1ecf1"; // blue
+      default:
+        return "#fff";
+    }
+  };
+
   return (
     <div className="container mt-4">
       <Toaster />
       <h2 className="mb-4 fw-bold fs-5 text-center">Invoices Dashboard</h2>
 
-      {/* ✅ Summary Cards */}
+      {/* Summary Cards */}
       <div className="row g-3 mb-4 justify-content-center">
         {Object.entries(summary).map(([label, count], i) => {
           const colorClass =
@@ -356,14 +352,12 @@ export default function InvoicesClient({ initialOpenModal }) {
         })}
       </div>
 
-      {/* ✅ Buttons and Search */}
+      {/* Buttons & Search */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
         <div className="d-flex flex-column flex-md-row gap-2 w-100 justify-content-between align-items-start align-items-md-center">
           <h4 className="mb-0">
             {status === "All" ? "All Invoices" : `${status} Invoices`}
           </h4>
-
-          {/* 🔍 Client Name Filter */}
           <Form.Control
             type="text"
             placeholder="Search by client name..."
@@ -386,7 +380,7 @@ export default function InvoicesClient({ initialOpenModal }) {
         </div>
       </div>
 
-      {/* ✅ Invoices Table */}
+      {/* Invoice Table */}
       <div className="table-responsive shadow-sm rounded">
         <table className="table table-striped align-middle text-center">
           <thead className="table-light">
@@ -403,40 +397,27 @@ export default function InvoicesClient({ initialOpenModal }) {
           </thead>
           <tbody>
             {filtered.map((inv, index) => (
-              <tr key={index}>
+              <tr key={inv._id}>
                 <td>{index + 1}</td>
                 <td>{`INV-${String(index + 1).padStart(2, "0")}`}</td>
                 <td>{inv.client}</td>
-                <td>${Number(inv.amount).toFixed(2)}</td>
+                <td>{Number(inv.amount).toFixed(2)}</td>
                 <td>
                   <span
                     className="d-inline-block text-center text-truncate"
                     style={{
                       maxWidth: "100px",
                       padding: "4px 8px",
-                      border: "1px solid #3523594d",
                       borderRadius: "6px",
-                      color: "#352359",
-                      cursor: "default",
-                      fontWeight: 500,
-                      backgroundColor:
-                        inv.status === "Paid"
-                          ? "#d4edda"
-                          : inv.status === "Pending"
-                          ? "#fff3cd"
-                          : inv.status === "Overdue"
-                          ? "#f8d7da"
-                          : "#d1ecf1",
+                      backgroundColor: "#e9ecef",
                     }}
                   >
                     {inv.status}
                   </span>
                 </td>
-                <td>{inv.paid ? `$${Number(inv.paid).toFixed(2)}` : "-"}</td>
+                <td>{inv.paid ? Number(inv.paid).toFixed(2) : "-"}</td>
                 <td>
-                  {inv.remaining
-                    ? `$${Number(inv.remaining).toFixed(2)}`
-                    : "-"}
+                  {inv.remaining ? Number(inv.remaining).toFixed(2) : "-"}
                 </td>
                 <td>
                   <div className="d-flex flex-column flex-sm-row justify-content-center gap-2">
@@ -459,14 +440,40 @@ export default function InvoicesClient({ initialOpenModal }) {
               </tr>
             ))}
           </tbody>
+
+          {/* Totals */}
+          <tfoot className="table-light">
+            <tr>
+              <td colSpan={3} className="text-start fw-bold">
+                Totals:
+              </td>
+              <td>
+                {filtered
+                  .reduce((acc, i) => acc + Number(i.amount || 0), 0)
+                  .toFixed(2)}
+              </td>
+              <td>-</td>
+              <td>
+                {filtered
+                  .reduce((acc, i) => acc + Number(i.paid || 0), 0)
+                  .toFixed(2)}
+              </td>
+              <td>
+                {filtered
+                  .reduce((acc, i) => acc + Number(i.remaining || 0), 0)
+                  .toFixed(2)}
+              </td>
+              <td>-</td>
+            </tr>
+          </tfoot>
         </table>
       </div>
 
       <div className="mt-3 text-end fw-bold pb-3 pb-md-3">
-        Total Filtered: ${total.toFixed(2)}
+        Total Filtered: {total.toFixed(2)}
       </div>
 
-      {/* ✅ Modal Form */}
+      {/* Modal Form */}
       <Modal show={showModal} onHide={handleClose} centered>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -475,7 +482,6 @@ export default function InvoicesClient({ initialOpenModal }) {
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSave}>
-            {/* ✅ Only existing clients can be selected */}
             <Form.Group className="mb-3">
               <Form.Label>Client Name</Form.Label>
               <Form.Select
@@ -492,7 +498,7 @@ export default function InvoicesClient({ initialOpenModal }) {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Amount ($)</Form.Label>
+              <Form.Label>Amount</Form.Label>
               <Form.Control
                 type="number"
                 placeholder="Enter total amount"
@@ -517,7 +523,7 @@ export default function InvoicesClient({ initialOpenModal }) {
             {form.status === "Partially Paid" && (
               <div className="row">
                 <div className="col-md-6 mb-3">
-                  <Form.Label>Amount Paid ($)</Form.Label>
+                  <Form.Label>Amount Paid</Form.Label>
                   <Form.Control
                     type="number"
                     placeholder="Enter paid amount"
@@ -526,11 +532,10 @@ export default function InvoicesClient({ initialOpenModal }) {
                   />
                 </div>
                 <div className="col-md-6 mb-3">
-                  <Form.Label>Remaining ($)</Form.Label>
+                  <Form.Label>Remaining</Form.Label>
                   <Form.Control
                     type="number"
                     placeholder="Auto-calculated"
-                    // Displaying the calculated remaining amount
                     value={
                       form.amount && form.paid
                         ? Math.max(

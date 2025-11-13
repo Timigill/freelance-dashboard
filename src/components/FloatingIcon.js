@@ -23,7 +23,7 @@ export default function FloatingActionButton() {
   }
 
   return (
-    <div className="position-fixed bottom-0 end-0 p-4" style={{ zIndex: 1050 }}>
+    <div className="position-fixed bottom-1 end-0 p-4" style={{ zIndex: 1050,  bottom: '50px' }}>
       {/* Secondary buttons */}
       <div
         className="d-flex flex-column align-items-end gap-2 mb-2"
@@ -36,7 +36,7 @@ export default function FloatingActionButton() {
       >
         <button
           className="btn btn-outline-primary rounded-circle shadow d-flex align-items-center justify-content-center"
-          style={{ width: '48px', height: '48px' }}
+          style={{ width: '48px', height: '48px'}}
           title="Add Task"
           onClick={() => handleClick('task')}
         >

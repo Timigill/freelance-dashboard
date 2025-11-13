@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { BsGithub } from "react-icons/bs";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react"; // ✅ signOut added
 import toast from "react-hot-toast";
 import "./login.css";
 
@@ -25,7 +25,7 @@ export default function LoginPage() {
     if (url) setCallbackUrl(url);
 
     const verified = params.get("verified");
-    if (verified) toast.success("Your email has been verified. Please login."); // ✅ replaced message
+    if (verified) toast.success("Your email has been verified. Please login.");
   }, []);
 
   const handleChange = (e) => {
@@ -41,7 +41,7 @@ export default function LoginPage() {
 
     if (!form.remember) {
       toast.error("You must check 'Remember me' to login.");
-      return; // Stop the login process
+      return;
     }
 
     setLoading(true);
@@ -55,11 +55,32 @@ export default function LoginPage() {
     if (result?.error) {
       toast.error(result.error);
       setLoading(false);
-    } else {
-      toast.success("Login successful!");
-      router.push(callbackUrl);
+      return;
+    }
+
+    toast.success("Login successful!");
+    router.push(callbackUrl);
+
+    if (form.remember) {
+      const expireAt = new Date().getTime() + 12 * 60 * 60 * 1000; // 12 hours
+      localStorage.setItem("autoLogoutAt", expireAt);
     }
   };
+
+  // ✅ Auto logout effect
+  useEffect(() => {
+    const checkLogout = () => {
+      const expireAt = localStorage.getItem("autoLogoutAt");
+      if (expireAt && new Date().getTime() > expireAt) {
+        signOut({ callbackUrl: "/" });
+        localStorage.removeItem("autoLogoutAt");
+      }
+    };
+
+    checkLogout(); // immediate check on load
+    const interval = setInterval(checkLogout, 60000); // check every minute
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="login-container">
@@ -72,7 +93,6 @@ export default function LoginPage() {
           value={form.emailOrPhone}
           onChange={handleChange}
           required
-          aria-label="Email or Phone Number"
         />
 
         <div className="password-field">
@@ -83,7 +103,6 @@ export default function LoginPage() {
             value={form.password}
             onChange={handleChange}
             required
-            aria-label="Password"
           />
           <span
             className="toggle-password"
@@ -108,8 +127,6 @@ export default function LoginPage() {
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
-
-      {/* ✅ removed the old message display */}
 
       <div className="text-center links">
         <a href="/forgot">Forgot Password?</a>

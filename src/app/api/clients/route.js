@@ -4,37 +4,20 @@ import Client from "@/models/Client";
 import IncomeSource from "@/models/IncomeSource";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { parsePhoneNumber } from "libphonenumber-js";
 
 // Helper to get user ID from NextAuth session
-const getUserIdFromSession = async (req) => {
+const getUserIdFromSession = async () => {
   const session = await getServerSession(authOptions);
   if (!session) throw new Error("Unauthorized");
   return session.user.id;
 };
 
-// ✅ CREATE a new client
-export async function POST(req) {
+// GET all clients
+export async function GET() {
   try {
     await dbConnect();
-    const body = await req.json();
-    const userId = await getUserIdFromSession(req);
-
-    const newClient = await Client.create({ ...body, userId });
-    return NextResponse.json(newClient, { status: 201 });
-  } catch (err) {
-    console.error("POST /api/clients error:", err);
-    return NextResponse.json(
-      { message: err.message || "Failed to create client" },
-      { status: err.message === "Unauthorized" ? 401 : 500 }
-    );
-  }
-}
-
-// ✅ GET all clients with income data
-export async function GET(req) {
-  try {
-    await dbConnect();
-    const userId = await getUserIdFromSession(req);
+    const userId = await getUserIdFromSession();
 
     const clients = await Client.find({ userId }).lean();
 
@@ -68,6 +51,44 @@ export async function GET(req) {
     console.error("GET /api/clients error:", err);
     return NextResponse.json(
       { message: err.message || "Failed to fetch clients" },
+      { status: err.message === "Unauthorized" ? 401 : 500 }
+    );
+  }
+}
+
+// POST create new client
+export async function POST(req) {
+  try {
+    await dbConnect();
+    const userId = await getUserIdFromSession();
+    const body = await req.json();
+
+    // Normalize phone number
+    let phoneNumber = "";
+    try {
+      phoneNumber = parsePhoneNumber(body.phone, "PK").number;
+    } catch {
+      return NextResponse.json(
+        { message: "Invalid phone number format" },
+        { status: 400 }
+      );
+    }
+
+    // Check duplicate phone for this user
+    const existingClient = await Client.findOne({ userId, phone: phoneNumber });
+    if (existingClient) {
+      return NextResponse.json(
+        { message: "Phone number already in use for this user." },
+        { status: 400 }
+      );
+    }
+
+    const newClient = await Client.create({ ...body, phone: phoneNumber, userId });
+    return NextResponse.json(newClient, { status: 201 });
+  } catch (err) {
+    console.error("POST /api/clients error:", err);
+    return NextResponse.json(
+      { message: err.message || "Failed to create client" },
       { status: err.message === "Unauthorized" ? 401 : 500 }
     );
   }

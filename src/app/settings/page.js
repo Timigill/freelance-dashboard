@@ -138,8 +138,23 @@ export default function SettingsPage() {
       <form onSubmit={handleSubmit} className="settings-form">
         {/* Top Section */}
         <div className="settings-top">
-          {/* Left */}
-          <div className="settings-left">
+          {/* Profile Photo */}
+          <div className="settings-photo">
+            <div className="profile-pic-container">
+              <img
+                src={preview || "/default-avatar.png"}
+                alt="Profile"
+                className="profile-pic"
+              />
+            </div>
+            <label className="upload-btn">
+              Change Photo
+              <input type="file" onChange={handleFileChange} hidden />
+            </label>
+          </div>
+
+          {/* User Info */}
+          <div className="settings-info">
             <div className="input-group">
               <label>Full Name</label>
               <input
@@ -165,39 +180,22 @@ export default function SettingsPage() {
                 onChange={handleChange}
               />
             </div>
-          </div>
 
-          {/* Right */}
-          <div className="settings-right">
-            <div className="profile-pic-container">
-              <img
-                src={preview || "/default-avatar.png"}
-                alt="Profile"
-                className="profile-pic"
-              />
+            <div className="input-group">
+              <label>Bio</label>
+              <textarea
+                name="bio"
+                rows={3}
+                value={form.bio}
+                onChange={handleChange}
+              ></textarea>
             </div>
-            <label className="upload-btn">
-              Change Photo
-              <input type="file" onChange={handleFileChange} hidden />
-            </label>
           </div>
-        </div>
-
-        {/* Bio */}
-        <div className="input-group">
-          <label>Bio</label>
-          <textarea
-            name="bio"
-            rows={3}
-            value={form.bio}
-            onChange={handleChange}
-          ></textarea>
         </div>
 
         {/* Password Section */}
         <div className="password-section">
           <h4>Change Password</h4>
-
           <div className="password-grid">
             {["oldPassword", "newPassword", "confirmPassword"].map(
               (field, i) => (
@@ -215,22 +213,10 @@ export default function SettingsPage() {
                     value={form[field]}
                     onChange={handleChange}
                     onFocus={() => setFocusedField(field)}
-                    onBlur={(e) => {
-                      if (
-                        e.relatedTarget &&
-                        e.relatedTarget.classList.contains("toggle-password")
-                      ) {
-                        return; // ignore blur if icon clicked
-                      }
-                      setFocusedField(null);
-                    }}
-                    className={focusedField === field ? "active" : ""}
+                    onBlur={() => setFocusedField(null)}
                   />
-
-                  {/* Toggle Eye Icon */}
                   <span
                     className="toggle-password"
-                    tabIndex={0}
                     onClick={() =>
                       setForm((prev) => ({
                         ...prev,

@@ -142,7 +142,6 @@ const handleDelete = async (taskId) => {
           marginTop: "-20px",
           width: "100vw",
           height: "100vh",
-          backgroundColor: "rgba(0,0,0,0.4)",
           zIndex: 9999,
           display: "flex",
           justifyContent: "center",
@@ -151,8 +150,8 @@ const handleDelete = async (taskId) => {
       >
         <div
           style={{
-            backgroundColor: "#352359",
-            color: "#fff",
+            backgroundColor: "#fff",
+            color: "#352359",
             padding: "20px 30px",
             borderRadius: "10px",
             boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
@@ -199,14 +198,7 @@ const handleDelete = async (taskId) => {
       position: "top-center",
     });
 
-    // clean auto-close fallback
-    setTimeout(() => {
-      if (!dismissed) {
-        dismissed = true;
-        toast.dismiss(toastId);
-        resolve(false);
-      }
-    }, 4000);
+    
   });
 
   if (!confirmed) return;
@@ -294,7 +286,7 @@ const handleDelete = async (taskId) => {
           <div className="card bg-primary text-white text-center h-100">
             <div className="card-body">
               <h6>Total Tasks Value</h6>
-              <h3>${totalAmount.toLocaleString()}</h3>
+              <h3>{totalAmount.toLocaleString()}</h3>
             </div>
           </div>
         </div>
@@ -302,7 +294,7 @@ const handleDelete = async (taskId) => {
           <div className="card bg-warning text-white text-center h-100">
             <div className="card-body">
               <h6>Pending Payments</h6>
-              <h3>${pendingAmount.toLocaleString()}</h3>
+              <h3>{pendingAmount.toLocaleString()}</h3>
             </div>
           </div>
         </div>
@@ -355,7 +347,7 @@ const handleDelete = async (taskId) => {
                       <small className="text-muted">{task.description}</small>
                     </td>
                     <td>{task.sourceId?.name || "-"}</td>
-                    <td>${(task.amount || 0).toLocaleString()}</td>
+                    <td>{(task.amount || 0).toLocaleString()}</td>
                     <td>
                       {task.dueDate
                         ? new Date(task.dueDate).toLocaleDateString()

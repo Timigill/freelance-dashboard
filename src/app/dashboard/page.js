@@ -1,12 +1,10 @@
-
-
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import IncomeChart from "@/components/IncomeChart";
+import FloatingActionButton from "@/components/FloatingIcon";
 import PieChart from "@/components/PieChart";
 import { BsPlusLg, BsCalendar3 } from "react-icons/bs";
 
@@ -61,33 +59,32 @@ export default function HomePage() {
   }, [session?.user?.id]);
 
   useEffect(() => {
-    if (status !== "authenticated") return;
+  if (status !== "authenticated") return;
 
-    let fetchedIncome = [];
-    let fetchedTasks = [];
+  const fetchData = async () => {
+    try {
+      const [incomeRes, tasksRes] = await Promise.all([
+        fetch(`/api/income?month=${selectedMonth}&year=${selectedYear}`),
+        fetch(`/api/tasks?month=${selectedMonth}&year=${selectedYear}`),
+      ]);
 
-    const fetchData = async () => {
-      try {
-        const incomeRes = await fetch(
-          `/api/income?month=${selectedMonth}&year=${selectedYear}`
-        );
-        fetchedIncome = await incomeRes.json();
-        setIncomeSources(fetchedIncome);
+      const incomeData = await incomeRes.json();
+      const taskData = await tasksRes.json();
 
-        const tasksRes = await fetch(
-          `/api/tasks?month=${selectedMonth}&year=${selectedYear}`
-        );
-        fetchedTasks = await tasksRes.json();
-        setTasks(fetchedTasks);
+      // Use fresh data for calculation
+      setIncomeSources(incomeData);
+      setTasks(taskData);
 
-        calculateMonthlyIncome(fetchedIncome, fetchedTasks);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+      calculateMonthlyIncome(incomeData, taskData);
+      computeLastSixMonths(incomeData, taskData);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    fetchData();
-  }, [status, selectedMonth, selectedYear]);
+  fetchData();
+}, [selectedMonth, selectedYear, status]);
+
 
   useEffect(() => {
     if (incomeSources.length && tasks.length) {
@@ -451,25 +448,25 @@ export default function HomePage() {
     );
   }
 
-  if (!user) {
-    return (
-      <div
-        className="d-flex flex-column justify-content-center align-items-center"
-        style={{ height: "80vh" }}
-      >
-        <div className="card p-4 text-center" style={{ maxWidth: "400px" }}>
-          <h4 className="mb-3">Create Your Account</h4>
-          <p className="text-muted mb-4">
-            Your account doesn’t exist yet. Please create one to access the
-            dashboard.
-          </p>
-          <a href="/signup" className="btn btn-primary px-4 py-2">
-            Create Account
-          </a>
-        </div>
-      </div>
-    );
-  }
+  // if (!user) {
+  //   return (
+  //     <div
+  //       className="d-flex flex-column justify-content-center align-items-center"
+  //       style={{ height: "80vh" }}
+  //     >
+  //       <div className="card p-4 text-center" style={{ maxWidth: "400px" }}>
+  //         <h4 className="mb-3">Create Your Account</h4>
+  //         <p className="text-muted mb-4">
+  //           Your account doesn’t exist yet. Please create one to access the
+  //           dashboard.
+  //         </p>
+  //         <a href="/signup" className="btn btn-primary px-4 py-2">
+  //           Create Account
+  //         </a>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="dashboard-page container-fluid py-3 px-2">
@@ -485,7 +482,7 @@ export default function HomePage() {
           <div className="hero-amount">
             {monthlyStats.totalIncome.toLocaleString("en-US", {
               style: "currency",
-              currency: "USD",
+              currency: "pkr",
               maximumFractionDigits: 0,
             })}
           </div>
@@ -508,7 +505,7 @@ export default function HomePage() {
 
       <div className="d-flex justify-content-between mt-2 pt-2 align-items-center mb-3">
         <div>
-          <h2 className="fw-bold mb-0 fs-5">Lancer Dashboard</h2>
+          <h2 className="fw-bold mb-0 fs-5">Laancer Dashboard</h2>
           <p className="text-muted small mb-0">
             Financial overview for {months[selectedMonth]} {selectedYear}
           </p>
@@ -533,7 +530,7 @@ export default function HomePage() {
                 <h3 className="mb-1 fw-bold">
                   {card.value.toLocaleString("en-US", {
                     style: card.suffix ? "decimal" : "currency",
-                    currency: "USD",
+                    currency: "pkr",
                     maximumFractionDigits: 0,
                   })}
                   {card.suffix || ""}
@@ -583,9 +580,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <button className="fab" aria-label="Quick add">
-        <BsPlusLg />
-      </button>
+      <FloatingActionButton />
     </div>
   );
 }
