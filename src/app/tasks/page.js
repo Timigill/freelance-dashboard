@@ -141,26 +141,21 @@ function TasksPageContent() {
             if (!dismissed) {
               dismissed = true;
               toast.dismiss(id);
-              resolve(false); // auto-cancel after 5 seconds
+              resolve(false); // auto-cancel after 4s
             }
           }, 4000);
-
           return () => clearTimeout(timer);
         }, [id]);
 
         return (
           <div
             style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
               width: "100vw",
               height: "100vh",
               zIndex: 9999,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              background: "rgba(0,0,0,0.3)",
             }}
           >
             <div
@@ -210,7 +205,7 @@ function TasksPageContent() {
       };
 
       toast.custom((t) => <ConfirmToast id={t.id} />, {
-        duration: Infinity, // keep until user clicks or 5s timer runs
+        duration: Infinity,
         position: "top-center",
       });
     });
@@ -218,15 +213,16 @@ function TasksPageContent() {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/clients/${taskId}`, { method: "DELETE" });
+      const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
       const data = await res.json();
+
       if (!res.ok) throw new Error(data?.message || "Failed to delete task");
 
-      toast.success("Client deleted successfully!");
-      fetchClients();
+      toast.success("Task deleted successfully!", { duration: 3000 });
+      fetchTasks(); // ✅ refresh the task list
     } catch (err) {
       console.error("Delete error:", err);
-      toast.error("Error deleting task");
+      toast.error("Error deleting task", { duration: 3000 });
     }
   };
 

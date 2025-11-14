@@ -42,8 +42,9 @@ export default function RootLayout({ children }) {
           <Toaster
             position="top-center"
             toastOptions={{
-              duration: 2000,
+              duration: 3000,
               style: {
+                zIndex: 9999,
                 background: "#1f29379f",
                 color: "#fff",
                 borderRadius: "10px",
@@ -54,10 +55,12 @@ export default function RootLayout({ children }) {
                 borderLeft: "4px solid #22c55e",
               },
               success: {
+                duration: 3000,
                 style: { borderLeft: "4px solid #22c55e" },
                 iconTheme: { primary: "#22c55e", secondary: "#1f2937" },
               },
               error: {
+                duration: 3000,
                 style: { borderLeft: "4px solid #ef4444" },
                 iconTheme: { primary: "#ef4444", secondary: "#1f2937" },
               },

@@ -142,106 +142,103 @@ export default function InvoicesClient({ initialOpenModal }) {
   };
 
   // Delete invoice
-  const handleDelete = async (taskId) => {
-    if (!taskId) return toast.error("Invalid task ID");
+const handleDelete = async (invoiceId) => {
+  if (!invoiceId) return toast.error("Invalid invoice ID");
 
-    const confirmed = await new Promise((resolve) => {
-      let dismissed = false;
+  const confirmed = await new Promise((resolve) => {
+    let dismissed = false;
 
-      const ConfirmToast = ({ id }) => {
-        useEffect(() => {
-          const timer = setTimeout(() => {
-            if (!dismissed) {
-              dismissed = true;
-              toast.dismiss(id);
-              resolve(false); 
-            }
-          }, 4000);
+    const ConfirmToast = ({ id }) => {
+      useEffect(() => {
+        const timer = setTimeout(() => {
+          if (!dismissed) {
+            dismissed = true;
+            toast.dismiss(id);
+            resolve(false);
+          }
+        }, 4000);
+        return () => clearTimeout(timer);
+      }, [id]);
 
-          return () => clearTimeout(timer);
-        }, [id]);
-
-        return (
+      return (
+        <div
+          style={{
+            position: "fixed",
+            width: "100vw",
+            height: "100vh",
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <div
             style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100vw",
-              height: "100vh",
-              zIndex: 9999,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              background: "rgba(0,0,0,0.3)",
+              backgroundColor: "#fff",
+              color: "#352359",
+              padding: "20px 30px",
+              borderRadius: "10px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+              maxWidth: "340px",
+              textAlign: "center",
             }}
           >
-            <div
-              style={{
-                backgroundColor: "#fff",
-                color: "#352359",
-                padding: "20px 30px",
-                borderRadius: "10px",
-                boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-                maxWidth: "340px",
-                textAlign: "center",
-              }}
-            >
-              <h5 className="mb-3">Confirm Delete</h5>
-              <p style={{ fontSize: "0.9rem" }}>
-                Are you sure you want to delete this task?
-              </p>
-              <div className="d-flex justify-content-center gap-3 mt-3">
-                <button
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => {
-                    if (!dismissed) {
-                      dismissed = true;
-                      toast.dismiss(id);
-                      resolve(false);
-                    }
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => {
-                    if (!dismissed) {
-                      dismissed = true;
-                      toast.dismiss(id);
-                      resolve(true);
-                    }
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
+            <h5 className="mb-3">Confirm Delete</h5>
+            <p style={{ fontSize: "0.9rem" }}>
+              Are you sure you want to delete this invoice?
+            </p>
+            <div className="d-flex justify-content-center gap-3 mt-3">
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => {
+                  if (!dismissed) {
+                    dismissed = true;
+                    toast.dismiss(id);
+                    resolve(false);
+                  }
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger btn-sm"
+                onClick={() => {
+                  if (!dismissed) {
+                    dismissed = true;
+                    toast.dismiss(id);
+                    resolve(true);
+                  }
+                }}
+              >
+                Delete
+              </button>
             </div>
           </div>
-        );
-      };
+        </div>
+      );
+    };
 
-      toast.custom((t) => <ConfirmToast id={t.id} />, {
-        duration: Infinity, // keep until user clicks or 5s timer runs
-        position: "top-center",
-      });
+    toast.custom((t) => <ConfirmToast id={t.id} />, {
+      duration: 4000,
+      position: "top-center",
     });
+  });
 
-    if (!confirmed) return;
+  if (!confirmed) return;
 
-    try {
-      const res = await fetch(`/api/clients/${taskId}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || "Failed to delete task");
+  try {
+    const res = await fetch(`/api/invoices?id=${invoiceId}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.message || "Failed to delete invoice");
 
-      toast.success("Client deleted successfully!");
-      fetchClients();
-    } catch (err) {
-      console.error("Delete error:", err);
-      toast.error("Error deleting task");
-    }
-  };
+    toast.success("Invoice deleted successfully!");
+    fetchData(); // refresh the list
+  } catch (err) {
+    console.error("Delete error:", err);
+    toast.error("Error deleting invoice");
+  }
+};
+
 
   // Close modal
   const handleClose = () => {

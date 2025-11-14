@@ -128,10 +128,11 @@ function ClientsPageContent() {
     }
   };
 
-  const handleDelete = async (taskId) => {
-    if (!taskId) return toast.error("Invalid task ID");
+  const handleDelete = async (clientId) => {
+    if (!clientId) return toast.error("Invalid client ID");
 
-    const confirmed = await new Promise((resolve) => {
+    let confirmed = false;
+    await new Promise((resolve) => {
       let dismissed = false;
 
       const ConfirmToast = ({ id }) => {
@@ -139,8 +140,8 @@ function ClientsPageContent() {
           const timer = setTimeout(() => {
             if (!dismissed) {
               dismissed = true;
-              toast.dismiss(id);
-              resolve(false);
+              toast.dismiss(id); // dismiss the ConfirmToast
+              resolve(false); // auto cancel after 4s
             }
           }, 4000);
 
@@ -151,15 +152,12 @@ function ClientsPageContent() {
           <div
             style={{
               position: "fixed",
-              top: 0,
-              left: 0,
               width: "100vw",
               height: "100vh",
               zIndex: 9999,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              background: "rgba(0,0,0,0.3)",
             }}
           >
             <div
@@ -175,7 +173,7 @@ function ClientsPageContent() {
             >
               <h5 className="mb-3">Confirm Delete</h5>
               <p style={{ fontSize: "0.9rem" }}>
-                Are you sure you want to delete this task?
+                Are you sure you want to delete this client?
               </p>
               <div className="d-flex justify-content-center gap-3 mt-3">
                 <button
@@ -209,23 +207,28 @@ function ClientsPageContent() {
       };
 
       toast.custom((t) => <ConfirmToast id={t.id} />, {
-        duration: Infinity, // keep until user clicks or 5s timer runs
+        duration: 4000
+        ,
         position: "top-center",
       });
-    });
+    }).then((res) => (confirmed = res));
 
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/clients/${taskId}`, { method: "DELETE" });
+      const res = await fetch(`/api/clients/${clientId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || "Failed to delete task");
 
-      toast.success("Client deleted successfully!");
+      if (!res.ok) throw new Error(data?.message || "Failed to delete client");
+
+      // Success toast will auto-dismiss after 4s
+      toast.success("Client deleted successfully!", { duration: 4000 });
       fetchClients();
     } catch (err) {
-      console.error("Delete error:", err);
-      toast.error("Error deleting task");
+      toast.error(`Error deleting client: ${err.message}`, { duration: 4000 });
     }
   };
 
@@ -551,8 +554,10 @@ function ClientsPageContent() {
                     >
                       <option value="">Select category</option>
                       <option value="Freelance">Freelance</option>
-                      <option value="Salary-Based">Fixed Salary</option>
-                      <option value="Task-Based">Task-Based Salary</option>
+                      <option value="Fixed Salary">Fixed Salary</option>
+                      <option value="Task-Based Salary">
+                        Task-Based Salary
+                      </option>
                     </select>
                   </div>
                 </div>
