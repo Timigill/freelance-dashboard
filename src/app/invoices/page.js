@@ -142,100 +142,104 @@ export default function InvoicesClient({ initialOpenModal }) {
   };
 
   // Delete invoice
-  const handleDelete = async (id) => {
-    let confirmResolve;
-    const ConfirmToast = ({ t }) => (
-      <div
-        style={{
-          position: "fixed",
-          width: "100vw",
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 9999,
-        }}
-      >
-        <div
-          style={{
-            background: "#fff",
-            color: "#352359",
-            padding: "20px 24px",
-            borderRadius: "12px",
-            width: "300px",
-            maxWidth: "90vw",
-            textAlign: "center",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
-          }}
-        >
-          <p
+  const handleDelete = async (taskId) => {
+    if (!taskId) return toast.error("Invalid task ID");
+
+    const confirmed = await new Promise((resolve) => {
+      let dismissed = false;
+
+      const ConfirmToast = ({ id }) => {
+        useEffect(() => {
+          const timer = setTimeout(() => {
+            if (!dismissed) {
+              dismissed = true;
+              toast.dismiss(id);
+              resolve(false); 
+            }
+          }, 4000);
+
+          return () => clearTimeout(timer);
+        }, [id]);
+
+        return (
+          <div
             style={{
-              marginBottom: "16px",
-              fontWeight: 500,
-              fontSize: "0.95rem",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              zIndex: 9999,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              background: "rgba(0,0,0,0.3)",
             }}
           >
-            Do you want to delete this invoice?
-          </p>
-          <div
-            style={{ display: "flex", gap: "10px", justifyContent: "center" }}
-          >
-            <button
-              onClick={() => {
-                toast.dismiss(t.id);
-                confirmResolve(true);
-              }}
+            <div
               style={{
-                background: "#dc3545",
-                color: "#fff",
-                border: "none",
-                padding: "8px 18px",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "0.85rem",
+                backgroundColor: "#fff",
+                color: "#352359",
+                padding: "20px 30px",
+                borderRadius: "10px",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+                maxWidth: "340px",
+                textAlign: "center",
               }}
             >
-              Yes
-            </button>
-            <button
-              onClick={() => {
-                toast.dismiss(t.id);
-                confirmResolve(false);
-              }}
-              style={{
-                background: "#6c757d",
-                color: "#fff",
-                border: "none",
-                padding: "8px 18px",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "0.85rem",
-              }}
-            >
-              No
-            </button>
+              <h5 className="mb-3">Confirm Delete</h5>
+              <p style={{ fontSize: "0.9rem" }}>
+                Are you sure you want to delete this task?
+              </p>
+              <div className="d-flex justify-content-center gap-3 mt-3">
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    if (!dismissed) {
+                      dismissed = true;
+                      toast.dismiss(id);
+                      resolve(false);
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => {
+                    if (!dismissed) {
+                      dismissed = true;
+                      toast.dismiss(id);
+                      resolve(true);
+                    }
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    );
+        );
+      };
 
-    const confirmPromise = new Promise((resolve) => {
-      confirmResolve = resolve;
-      toast.custom((t) => <ConfirmToast t={t} />, { duration: Infinity });
+      toast.custom((t) => <ConfirmToast id={t.id} />, {
+        duration: Infinity, // keep until user clicks or 5s timer runs
+        position: "top-center",
+      });
     });
 
+    if (!confirmed) return;
+
     try {
-      const confirmed = await confirmPromise;
-      if (!confirmed) return;
+      const res = await fetch(`/api/clients/${taskId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || "Failed to delete task");
 
-      const res = await fetch(`/api/invoices?id=${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete invoice");
-
-      fetchData();
-      toast.success("Invoice deleted successfully!");
+      toast.success("Client deleted successfully!");
+      fetchClients();
     } catch (err) {
-      console.error("Error deleting invoice:", err);
-      toast.error("Error deleting invoice");
+      console.error("Delete error:", err);
+      toast.error("Error deleting task");
     }
   };
 

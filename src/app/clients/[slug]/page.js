@@ -273,10 +273,8 @@ function ClientsDynamicPageContent() {
           }
           .client-card,
           .invoice-card {
-            background: #fff;
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 4px 12px rgba(53, 35, 89, 0.2);
             margin-bottom: 20px;
           }
           .client-header {
@@ -285,13 +283,7 @@ function ClientsDynamicPageContent() {
             gap: 20px;
             flex-wrap: wrap;
           }
-          .client-photo img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #352359;
-          }
+          
           .client-details h3 {
             margin: 0 0 5px;
             font-size: 1.5rem;

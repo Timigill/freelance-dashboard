@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import IncomeChart from "@/components/IncomeChart";
@@ -18,6 +18,8 @@ export default function HomePage() {
 
   // ----------------- STATES -----------------
   // inside HomePage component
+
+
   const [showClientModal, setShowClientModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [incomeSources, setIncomeSources] = useState([]);
@@ -59,32 +61,31 @@ export default function HomePage() {
   }, [session?.user?.id]);
 
   useEffect(() => {
-  if (status !== "authenticated") return;
+    if (status !== "authenticated") return;
 
-  const fetchData = async () => {
-    try {
-      const [incomeRes, tasksRes] = await Promise.all([
-        fetch(`/api/income?month=${selectedMonth}&year=${selectedYear}`),
-        fetch(`/api/tasks?month=${selectedMonth}&year=${selectedYear}`),
-      ]);
+    const fetchData = async () => {
+      try {
+        const [incomeRes, tasksRes] = await Promise.all([
+          fetch(`/api/income?month=${selectedMonth}&year=${selectedYear}`),
+          fetch(`/api/tasks?month=${selectedMonth}&year=${selectedYear}`),
+        ]);
 
-      const incomeData = await incomeRes.json();
-      const taskData = await tasksRes.json();
+        const incomeData = await incomeRes.json();
+        const taskData = await tasksRes.json();
 
-      // Use fresh data for calculation
-      setIncomeSources(incomeData);
-      setTasks(taskData);
+        // Use fresh data for calculation
+        setIncomeSources(incomeData);
+        setTasks(taskData);
 
-      calculateMonthlyIncome(incomeData, taskData);
-      computeLastSixMonths(incomeData, taskData);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+        calculateMonthlyIncome(incomeData, taskData);
+        computeLastSixMonths(incomeData, taskData);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  fetchData();
-}, [selectedMonth, selectedYear, status]);
-
+    fetchData();
+  }, [selectedMonth, selectedYear, status]);
 
   useEffect(() => {
     if (incomeSources.length && tasks.length) {
@@ -206,6 +207,8 @@ export default function HomePage() {
 
     return { labels, values };
   };
+  const pieChartData = useMemo(() => getPieChartData(), [incomeSources]);
+
 
   const fetchIncomeSources = async () => {
     try {
@@ -386,7 +389,7 @@ export default function HomePage() {
 
   // ----------------- RENDER -----------------
 
-  if (status === "loading") {
+  if (status === "loading" || loadingUser) {
     return (
       <div
         className="d-flex justify-content-center align-items-center"
@@ -574,7 +577,7 @@ export default function HomePage() {
           <div className="card shadow-sm h-100">
             <div className="card-body">
               <h5 className="card-title mb-4">Income by Client</h5>
-              <PieChart data={getPieChartData()} />
+              <PieChart data={pieChartData} />
             </div>
           </div>
         </div>

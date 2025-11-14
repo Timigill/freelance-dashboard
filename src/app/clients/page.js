@@ -129,72 +129,87 @@ function ClientsPageContent() {
   };
 
   const handleDelete = async (taskId) => {
-    console.log("Deleting client with id:", taskId);
     if (!taskId) return toast.error("Invalid task ID");
 
     const confirmed = await new Promise((resolve) => {
-      let dismissed = false; // flag to stop multiple resolves
+      let dismissed = false;
 
-      const ConfirmToast = ({ id }) => (
-        <div
-          style={{
-            position: "fixed",
-            marginTop: "-20px",
-            width: "100vw",
-            height: "100vh",
-            zIndex: 9999,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
+      const ConfirmToast = ({ id }) => {
+        useEffect(() => {
+          const timer = setTimeout(() => {
+            if (!dismissed) {
+              dismissed = true;
+              toast.dismiss(id);
+              resolve(false);
+            }
+          }, 4000);
+
+          return () => clearTimeout(timer);
+        }, [id]);
+
+        return (
           <div
             style={{
-              backgroundColor: "#fff",
-              color: "#352359",
-              padding: "20px 30px",
-              borderRadius: "10px",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-              maxWidth: "340px",
-              textAlign: "center",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              zIndex: 9999,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              background: "rgba(0,0,0,0.3)",
             }}
           >
-            <h5 className="mb-3">Confirm Delete</h5>
-            <p style={{ fontSize: "0.9rem" }}>
-              Are you sure you want to delete this task?
-            </p>
-            <div className="d-flex justify-content-center gap-3 mt-3">
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => {
-                  if (!dismissed) {
-                    dismissed = true;
-                    toast.dismiss(id);
-                    resolve(false);
-                  }
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-danger btn-sm"
-                onClick={() => {
-                  if (!dismissed) {
-                    dismissed = true;
-                    toast.dismiss(id);
-                    resolve(true);
-                  }
-                }}
-              >
-                Delete
-              </button>
+            <div
+              style={{
+                backgroundColor: "#fff",
+                color: "#352359",
+                padding: "20px 30px",
+                borderRadius: "10px",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+                maxWidth: "340px",
+                textAlign: "center",
+              }}
+            >
+              <h5 className="mb-3">Confirm Delete</h5>
+              <p style={{ fontSize: "0.9rem" }}>
+                Are you sure you want to delete this task?
+              </p>
+              <div className="d-flex justify-content-center gap-3 mt-3">
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    if (!dismissed) {
+                      dismissed = true;
+                      toast.dismiss(id);
+                      resolve(false);
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => {
+                    if (!dismissed) {
+                      dismissed = true;
+                      toast.dismiss(id);
+                      resolve(true);
+                    }
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      );
+        );
+      };
 
-      const toastId = toast.custom((t) => <ConfirmToast id={t.id} />, {
-        duration: Infinity,
+      toast.custom((t) => <ConfirmToast id={t.id} />, {
+        duration: Infinity, // keep until user clicks or 5s timer runs
         position: "top-center",
       });
     });
@@ -367,8 +382,8 @@ function ClientsPageContent() {
             >
               <option value="All">All Categories</option>
               <option value="Freelance">Freelance</option>
-              <option value="Salary-Based">Fixed Salary</option>
-              <option value="Task-Based">Task-Based Salary</option>
+              <option value="Fixed Salary">Fixed Salary</option>
+              <option value="Task Based salary">Task Based Salary</option>
             </select>
           </div>
         </div>
