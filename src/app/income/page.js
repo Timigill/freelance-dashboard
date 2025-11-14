@@ -149,10 +149,9 @@ function IncomePageContent() {
             if (!dismissed) {
               dismissed = true;
               toast.dismiss(id);
-              resolve(false); 
+              resolve(false);
             }
           }, 4000);
-
           return () => clearTimeout(timer);
         }, [id]);
 
@@ -160,15 +159,12 @@ function IncomePageContent() {
           <div
             style={{
               position: "fixed",
-              top: 0,
-              left: 0,
               width: "100vw",
               height: "100vh",
               zIndex: 9999,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              background: "rgba(0,0,0,0.3)",
             }}
           >
             <div
@@ -218,7 +214,7 @@ function IncomePageContent() {
       };
 
       toast.custom((t) => <ConfirmToast id={t.id} />, {
-        duration: Infinity, // keep until user clicks or 5s timer runs
+        duration: Infinity,
         position: "top-center",
       });
     });
@@ -226,15 +222,24 @@ function IncomePageContent() {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/clients/${taskId}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || "Failed to delete task");
+      const res = await fetch(`/api/income?id=${taskId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
-      toast.success("Client deleted successfully!");
-      fetchClients();
+      if (!res.ok) {
+        let errData = {};
+        try {
+          errData = await res.json();
+        } catch {}
+        throw new Error(errData?.error || "Failed to delete income source");
+      }
+
+      toast.success("Income source deleted successfully!");
+      fetchIncomeSources(); // refresh the list
     } catch (err) {
       console.error("Delete error:", err);
-      toast.error("Error deleting task");
+      toast.error(err.message || "Error deleting income source");
     }
   };
 

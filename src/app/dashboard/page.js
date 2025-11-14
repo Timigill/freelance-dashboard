@@ -389,7 +389,7 @@ export default function HomePage() {
 
   // ----------------- RENDER -----------------
 
-  if (status === "loading" || loadingUser) {
+  if (status === "loading") {
     return (
       <div
         className="d-flex justify-content-center align-items-center"
@@ -403,7 +403,7 @@ export default function HomePage() {
     );
   }
 
-  if (!session || status !== "authenticated") {
+  if ( status !== "authenticated") {
     return (
       <div
         className="d-flex flex-column justify-content-center align-items-center"
@@ -451,25 +451,6 @@ export default function HomePage() {
     );
   }
 
-  // if (!user) {
-  //   return (
-  //     <div
-  //       className="d-flex flex-column justify-content-center align-items-center"
-  //       style={{ height: "80vh" }}
-  //     >
-  //       <div className="card p-4 text-center" style={{ maxWidth: "400px" }}>
-  //         <h4 className="mb-3">Create Your Account</h4>
-  //         <p className="text-muted mb-4">
-  //           Your account doesn’t exist yet. Please create one to access the
-  //           dashboard.
-  //         </p>
-  //         <a href="/signup" className="btn btn-primary px-4 py-2">
-  //           Create Account
-  //         </a>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="dashboard-page container-fluid py-3 px-2">
