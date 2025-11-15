@@ -17,12 +17,13 @@ export default function LandingPage() {
     }
   }, [status, router]);
 
-  if (status === "loading") {
+  if (status === "loading" || status === "authenticated") {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
+        <span className="ms-2 fw-semibold">Loading...</span>
       </div>
     );
   }

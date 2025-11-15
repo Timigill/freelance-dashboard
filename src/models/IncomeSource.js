@@ -15,8 +15,7 @@ const IncomeSourceSchema = new mongoose.Schema({
   clientName: String,
   type: {
     type: String,
-    enum: ["Fixed", "Task-Based", "Freelance"],
-    default: "Fixed",
+    enum: ["Fixed Salary", "Task-Based Salary", "Freelance"],
   },
   isActive: { type: Boolean, default: true },
   payments: [
@@ -31,7 +30,7 @@ const IncomeSourceSchema = new mongoose.Schema({
       notes: String,
     },
   ],
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, 
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

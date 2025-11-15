@@ -24,7 +24,7 @@ function IncomePageContent() {
   // Fetch income sources
   const fetchIncomeSources = async () => {
     try {
-      const res = await fetch("/api/income");
+      const res = await fetch("/api/income", { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch income sources");
       const data = await res.json();
       setIncomeSources(data);
@@ -37,7 +37,7 @@ function IncomePageContent() {
   // Fetch clients
   const fetchClients = async () => {
     try {
-      const res = await fetch("/api/clients");
+      const res = await fetch("/api/clients", { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch clients");
       const data = await res.json();
       setClients(data);
@@ -93,6 +93,7 @@ function IncomePageContent() {
         await fetch("/api/income", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ ...updatedForm, _id: currentSource._id }), // include _id in body
         });
       } else {
@@ -100,6 +101,7 @@ function IncomePageContent() {
         await fetch("/api/income", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(updatedForm),
         });
       }
@@ -247,7 +249,9 @@ function IncomePageContent() {
   const filteredSources =
     filter === "all"
       ? incomeSources
-      : incomeSources.filter((s) => s.type === filter);
+      : incomeSources.filter(
+          (s) => s.type?.toLowerCase().trim() === filter.toLowerCase().trim()
+        );
 
   const activeSources =
     filter === "all"
@@ -335,7 +339,7 @@ function IncomePageContent() {
       <div className="card shadow-sm mb-4">
         <div className="card-body">
           <div className="btn-group">
-            {["all", "Fixed", "Task-Based", "Freelance"].map((t) => (
+            {["all", "Fixed Salary", "Task-Based Salary", "Freelance"].map((t) => (
               <button
                 key={t}
                 className={`btn ${

@@ -19,7 +19,6 @@ export default function HomePage() {
   // ----------------- STATES -----------------
   // inside HomePage component
 
-
   const [showClientModal, setShowClientModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [incomeSources, setIncomeSources] = useState([]);
@@ -208,7 +207,6 @@ export default function HomePage() {
     return { labels, values };
   };
   const pieChartData = useMemo(() => getPieChartData(), [incomeSources]);
-
 
   const fetchIncomeSources = async () => {
     try {
@@ -403,7 +401,7 @@ export default function HomePage() {
     );
   }
 
-  if ( status !== "authenticated") {
+  if (status !== "authenticated") {
     return (
       <div
         className="d-flex flex-column justify-content-center align-items-center"
@@ -450,7 +448,6 @@ export default function HomePage() {
       </div>
     );
   }
-
 
   return (
     <div className="dashboard-page container-fluid py-3 px-2">
@@ -564,7 +561,9 @@ export default function HomePage() {
         </div>
       </div>
 
-      <FloatingActionButton />
+      <div className="d-md-none">
+        <FloatingActionButton />
+      </div>
     </div>
   );
 }
