@@ -1,27 +1,36 @@
-import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]/route";
 import User from "@/models/User";
-import { dbConnect } from "@/lib/dbConnect";
 
 export async function GET(req) {
   try {
-    await dbConnect();
+    const session = await getServerSession(req, authOptions);
 
-    const token = req.cookies.get("token")?.value;
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("name email"); // sirf name aur email
+    const user = await User.findById(session.user.id).select("name email");
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return new Response(JSON.stringify({ error: "User not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    return NextResponse.json({ user });
+    return new Response(JSON.stringify({ user }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (err) {
     console.error("Dashboard error:", err);
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
