@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs";
 export async function GET(req, { params }) {
   try {
     await dbConnect();
-    const { id } = params;
+    const { id } = await params;
 
     const user = await User.findById(id).select("-password");
     if (!user) {
@@ -17,10 +17,7 @@ export async function GET(req, { params }) {
     return NextResponse.json(user);
   } catch (err) {
     console.error("GET user error:", err);
-    return NextResponse.json(
-      { error: "Failed to fetch user" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
   }
 }
 
@@ -28,7 +25,7 @@ export async function GET(req, { params }) {
 export async function PATCH(req, { params }) {
   try {
     await dbConnect();
-    const { id } = params;
+    const { id } = await params;
     const data = await req.json();
 
     const user = await User.findById(id);
@@ -46,10 +43,7 @@ export async function PATCH(req, { params }) {
     if (data.oldPassword && data.newPassword) {
       const isMatch = await bcrypt.compare(data.oldPassword, user.password);
       if (!isMatch) {
-        return NextResponse.json(
-          { error: "Old password is incorrect" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Old password is incorrect" }, { status: 400 });
       }
       const hashed = await bcrypt.hash(data.newPassword, 10);
       user.password = hashed;
@@ -62,9 +56,6 @@ export async function PATCH(req, { params }) {
     return NextResponse.json({ message: "Profile updated", user: updatedUser });
   } catch (err) {
     console.error("PATCH user error:", err);
-    return NextResponse.json(
-      { error: "Failed to update profile" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
   }
 }
