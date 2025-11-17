@@ -50,6 +50,7 @@ export default function LoginPage() {
       redirect: false,
       emailOrPhone: form.emailOrPhone,
       password: form.password,
+      callbackUrl: callbackUrl,
     });
 
     if (result?.error) {
@@ -140,7 +141,7 @@ export default function LoginPage() {
           <button
             type="button"
             className="google-btn"
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("google", { callbackUrl })}
           >
             <FcGoogle
               size={20}
@@ -152,7 +153,7 @@ export default function LoginPage() {
           <button
             type="button"
             className="github-btn"
-            onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("github", { callbackUrl })}
           >
             <BsGithub
               size={20}

@@ -11,6 +11,7 @@ import parsePhoneNumber from "libphonenumber-js";
 
 export const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
+
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -24,7 +25,6 @@ export const authOptions = {
       },
       async authorize(credentials) {
         await dbConnect();
-
         const { emailOrPhone, password } = credentials;
         let user;
 
@@ -36,9 +36,7 @@ export const authOptions = {
         } else {
           try {
             const phoneNumber = parsePhoneNumber(emailOrPhone, "PK");
-            if (!phoneNumber.isValid()) {
-              throw new Error("Invalid phone number format");
-            }
+            if (!phoneNumber.isValid()) throw new Error("Invalid phone number");
             user = await User.findOne({ phone: phoneNumber.number });
           } catch {
             throw new Error("Invalid phone number format");
@@ -46,13 +44,12 @@ export const authOptions = {
         }
 
         if (!user) throw new Error("User not found");
-        if (!user.isVerified)
-          throw new Error("Please verify your account first");
+        if (!user.isVerified) throw new Error("Please verify your account");
 
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) throw new Error("Invalid password");
 
-        return { id: user._id, name: user.name, email: user.email };
+        return { id: user._id.toString(), name: user.name, email: user.email };
       },
     }),
 
@@ -67,9 +64,47 @@ export const authOptions = {
     }),
   ],
 
-  session: { strategy: "jwt" },
   pages: { signIn: "/login" },
+  session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
+
+  callbacks: {
+    async signIn({ user, account }) {
+      await dbConnect();
+
+      if (account?.provider === "google" || account?.provider === "github") {
+        const existingUser = await User.findOne({ email: user.email });
+
+        if (!existingUser) {
+          const newUser = await User.create({
+            name: user.name || "No Name",
+            email: user.email,
+            isVerified: true,
+            provider: account.provider,
+          });
+          user.id = newUser._id.toString(); // ✅ Important for JWT
+        } else {
+          user.id = existingUser._id.toString(); // ✅ Ensure ID exists
+        }
+      }
+
+      return true;
+    },
+
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+      }
+      return token;
+    },
+
+    async session({ session, token }) {
+      session.user.id = token.id;
+      session.user.email = token.email;
+      return session;
+    },
+  },
 
   cookies: {
     sessionToken: {
@@ -83,47 +118,6 @@ export const authOptions = {
         path: "/",
         secure: process.env.NODE_ENV === "production",
       },
-    },
-  },
-
-  callbacks: {
-    async signIn({ user, account }) {
-      await dbConnect();
-
-      if (account?.provider === "google" || account?.provider === "github") {
-        const existingUser = await User.findOne({ email: user.email });
-
-        if (!existingUser) {
-          await User.create({
-            name: user.name || "No Name",
-            email: user.email,
-            isVerified: true,
-            provider: account.provider,
-          });
-          console.log("✅ New OAuth user saved to DB:", user.email);
-        } else {
-          console.log("ℹ️ OAuth user already exists:", user.email);
-        }
-      }
-
-      return true;
-    },
-
-    async jwt({ token, user }) {
-      if (user) {
-        const dbUser = await User.findOne({ email: user.email });
-        if (dbUser) {
-          token.id = dbUser._id.toString();
-        }
-      }
-      return token;
-    },
-
-    async session({ session, token }) {
-      if (token?.id) {
-        session.user.id = token.id;
-      }
-      return session;
     },
   },
 };
