@@ -13,7 +13,7 @@ export function showToast(message, type = "success") {
           position: "relative",
           background: "#1f29379f",
           color: "#fff",
-          padding: "12px 16px",
+          padding: "6px 16px",
           borderRadius: "10px",
           boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
           borderLeft: `7px solid ${isSuccess ? "#22c52aff" : "#ef4444"}`,
