@@ -91,8 +91,10 @@ function ClientsPageContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isValid) return;
-    showToast("Please fill all fields.", "error");
+    if (!isValid) {
+      showToast("Please fill all fields.", "error");
+      return;
+    }
 
     try {
       const method = editingClientId ? "PUT" : "POST";
@@ -129,7 +131,7 @@ function ClientsPageContent() {
       setShouldCloseModal(true);
     } catch (err) {
       console.error("Error saving client:", err);
-      toast.error(err.message);
+      showToast(err.message, "error");
     }
   };
 
@@ -390,7 +392,7 @@ function ClientsPageContent() {
               <option value="All">All Categories</option>
               <option value="Freelance">Freelance</option>
               <option value="Fixed Salary">Fixed Salary</option>
-              <option value="Task Based salary">Task Based Salary</option>
+              <option value="Task Based Salary">Task Based Salary</option>
             </select>
           </div>
         </div>
@@ -559,8 +561,8 @@ function ClientsPageContent() {
                       <option value="">Select category</option>
                       <option value="Freelance">Freelance</option>
                       <option value="Fixed Salary">Fixed Salary</option>
-                      <option value="Task-Based Salary">
-                        Task-Based Salary
+                      <option value="Task Based Salary">
+                        Task Based Salary
                       </option>
                     </select>
                   </div>

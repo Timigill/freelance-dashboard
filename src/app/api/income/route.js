@@ -50,6 +50,8 @@ export async function GET(req) {
   }
 }
 
+const validTypes = ["Fixed Salary", "Task Based Salary", "Freelance"];
+
 export async function POST(req) {
   try {
     await dbConnect();
@@ -63,8 +65,14 @@ export async function POST(req) {
       );
     }
 
+    // sanitize type
+    const type = validTypes.includes(body.type?.trim())
+      ? body.type.trim()
+      : "Fixed Salary";
+
     const newIncome = await IncomeSource.create({
       ...body,
+      type, // use sanitized type
       userId,
       clientName: body.clientName || "Unknown",
       amount: Number(body.amount) || 0,
@@ -81,7 +89,6 @@ export async function POST(req) {
   }
 }
 
-// ✅ PUT update income source for logged-in user
 export async function PUT(req) {
   try {
     await dbConnect();
@@ -90,6 +97,13 @@ export async function PUT(req) {
 
     if (!body._id)
       return NextResponse.json({ error: "_id required" }, { status: 400 });
+
+    // sanitize type
+    if (body.type) {
+      body.type = validTypes.includes(body.type?.trim())
+        ? body.type.trim()
+        : "Fixed Salary";
+    }
 
     const updated = await IncomeSource.findOneAndUpdate(
       { _id: body._id, userId },

@@ -13,6 +13,16 @@ function IncomePageContent() {
   const [filter, setFilter] = useState("all");
   const searchParams = useSearchParams();
 
+  // Normalize client category/type
+  const normalizeType = (type) => {
+    if (!type) return "Fixed Salary";
+    const t = type.trim().toLowerCase();
+    if (t === "task based salary" || t === "task-based salary") return "Task-Based Salary";
+    if (t === "fixed salary") return "Fixed Salary";
+    if (t === "freelance") return "Freelance";
+    return "Fixed Salary"; // fallback
+  };
+
   const [form, setForm] = useState({
     name: "",
     amount: "",
@@ -32,7 +42,7 @@ function IncomePageContent() {
       setIncomeSources(data);
     } catch (err) {
       console.error(err);
-      showToast("Error fetching income sources","error");
+      showToast("Error fetching income sources", "error");
     }
   };
 
@@ -45,7 +55,7 @@ function IncomePageContent() {
       setClients(data);
     } catch (err) {
       console.error(err);
-      showToast("Error fetching clients","error");
+      showToast("Error fetching clients", "error");
     }
   };
 
@@ -65,6 +75,7 @@ function IncomePageContent() {
         description: "",
         clientId: "",
         clientName: "",
+        type: "Fixed Salary",
       });
       setShowModal(true);
     }
@@ -76,10 +87,10 @@ function IncomePageContent() {
     try {
       let updatedForm = { ...form };
 
-      // Auto-fill clientName if missing
-      if (updatedForm.clientId && !updatedForm.type) {
+      // Ensure type is correct based on client
+      if (updatedForm.clientId) {
         const selected = clients.find((c) => c._id === updatedForm.clientId);
-        if (selected) updatedForm.type = selected.category || "Other";
+        updatedForm.type = selected ? normalizeType(selected.category) : "Fixed Salary";
       }
 
       updatedForm.amount =
@@ -88,15 +99,13 @@ function IncomePageContent() {
           : updatedForm.amount;
 
       if (currentSource) {
-        // PUT (update)
         await fetch("/api/income", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ ...updatedForm, _id: currentSource._id }), // include _id in body
+          body: JSON.stringify({ ...updatedForm, _id: currentSource._id }),
         });
       } else {
-        // POST (new)
         await fetch("/api/income", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -118,10 +127,10 @@ function IncomePageContent() {
       });
 
       fetchIncomeSources();
-      showToast("Income source saved successfully!","success");
+      showToast("Income source saved successfully!", "success");
     } catch (err) {
       console.error(err);
-      showToast("Error saving income source","error");
+      showToast("Error saving income source", "error");
     }
   };
 
@@ -135,11 +144,12 @@ function IncomePageContent() {
       description: source.description || "",
       clientId: source.clientId || "",
       clientName: source.clientName || "",
-      type: source.type || "Fixed Salary",
+      type: normalizeType(source.type),
     });
     setShowModal(true);
   };
 
+  // Delete
   const handleDelete = async (taskId) => {
     if (!taskId) return toast.error("Invalid task ID");
 
@@ -229,7 +239,6 @@ function IncomePageContent() {
         method: "DELETE",
         credentials: "include",
       });
-
       if (!res.ok) {
         let errData = {};
         try {
@@ -237,16 +246,14 @@ function IncomePageContent() {
         } catch {}
         throw new Error(errData?.error || "Failed to delete income source");
       }
-
-      showToast("Income source deleted successfully!","success");
-      fetchIncomeSources(); // refresh the list
+      showToast("Income source deleted successfully!", "success");
+      fetchIncomeSources();
     } catch (err) {
       console.error("Delete error:", err);
-      showToast(err.message || "Error deleting income source","error");
+      showToast(err.message || "Error deleting income source", "error");
     }
   };
 
-  // Filtered sources
   const filteredSources =
     filter === "all"
       ? incomeSources
@@ -257,37 +264,25 @@ function IncomePageContent() {
   const activeSources =
     filter === "all"
       ? incomeSources.filter((s) => s.isActive)
-      : incomeSources.filter((s) => s.type === filter && s.isActive);
+      : incomeSources.filter(
+          (s) => s.isActive && s.type?.toLowerCase().trim() === filter.toLowerCase().trim()
+        );
 
-  const totalIncome = activeSources.reduce(
-    (sum, s) => sum + (s.amount || 0),
-    0
-  );
+  const totalIncome = activeSources.reduce((sum, s) => sum + (s.amount || 0), 0);
 
   return (
     <div className="container-fluid py-4">
-      {/* Header */}
+      {/* Header & Add Button */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-nowrap">
         <div>
-          <h3
-            className="fw-bold mb-0 fs-5 fs-md-4"
-            style={{ color: "var(--bs-primary)" }}
-          >
+          <h3 className="fw-bold mb-0 fs-5 fs-md-4" style={{ color: "var(--bs-primary)" }}>
             Income Sources
           </h3>
-          <p className="text-muted fs-6 mb-0">
-            Manage your income streams and track earnings
-          </p>
+          <p className="text-muted fs-6 mb-0">Manage your income streams and track earnings</p>
         </div>
         <button
           className="btn mt-2 mt-md-0"
-          style={{
-            background: "var(--bs-primary)",
-            color: "white",
-            whiteSpace: "nowrap",
-            fontSize: "0.9rem",
-            padding: "6px 14px",
-          }}
+          style={{ background: "var(--bs-primary)", color: "white", whiteSpace: "nowrap", fontSize: "0.9rem", padding: "6px 14px" }}
           onClick={() => {
             setCurrentSource(null);
             setForm({
@@ -297,6 +292,7 @@ function IncomePageContent() {
               description: "",
               clientId: "",
               clientName: "",
+              type: "Fixed Salary",
             });
             setShowModal(true);
           }}
@@ -310,27 +306,16 @@ function IncomePageContent() {
         <div className="col-12 col-md-4">
           <div className="card bg-primary text-white h-100 text-center">
             <div className="card-body d-flex flex-column justify-content-center">
-              <h6 className="mb-2" style={{ color: "var(--bs-primary)" }}>
-                Total Monthly Income
-              </h6>
+              <h6 className="mb-2" style={{ color: "var(--bs-primary)" }}>Total Monthly Income</h6>
               <h3 className="mb-0">{totalIncome.toLocaleString()}</h3>
             </div>
           </div>
         </div>
-
         <div className="col-12 col-md-4">
           <div className="card bg-info text-white h-100 text-center">
             <div className="card-body d-flex flex-column justify-content-center">
-              <h6 className="mb-2" style={{ color: "var(--bs-primary)" }}>
-                Average per Source
-              </h6>
-              <h3 className="mb-0">
-                {incomeSources.length
-                  ? Math.round(
-                      totalIncome / incomeSources.length
-                    ).toLocaleString()
-                  : 0}
-              </h3>
+              <h6 className="mb-2" style={{ color: "var(--bs-primary)" }}>Average per Source</h6>
+              <h3 className="mb-0">{incomeSources.length ? Math.round(totalIncome / incomeSources.length).toLocaleString() : 0}</h3>
             </div>
           </div>
         </div>
@@ -340,24 +325,20 @@ function IncomePageContent() {
       <div className="card shadow-sm mb-4">
         <div className="card-body">
           <div className="btn-group">
-            {["all", "Fixed Salary", "Task-Based Salary", "Freelance"].map(
-              (t) => (
-                <button
-                  key={t}
-                  className={`btn ${
-                    filter === t ? "btn-primary" : "btn-outline-primary"
-                  }`}
-                  onClick={() => setFilter(t)}
-                >
-                  {t === "all" ? "All" : t}
-                </button>
-              )
-            )}
+            {["all", "Fixed Salary", "Task-Based Salary", "Freelance"].map((t) => (
+              <button
+                key={t}
+                className={`btn ${filter === t ? "btn-primary" : "btn-outline-primary"}`}
+                onClick={() => setFilter(t)}
+              >
+                {t === "all" ? "All" : t}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Income Table */}
       <div className="card shadow-sm">
         <div className="card-body p-0">
           <div className="table-responsive">
@@ -375,28 +356,13 @@ function IncomePageContent() {
                 {filteredSources.map((source) => (
                   <tr key={source._id}>
                     <td>{source.name}</td>
-                    <td>
-                      {source.clientName || (source.clientId ? "Client" : "—")}
-                    </td>
+                    <td>{source.clientName || (source.clientId ? "Client" : "—")}</td>
                     <td>{source.amount.toLocaleString()}</td>
                     <td>{source.frequency}</td>
-
                     <td>
                       <div className="d-flex flex-column flex-sm-row gap-2">
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          onClick={() => handleEdit(source)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          onClick={() => handleDelete(source._id)}
-                        >
-                          Delete
-                        </Button>
+                        <Button variant="outline-primary" size="sm" onClick={() => handleEdit(source)}>Edit</Button>
+                        <Button variant="outline-danger" size="sm" onClick={() => handleDelete(source._id)}>Delete</Button>
                       </div>
                     </td>
                   </tr>
@@ -410,12 +376,11 @@ function IncomePageContent() {
       {/* Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>
-            {currentSource ? "Edit" : "Add"} Income Source
-          </Modal.Title>
+          <Modal.Title>{currentSource ? "Edit" : "Add"} Income Source</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
+            {/* Name */}
             <Form.Group className="mb-3">
               <Form.Label>Name</Form.Label>
               <Form.Control
@@ -426,6 +391,8 @@ function IncomePageContent() {
                 required
               />
             </Form.Group>
+
+            {/* Client */}
             <Form.Group className="mb-3">
               <Form.Label>Client</Form.Label>
               <Form.Select
@@ -434,18 +401,9 @@ function IncomePageContent() {
                 onChange={(e) => {
                   const id = e.target.value;
                   const selected = clients.find((c) => c._id === id);
-                  const clientName = selected
-                    ? selected.company
-                      ? `${selected.company} — ${selected.name}`
-                      : selected.name
-                    : "";
-                  const type = selected?.category || "Other"; // <-- Add this
-                  setForm((prev) => ({
-                    ...prev,
-                    clientId: id,
-                    clientName,
-                    type,
-                  }));
+                  const clientName = selected ? (selected.company ? `${selected.company} — ${selected.name}` : selected.name) : "";
+                  const type = selected ? normalizeType(selected.category) : "Fixed Salary";
+                  setForm((prev) => ({ ...prev, clientId: id, clientName, type }));
                 }}
               >
                 <option value="">Select client...</option>
@@ -456,27 +414,27 @@ function IncomePageContent() {
                 ))}
               </Form.Select>
             </Form.Group>
+
+            {/* Amount */}
             <Form.Group className="mb-3">
               <Form.Label>Amount</Form.Label>
               <Form.Control
                 type="number"
                 placeholder="Enter amount"
                 value={form.amount}
-                onChange={(e) =>
-                  setForm({ ...form, amount: parseFloat(e.target.value) })
-                }
+                onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) })}
                 required
                 min="0"
                 step="0.01"
               />
             </Form.Group>
+
+            {/* Frequency */}
             <Form.Group className="mb-3">
               <Form.Label>Frequency</Form.Label>
               <Form.Select
                 value={form.frequency}
-                onChange={(e) =>
-                  setForm({ ...form, frequency: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, frequency: e.target.value })}
                 required
               >
                 <option value="One-time">One-time</option>
@@ -485,6 +443,8 @@ function IncomePageContent() {
                 <option value="Yearly">Yearly</option>
               </Form.Select>
             </Form.Group>
+
+            {/* Description */}
             <Form.Group className="mb-3">
               <Form.Label>Description</Form.Label>
               <Form.Control
@@ -492,19 +452,13 @@ function IncomePageContent() {
                 rows={3}
                 placeholder="Enter description"
                 value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
               />
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" type="submit">
-              Save
-            </Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
+            <Button variant="primary" type="submit">Save</Button>
           </Modal.Footer>
         </Form>
       </Modal>
