@@ -25,6 +25,7 @@ export const authOptions = {
       },
       async authorize(credentials) {
         await dbConnect();
+
         const { emailOrPhone, password } = credentials;
         let user;
 
@@ -36,7 +37,7 @@ export const authOptions = {
         } else {
           try {
             const phoneNumber = parsePhoneNumber(emailOrPhone, "PK");
-            if (!phoneNumber.isValid()) throw new Error("Invalid phone number");
+            if (!phoneNumber.isValid()) throw new Error("Invalid phone number format");
             user = await User.findOne({ phone: phoneNumber.number });
           } catch {
             throw new Error("Invalid phone number format");
@@ -44,7 +45,7 @@ export const authOptions = {
         }
 
         if (!user) throw new Error("User not found");
-        if (!user.isVerified) throw new Error("Please verify your account");
+        if (!user.isVerified) throw new Error("Please verify your account first");
 
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) throw new Error("Invalid password");
@@ -64,9 +65,10 @@ export const authOptions = {
     }),
   ],
 
-  pages: { signIn: "/login" },
   session: { strategy: "jwt" },
+  pages: { signIn: "/login" },
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true, // Required for App Router + production
 
   callbacks: {
     async signIn({ user, account }) {
@@ -74,50 +76,32 @@ export const authOptions = {
 
       if (account?.provider === "google" || account?.provider === "github") {
         const existingUser = await User.findOne({ email: user.email });
-
         if (!existingUser) {
-          const newUser = await User.create({
+          await User.create({
             name: user.name || "No Name",
             email: user.email,
             isVerified: true,
             provider: account.provider,
           });
-          user.id = newUser._id.toString(); // ✅ Important for JWT
+          console.log("✅ New OAuth user saved to DB:", user.email);
         } else {
-          user.id = existingUser._id.toString(); // ✅ Ensure ID exists
+          console.log("ℹ️ OAuth user already exists:", user.email);
         }
       }
-
       return true;
     },
 
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.email = user.email;
+        const dbUser = await User.findOne({ email: user.email });
+        if (dbUser) token.id = dbUser._id.toString();
       }
       return token;
     },
 
     async session({ session, token }) {
-      session.user.id = token.id;
-      session.user.email = token.email;
+      if (token?.id) session.user.id = token.id;
       return session;
-    },
-  },
-
-  cookies: {
-    sessionToken: {
-      name:
-        process.env.NODE_ENV === "production"
-          ? "__Secure-next-auth.session-token"
-          : "next-auth.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
     },
   },
 };
