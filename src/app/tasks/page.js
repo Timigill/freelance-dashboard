@@ -3,6 +3,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { Modal, Button, Form, Badge } from "react-bootstrap";
+import { showToast } from "../../utils/toastHelper";
+
 
 function TasksPageContent() {
   const [tasks, setTasks] = useState([]);
@@ -130,7 +132,8 @@ function TasksPageContent() {
   };
 
   const handleDelete = async (taskId) => {
-    if (!taskId) return toast.error("Invalid task ID");
+    if (!taskId) return 
+    showToast("Invalid task ID","error");
 
     const confirmed = await new Promise((resolve) => {
       let dismissed = false;
@@ -218,11 +221,11 @@ function TasksPageContent() {
 
       if (!res.ok) throw new Error(data?.message || "Failed to delete task");
 
-      toast.success("Task deleted successfully!", { duration: 3000 });
+      showToast("Task deleted successfully!","success");
       fetchTasks(); // ✅ refresh the task list
     } catch (err) {
       console.error("Delete error:", err);
-      toast.error("Error deleting task", { duration: 3000 });
+      showToast("Error deleting task","error");
     }
   };
 

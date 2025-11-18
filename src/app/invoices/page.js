@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import toast, { Toaster } from "react-hot-toast";
+import { showToast } from "../../utils/toastHelper";
+
 
 export default function InvoicesClient({ initialOpenModal }) {
   const [invoices, setInvoices] = useState([]);
@@ -41,7 +43,7 @@ export default function InvoicesClient({ initialOpenModal }) {
       setClients(Array.isArray(clientData) ? clientData : []);
     } catch (err) {
       console.error("Error fetching data:", err);
-      toast.error("Failed to fetch data.");
+      showToast("Failed to fetch data.","error");
     } finally {
       setLoading(false);
     }
@@ -86,7 +88,7 @@ export default function InvoicesClient({ initialOpenModal }) {
     e.preventDefault();
 
     if (!form.client || !form.amount) {
-      toast.error("Please select a client and enter an amount.");
+      showToast("Please select a client and enter an amount.","error");
       return;
     }
 
@@ -95,7 +97,7 @@ export default function InvoicesClient({ initialOpenModal }) {
 
     // Validation
     if (form.status === "Partially Paid" && paidAmount > totalAmount) {
-      toast.error("Paid amount cannot exceed total amount.");
+      showToast("Paid amount cannot exceed total amount.","error");
       return;
     }
 
@@ -127,10 +129,10 @@ export default function InvoicesClient({ initialOpenModal }) {
 
       fetchData();
       handleClose();
-      toast.success("Invoice saved successfully!");
+      showToast("Invoice saved successfully!","success");
     } catch (error) {
       console.error("Error saving invoice:", error);
-      toast.error("Error saving invoice");
+      showToast("Error saving invoice","error");
     }
   };
 
@@ -143,7 +145,8 @@ export default function InvoicesClient({ initialOpenModal }) {
 
   // Delete invoice
 const handleDelete = async (invoiceId) => {
-  if (!invoiceId) return toast.error("Invalid invoice ID");
+  if (!invoiceId) return
+   showToast("Invalid invoice ID","error");
 
   const confirmed = await new Promise((resolve) => {
     let dismissed = false;
@@ -231,11 +234,11 @@ const handleDelete = async (invoiceId) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data?.message || "Failed to delete invoice");
 
-    toast.success("Invoice deleted successfully!");
+    showToast("Invoice deleted successfully!","success");
     fetchData(); // refresh the list
   } catch (err) {
     console.error("Delete error:", err);
-    toast.error("Error deleting invoice");
+    showToastr("Error deleting invoice","error");
   }
 };
 

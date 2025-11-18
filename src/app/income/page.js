@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import toast from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
+import { showToast } from "../../utils/toastHelper";
 
 function IncomePageContent() {
   const [incomeSources, setIncomeSources] = useState([]);
@@ -31,7 +32,7 @@ function IncomePageContent() {
       setIncomeSources(data);
     } catch (err) {
       console.error(err);
-      toast.error("Error fetching income sources");
+      showToast("Error fetching income sources","error");
     }
   };
 
@@ -44,7 +45,7 @@ function IncomePageContent() {
       setClients(data);
     } catch (err) {
       console.error(err);
-      toast.error("Error fetching clients");
+      showToast("Error fetching clients","error");
     }
   };
 
@@ -117,10 +118,10 @@ function IncomePageContent() {
       });
 
       fetchIncomeSources();
-      toast.success("Income source saved successfully!");
+      showToast("Income source saved successfully!","success");
     } catch (err) {
       console.error(err);
-      toast.error("Error saving income source");
+      showToast("Error saving income source","error");
     }
   };
 
@@ -237,11 +238,11 @@ function IncomePageContent() {
         throw new Error(errData?.error || "Failed to delete income source");
       }
 
-      toast.success("Income source deleted successfully!");
+      showToast("Income source deleted successfully!","success");
       fetchIncomeSources(); // refresh the list
     } catch (err) {
       console.error("Delete error:", err);
-      toast.error(err.message || "Error deleting income source");
+      showToast(err.message || "Error deleting income source","error");
     }
   };
 

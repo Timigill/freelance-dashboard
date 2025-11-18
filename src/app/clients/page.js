@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { showToast } from "../../utils/toastHelper";
 
 function ClientsPageContent() {
   const [clients, setClients] = useState([]);
@@ -90,7 +91,8 @@ function ClientsPageContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isValid) return toast.error("Please fill all fields.");
+    if (!isValid) return;
+    showToast("Please fill all fields.", "error");
 
     try {
       const method = editingClientId ? "PUT" : "POST";
@@ -109,7 +111,10 @@ function ClientsPageContent() {
 
       if (!res.ok) throw new Error(data.message || "Failed to save client");
 
-      toast.success(editingClientId ? "Client updated!" : "Client added!");
+      showToast(
+        editingClientId ? "Client updated!" : "Client added!",
+        "success"
+      );
 
       setForm({
         name: "",
@@ -207,8 +212,7 @@ function ClientsPageContent() {
       };
 
       toast.custom((t) => <ConfirmToast id={t.id} />, {
-        duration: 4000
-        ,
+        duration: 4000,
         position: "top-center",
       });
     }).then((res) => (confirmed = res));
@@ -225,10 +229,10 @@ function ClientsPageContent() {
       if (!res.ok) throw new Error(data?.message || "Failed to delete client");
 
       // Success toast will auto-dismiss after 4s
-      toast.success("Client deleted successfully!", { duration: 4000 });
+      showToast("Client deleted successfully!", "success");
       fetchClients();
     } catch (err) {
-      toast.error(`Error deleting client: ${err.message}`, { duration: 4000 });
+      showToast(`Error deleting client: ${err.message}`, "error");
     }
   };
 
