@@ -19,6 +19,7 @@ function IncomePageContent() {
     description: "",
     clientId: "",
     clientName: "",
+    type: "Fixed Salary",
   });
 
   // Fetch income sources
@@ -75,12 +76,9 @@ function IncomePageContent() {
       let updatedForm = { ...form };
 
       // Auto-fill clientName if missing
-      if (updatedForm.clientId && !updatedForm.clientName) {
+      if (updatedForm.clientId && !updatedForm.type) {
         const selected = clients.find((c) => c._id === updatedForm.clientId);
-        if (selected)
-          updatedForm.clientName = selected.company
-            ? `${selected.company} — ${selected.name}`
-            : selected.name;
+        if (selected) updatedForm.type = selected.category || "Other";
       }
 
       updatedForm.amount =
@@ -115,6 +113,7 @@ function IncomePageContent() {
         description: "",
         clientId: "",
         clientName: "",
+        type: "Fixed Salary",
       });
 
       fetchIncomeSources();
@@ -135,6 +134,7 @@ function IncomePageContent() {
       description: source.description || "",
       clientId: source.clientId || "",
       clientName: source.clientName || "",
+      type: source.type || "Fixed Salary",
     });
     setShowModal(true);
   };
@@ -216,7 +216,7 @@ function IncomePageContent() {
       };
 
       toast.custom((t) => <ConfirmToast id={t.id} />, {
-        duration: Infinity,
+        duration: 3000,
         position: "top-center",
       });
     });
@@ -339,17 +339,19 @@ function IncomePageContent() {
       <div className="card shadow-sm mb-4">
         <div className="card-body">
           <div className="btn-group">
-            {["all", "Fixed Salary", "Task-Based Salary", "Freelance"].map((t) => (
-              <button
-                key={t}
-                className={`btn ${
-                  filter === t ? "btn-primary" : "btn-outline-primary"
-                }`}
-                onClick={() => setFilter(t)}
-              >
-                {t === "all" ? "All" : t}
-              </button>
-            ))}
+            {["all", "Fixed Salary", "Task-Based Salary", "Freelance"].map(
+              (t) => (
+                <button
+                  key={t}
+                  className={`btn ${
+                    filter === t ? "btn-primary" : "btn-outline-primary"
+                  }`}
+                  onClick={() => setFilter(t)}
+                >
+                  {t === "all" ? "All" : t}
+                </button>
+              )
+            )}
           </div>
         </div>
       </div>
@@ -436,7 +438,13 @@ function IncomePageContent() {
                       ? `${selected.company} — ${selected.name}`
                       : selected.name
                     : "";
-                  setForm((prev) => ({ ...prev, clientId: id, clientName }));
+                  const type = selected?.category || "Other"; // <-- Add this
+                  setForm((prev) => ({
+                    ...prev,
+                    clientId: id,
+                    clientName,
+                    type,
+                  }));
                 }}
               >
                 <option value="">Select client...</option>

@@ -179,29 +179,21 @@ function ClientsDynamicPageContent() {
   if (client) {
     return (
       <div className="client-container">
-        <button className="btn-back" onClick={() => router.back()}>
-          Back
-        </button>
+        <div className="header-row">
+          <h2>{client.name}</h2>
+          <button className="btn-back" onClick={() => router.back()}>
+            Back
+          </button>
+        </div>
 
         <div className="client-card">
-          <div className="client-header">
-            {/* <div className="client-photo">
-              <img
-                src={client.profilePic || "/default-avatar.png"}
-                alt={client.name}
-              />
-            </div> */}
-            <div className="client-details">
-              <h3>{client.name}</h3>
-              <p>
-                <strong>Company:</strong> {client.company || "—"}
-              </p>
-              <p>
-                <strong>Category:</strong> {client.category || "—"}
-              </p>
-            </div>
-          </div>
-          <div className="client-info">
+          <div className="client-details">
+            <p>
+              <strong>Company:</strong> {client.company || "—"}
+            </p>
+            <p>
+              <strong>Category:</strong> {client.category || "—"}
+            </p>
             <p>
               <strong>Phone:</strong> {client.phone || "—"}
             </p>
@@ -216,7 +208,7 @@ function ClientsDynamicPageContent() {
         </div>
 
         <div className="invoice-card">
-          <h4>Invoices</h4>
+          <h3>Invoices</h3>
           {invoices.length > 0 ? (
             <div className="table-wrapper">
               <table>
@@ -257,84 +249,105 @@ function ClientsDynamicPageContent() {
             font-family: "Segoe UI", sans-serif;
             color: #352359;
           }
+
+          .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+          }
+            .header-row h2{
+            font-size: 24px !important;
+            font-weight: bold;
+            }
+
           .btn-back {
-            background: none;
-            border: 1px solid #352359;
-            color: #352359;
-            padding: 8px 15px;
+            background: #352359;
+            border: none;
+            color: #fff;
+            padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
-            margin-bottom: 15px;
+            font-weight: 500;
             transition: 0.3s;
           }
           .btn-back:hover {
-            background: #352359;
-            color: #fff;
+            background: #1c1330ff;
           }
-          .client-card,
+
+          .client-card {
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            background-color: #fff;
+          }
+
+          .client-details p {
+            margin: 6px 0;
+            font-size: 0.95rem;
+          }
+
           .invoice-card {
             border-radius: 12px;
             padding: 20px;
-            margin-bottom: 20px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
           }
-          .client-header {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-          }
-          
-          .client-details h3 {
-            margin: 0 0 5px;
-            font-size: 1.5rem;
-            color: #352359;
-          }
-          .client-info p {
-            margin: 5px 0;
-          }
-          .invoice-card h4 {
+
+          .invoice-card h3 {
             margin-bottom: 15px;
             color: #352359;
           }
+
           table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 600px;
           }
           th,
           td {
             border: 1px solid #ccc;
-            padding: 10px;
+            padding: 10px 8px;
             text-align: left;
+            font-size: 0.9rem;
           }
           th {
             background: #352359;
             color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 1;
           }
           tr:nth-child(even) {
             background: #f9f9f9;
           }
           tr:hover {
-            background: rgba(53, 35, 89, 0.1);
+            background: rgba(53, 35, 89, 0.08);
           }
-          .clickable-row {
-            cursor: pointer;
-            color: #0d6efd;
+
+          .table-wrapper {
+            overflow-x: auto;
           }
+
           .no-data {
             text-align: center;
             color: #999;
             padding: 10px 0;
           }
-          .filter-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-          }
+
           @media (max-width: 768px) {
-            .client-header {
-              flex-direction: column;
+            .header-row {
+              padding: 0 2rem;
+
+              flex-direction: row;
               align-items: center;
+              gap: 10px;
+            }
+
+            table {
+              font-size: 0.85rem;
             }
           }
         `}</style>
