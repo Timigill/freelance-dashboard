@@ -93,7 +93,7 @@ function ClientsPageContent() {
     e.preventDefault();
     if (!isValid) {
       showToast("Please fill all fields.", "error");
-      return;
+      // return;
     }
 
     try {

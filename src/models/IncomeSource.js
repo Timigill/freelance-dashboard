@@ -15,7 +15,7 @@ const IncomeSourceSchema = new mongoose.Schema({
   clientName: String,
   type: {
     type: String,
-    enum: ["Fixed Salary", "Task-Based Salary", "Freelance"],
+    enum: ["Fixed Salary", "Task Based Salary", "Freelance"],
   },
   isActive: { type: Boolean, default: true },
   payments: [

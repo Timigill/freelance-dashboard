@@ -325,7 +325,7 @@ function IncomePageContent() {
       <div className="card shadow-sm mb-4">
         <div className="card-body">
           <div className="btn-group">
-            {["all", "Fixed Salary", "Task-Based Salary", "Freelance"].map((t) => (
+            {["all", "Fixed Salary", "Task Based Salary", "Freelance"].map((t) => (
               <button
                 key={t}
                 className={`btn ${filter === t ? "btn-primary" : "btn-outline-primary"}`}
