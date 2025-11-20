@@ -9,6 +9,8 @@ function ClientsDynamicPageContent() {
   const [client, setClient] = useState(null);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState([]);
+
 
   useEffect(() => {
     if (!slug) return;
@@ -71,49 +73,81 @@ function ClientsDynamicPageContent() {
     }
   };
 
-  const fetchClientDetails = async (id) => {
-    setLoading(true);
-    setClients([]);
+const fetchClientDetails = async (id) => {
+  setLoading(true);
+  setClients([]);
+  setClient(null);
+  setInvoices([]);
+  setTasks([]); // make sure tasks reset
+
+  try {
+    const [clientRes, invoiceRes, tasksRes] = await Promise.all([
+      fetch(`/api/clients/${id}`),
+      fetch(`/api/invoices`),
+      fetch(`/api/tasks`),
+    ]);
+
+    const clientData = await safeJson(clientRes);
+    if (clientData?.error) return setClient(null), setInvoices([]);
+
+    const invoiceData = await safeJson(invoiceRes);
+    const tasksData = await safeJson(tasksRes);
+
+    setClient(clientData);
+
+    const clientId = clientData._id?.toString();
+    const clientName = clientData.name?.trim().toLowerCase() || "";
+    const companyName = clientData.company?.trim().toLowerCase() || "";
+
+    // -----------------------------
+    // FILTER INVOICES
+    // -----------------------------
+    const filteredInvoices = (invoiceData || []).filter((inv) => {
+      const invClientId = inv.clientId?.toString();
+      const invClientName =
+        inv.clientName?.trim().toLowerCase() ||
+        inv.client?.trim().toLowerCase() ||
+        inv.client?.name?.trim().toLowerCase() ||
+        "";
+      const invCompany =
+        inv.company?.trim().toLowerCase() ||
+        inv.clientCompany?.trim().toLowerCase() ||
+        "";
+
+      return (
+        invClientId === clientId ||
+        invClientName.includes(clientName) ||
+        invCompany.includes(companyName)
+      );
+    });
+
+    setInvoices(filteredInvoices);
+
+    // -----------------------------
+    // FILTER TASKS
+    // -----------------------------
+    const filteredTasks = (tasksData || []).filter((t) => {
+      const taskClientId = t.clientId?.toString();
+      const taskClientName =
+        t.clientName?.trim().toLowerCase() ||
+        t.client?.trim().toLowerCase() ||
+        t.client?.name?.trim().toLowerCase() ||
+        "";
+      return (
+        taskClientId === clientId || taskClientName.includes(clientName)
+      );
+    });
+
+    setTasks(filteredTasks);
+  } catch (err) {
+    console.error(err);
     setClient(null);
     setInvoices([]);
-    try {
-      const [clientRes, invoiceRes] = await Promise.all([
-        fetch(`/api/clients/${id}`),
-        fetch(`/api/invoices`),
-      ]);
-      const clientData = await safeJson(clientRes);
-      if (clientData?.error) return setClient(null), setInvoices([]);
-      const invoiceData = await safeJson(invoiceRes);
-      setClient(clientData);
-      const clientId = clientData._id?.toString();
-      const clientName = clientData.name?.trim().toLowerCase() || "";
-      const companyName = clientData.company?.trim().toLowerCase() || "";
-      const filteredInvoices = (invoiceData || []).filter((inv) => {
-        const invClientId = inv.clientId?.toString();
-        const invClientName =
-          inv.clientName?.trim().toLowerCase() ||
-          inv.client?.trim().toLowerCase() ||
-          inv.client?.name?.trim().toLowerCase() ||
-          "";
-        const invCompany =
-          inv.company?.trim().toLowerCase() ||
-          inv.clientCompany?.trim().toLowerCase() ||
-          "";
-        return (
-          invClientId === clientId ||
-          invClientName.includes(clientName) ||
-          invCompany.includes(companyName)
-        );
-      });
-      setInvoices(filteredInvoices);
-    } catch (err) {
-      console.error(err);
-      setClient(null);
-      setInvoices([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setTasks([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (loading) return <div className="p-4">Loading...</div>;
 
@@ -240,6 +274,42 @@ function ClientsDynamicPageContent() {
             <p className="no-data">No invoices found.</p>
           )}
         </div>
+
+        <div className="task-card">
+          <h3>All Tasks of {client.name}</h3>
+
+          {tasks.length > 0 ? (
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Task Title</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Due Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.map((task) => (
+                    <tr key={task._id}>
+                      <td>{task.title || "—"}</td>
+                      <td>{task.status || "—"}</td>
+                      <td>{task.priority || "—"}</td>
+                      <td>
+                        {task.dueDate
+                          ? new Date(task.dueDate).toLocaleDateString()
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="no-data">No tasks found for this client.</p>
+          )}
+        </div>
+
 
         <style jsx>{`
           .client-container {
