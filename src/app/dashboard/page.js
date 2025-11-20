@@ -167,21 +167,6 @@ export default function HomePage() {
   }}>Loading dashboard...</div>;
 }
 
-// if (status !== "authenticated" || !session?.user?.id) {
-//   return (
-//     <div className="d-flex flex-column justify-content-center align-items-center" style={{ height: "80vh" }}>
-//       <div className="card p-4 text-center" style={{ maxWidth: 400, borderRadius: 12, boxShadow: "0 8px 25px rgba(0,0,0,0.15)" }}>
-//         <h4 className="mb-3" style={{ color: "var(--bs-primary)" }}>Access Denied</h4>
-//         <p className="text-muted mb-4" style={{ fontSize: 18 }}>
-//           You must be logged in to access the dashboard.
-//         </p>
-//         <Link href="/login" className="btn btn-primary px-4 py-2">Go to Login</Link>
-//       </div>
-//     </div>
-//   );
-// }
-
-
   const overviewData = [
     { title: "Total Monthly Income", value: monthlyStats.totalIncome, color: "primary" },
     { title: "Pending Payments", value: monthlyStats.pendingAmount, color: "warning" },
