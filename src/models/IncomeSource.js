@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
 const IncomeSourceSchema = new mongoose.Schema({
-  name: { type: String, required: true },
   amount: { type: Number, required: true, min: 0 },
   startDate: { type: Date, default: Date.now },
   endDate: Date,
@@ -31,7 +30,6 @@ const IncomeSourceSchema = new mongoose.Schema({
     },
   ],
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

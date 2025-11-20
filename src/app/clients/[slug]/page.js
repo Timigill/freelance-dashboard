@@ -73,81 +73,81 @@ function ClientsDynamicPageContent() {
     }
   };
 
-const fetchClientDetails = async (id) => {
-  setLoading(true);
-  setClients([]);
-  setClient(null);
-  setInvoices([]);
-  setTasks([]); // make sure tasks reset
-
-  try {
-    const [clientRes, invoiceRes, tasksRes] = await Promise.all([
-      fetch(`/api/clients/${id}`),
-      fetch(`/api/invoices`),
-      fetch(`/api/tasks`),
-    ]);
-
-    const clientData = await safeJson(clientRes);
-    if (clientData?.error) return setClient(null), setInvoices([]);
-
-    const invoiceData = await safeJson(invoiceRes);
-    const tasksData = await safeJson(tasksRes);
-
-    setClient(clientData);
-
-    const clientId = clientData._id?.toString();
-    const clientName = clientData.name?.trim().toLowerCase() || "";
-    const companyName = clientData.company?.trim().toLowerCase() || "";
-
-    // -----------------------------
-    // FILTER INVOICES
-    // -----------------------------
-    const filteredInvoices = (invoiceData || []).filter((inv) => {
-      const invClientId = inv.clientId?.toString();
-      const invClientName =
-        inv.clientName?.trim().toLowerCase() ||
-        inv.client?.trim().toLowerCase() ||
-        inv.client?.name?.trim().toLowerCase() ||
-        "";
-      const invCompany =
-        inv.company?.trim().toLowerCase() ||
-        inv.clientCompany?.trim().toLowerCase() ||
-        "";
-
-      return (
-        invClientId === clientId ||
-        invClientName.includes(clientName) ||
-        invCompany.includes(companyName)
-      );
-    });
-
-    setInvoices(filteredInvoices);
-
-    // -----------------------------
-    // FILTER TASKS
-    // -----------------------------
-    const filteredTasks = (tasksData || []).filter((t) => {
-      const taskClientId = t.clientId?.toString();
-      const taskClientName =
-        t.clientName?.trim().toLowerCase() ||
-        t.client?.trim().toLowerCase() ||
-        t.client?.name?.trim().toLowerCase() ||
-        "";
-      return (
-        taskClientId === clientId || taskClientName.includes(clientName)
-      );
-    });
-
-    setTasks(filteredTasks);
-  } catch (err) {
-    console.error(err);
+  const fetchClientDetails = async (id) => {
+    setLoading(true);
+    setClients([]);
     setClient(null);
     setInvoices([]);
-    setTasks([]);
-  } finally {
-    setLoading(false);
-  }
-};
+    setTasks([]); // make sure tasks reset
+
+    try {
+      const [clientRes, invoiceRes, tasksRes] = await Promise.all([
+        fetch(`/api/clients/${id}`),
+        fetch(`/api/invoices`),
+        fetch(`/api/tasks`),
+      ]);
+
+      const clientData = await safeJson(clientRes);
+      if (clientData?.error) return setClient(null), setInvoices([]);
+
+      const invoiceData = await safeJson(invoiceRes);
+      const tasksData = await safeJson(tasksRes);
+
+      setClient(clientData);
+
+      const clientId = clientData._id?.toString();
+      const clientName = clientData.name?.trim().toLowerCase() || "";
+      const companyName = clientData.company?.trim().toLowerCase() || "";
+
+      // -----------------------------
+      // FILTER INVOICES
+      // -----------------------------
+      const filteredInvoices = (invoiceData || []).filter((inv) => {
+        const invClientId = inv.clientId?.toString();
+        const invClientName =
+          inv.clientName?.trim().toLowerCase() ||
+          inv.client?.trim().toLowerCase() ||
+          inv.client?.name?.trim().toLowerCase() ||
+          "";
+        const invCompany =
+          inv.company?.trim().toLowerCase() ||
+          inv.clientCompany?.trim().toLowerCase() ||
+          "";
+
+        return (
+          invClientId === clientId ||
+          invClientName.includes(clientName) ||
+          invCompany.includes(companyName)
+        );
+      });
+
+      setInvoices(filteredInvoices);
+
+      // -----------------------------
+      // FILTER TASKS
+      // -----------------------------
+      const filteredTasks = (tasksData || []).filter((t) => {
+        const taskClientId = t.clientId?.toString();
+        const taskClientName =
+          t.clientName?.trim().toLowerCase() ||
+          t.client?.trim().toLowerCase() ||
+          t.client?.name?.trim().toLowerCase() ||
+          "";
+        return (
+          taskClientId === clientId || taskClientName.includes(clientName)
+        );
+      });
+
+      setTasks(filteredTasks);
+    } catch (err) {
+      console.error(err);
+      setClient(null);
+      setInvoices([]);
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) return <div className="p-4">Loading...</div>;
 
@@ -274,41 +274,50 @@ const fetchClientDetails = async (id) => {
             <p className="no-data">No invoices found.</p>
           )}
         </div>
+<div className="task-card">
+  <h3>All Tasks of {client.name}</h3>
 
-        <div className="task-card">
-          <h3>All Tasks of {client.name}</h3>
+  {tasks.length > 0 ? (
+    <table className="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Task Title</th>
+          <th>Client</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {tasks
+          .filter((task) => {
+            const taskClientId = task.clientId?.toString() || "";
+            const taskClientName = (task.clientName || task.client?.name || "")
+              .trim()
+              .toLowerCase();
+            const selectedClientId = client._id?.toString() || "";
+            const selectedClientName = client.name?.trim().toLowerCase() || "";
 
-          {tasks.length > 0 ? (
-            <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Task Title</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                    <th>Due Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tasks.map((task) => (
-                    <tr key={task._id}>
-                      <td>{task.title || "—"}</td>
-                      <td>{task.status || "—"}</td>
-                      <td>{task.priority || "—"}</td>
-                      <td>
-                        {task.dueDate
-                          ? new Date(task.dueDate).toLocaleDateString()
-                          : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="no-data">No tasks found for this client.</p>
-          )}
-        </div>
+            return (
+              taskClientId === selectedClientId ||
+              taskClientName.includes(selectedClientName)
+            );
+          })
+          .map((task, index) => (
+            <tr key={task._id || `task-${index}`}>
+              <td>{task.title || task.name || "—"}</td>
+              <td>{task.clientName || task.client?.name || "—"}</td>
+              <td>{task.status || "Pending"}</td>
+              <td>
+                {/* Add your edit/delete buttons here */}
+              </td>
+            </tr>
+          ))}
+      </tbody>
+    </table>
+  ) : (
+    <p className="no-data">No tasks found for this client.</p>
+  )}
+</div>
 
 
         <style jsx>{`

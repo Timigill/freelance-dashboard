@@ -11,11 +11,6 @@ const TaskSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
-  sourceId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "IncomeSource",
-    required: true,
-  },
   clientId: {
   type: mongoose.Schema.Types.ObjectId,
   ref: "Client",

@@ -473,9 +473,9 @@ const handleDelete = async (invoiceId) => {
         </table>
       </div>
 
-      <div className="mt-3 text-end fw-bold pb-3 pb-md-3">
+      {/* <div className="mt-3 text-end fw-bold pb-3 pb-md-3">
         Total Filtered: {total.toFixed(2)}
-      </div>
+      </div> */}
 
       {/* Modal Form */}
       <Modal show={showModal} onHide={handleClose} centered>

@@ -5,38 +5,40 @@ import mongoose from "mongoose";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 
-// Helper to safely cast ObjectId
 const castObjectId = (id) =>
-  mongoose.Types.ObjectId.isValid(id) ? mongoose.Types.ObjectId(id) : null;
+  mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null;
 
-// Helper to get user ID from session
 const getUserIdFromSession = async () => {
   const session = await getServerSession(authOptions);
   if (!session) throw new Error("Unauthorized");
   return session.user.id;
 };
 
-// ---------------- GET Tasks ----------------
+// =========================
+// 🚀 GET TASKS
+// =========================
 export async function GET(request) {
   try {
     await dbConnect();
     const userId = await getUserIdFromSession();
+
     const { searchParams } = new URL(request.url);
     const query = { userId };
 
     // Filter by month/year
     if (searchParams.has("month") && searchParams.has("year")) {
-      const month = parseInt(searchParams.get("month"));
-      const year = parseInt(searchParams.get("year"));
+      const month = Number(searchParams.get("month"));
+      const year = Number(searchParams.get("year"));
+
       const start = new Date(year, month - 1, 1);
       const end = new Date(year, month, 0, 23, 59, 59);
       query.dueDate = { $gte: start, $lte: end };
     }
 
-    // Filter by sourceId
-    if (searchParams.has("sourceId")) {
-      const id = castObjectId(searchParams.get("sourceId"));
-      if (id) query.sourceId = id;
+    // Filter by clientId
+    if (searchParams.has("clientId")) {
+      const id = castObjectId(searchParams.get("clientId"));
+      if (id) query.clientId = id;
     }
 
     // Filter by status
@@ -44,7 +46,7 @@ export async function GET(request) {
       query.status = searchParams.get("status");
     }
 
-    // Filter by paymentStatus
+    // Filter by payment status
     if (
       searchParams.has("paymentStatus") &&
       searchParams.get("paymentStatus") !== "all"
@@ -53,17 +55,14 @@ export async function GET(request) {
     }
 
     const tasks = await Task.find(query)
-      .populate("sourceId", "name type")
       .populate({
         path: "clientId",
         select: "name company email",
-        strictPopulate: false,
       })
       .sort({ dueDate: 1 })
       .lean();
 
-    // Add clientName for frontend
-    const tasksWithClientName = tasks.map((task) => ({
+    const formatted = tasks.map((task) => ({
       ...task,
       clientName: task.clientId
         ? task.clientId.company
@@ -72,7 +71,7 @@ export async function GET(request) {
         : "-",
     }));
 
-    return NextResponse.json(tasksWithClientName);
+    return NextResponse.json(formatted);
   } catch (err) {
     console.error("GET /api/tasks error:", err);
     return NextResponse.json(
@@ -82,20 +81,23 @@ export async function GET(request) {
   }
 }
 
-// ---------------- POST Task ----------------
+// =========================
+// 🚀 POST TASK
+// =========================
 export async function POST(request) {
   try {
     await dbConnect();
     const userId = await getUserIdFromSession();
+
     const body = await request.json();
 
-    // Required fields
-    const { name, dueDate, sourceId } = body;
-    if (!name || !dueDate || !sourceId) {
+    const { name, dueDate, amount, clientId } = body;
+
+    if (!name || !dueDate || !amount || !clientId) {
       return NextResponse.json(
         {
           error: true,
-          message: "Task name, dueDate and sourceId are required",
+          message: "name, amount, dueDate, and clientId are required",
         },
         { status: 400 }
       );
@@ -103,17 +105,12 @@ export async function POST(request) {
 
     const task = await Task.create({ ...body, userId });
 
-    // Populate for frontend
-    await task.populate("sourceId", "name type");
-    if (task.clientId)
-      await task.populate({
-        path: "clientId",
-        select: "name company email",
-        strictPopulate: false,
-      });
+    await task.populate({
+      path: "clientId",
+      select: "name company email",
+    });
 
-    // Add clientName for frontend
-    const taskWithClientName = {
+    const formatted = {
       ...task.toObject(),
       clientName: task.clientId
         ? task.clientId.company
@@ -122,7 +119,7 @@ export async function POST(request) {
         : "-",
     };
 
-    return NextResponse.json(taskWithClientName, { status: 201 });
+    return NextResponse.json(formatted, { status: 201 });
   } catch (err) {
     console.error("POST /api/tasks error:", err);
     return NextResponse.json(
