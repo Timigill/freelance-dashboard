@@ -37,59 +37,73 @@ export default function SignupPage() {
     setForm((prev) => ({ ...prev, phone: `+${value}` }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-    if (!form.agree) {
-      toast.error("You must agree to Terms & Conditions");
-      return;
-    }
-    if (!form.phone || form.phone.length < 10) {
-      toast.error("Please enter a valid phone number");
-      return;
-    }
+  // Password strength check
+  const password = form.password;
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=~`[\]{}|:;"'<>,.?/]).{8,}$/;
 
-    setLoading(true);
+  if (!passwordRegex.test(password)) {
+    toast.error(
+      "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character."
+    );
+    return;
+  }
 
-    try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: `${form.firstName} ${form.lastName}`,
-          email: form.email,
-          phone: form.phone,
-          password: form.password,
-        }),
-      });
+  if (form.password !== form.confirmPassword) {
+    toast.error("Passwords do not match");
+    return;
+  }
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Signup failed");
+  if (!form.agree) {
+    toast.error("You must agree to Terms & Conditions");
+    return;
+  }
+  if (!form.phone || form.phone.length < 10) {
+    toast.error("Please enter a valid phone number");
+    return;
+  }
 
-      toast.success("Signup successful! Check your email for verification.");
-      setForm({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmPassword: "",
-        agree: false,
-      });
+  setLoading(true);
 
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 2000);
-    } catch (err) {
-      toast.error(err.message || "Signup failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: `${form.firstName} ${form.lastName}`,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Signup failed");
+
+    toast.success("Signup successful! Check your email for verification.");
+    setForm({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+      agree: false,
+    });
+
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 2000);
+  } catch (err) {
+    toast.error(err.message || "Signup failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="signup-container">

@@ -28,12 +28,48 @@ export default function HomePage() {
     pendingTasks: 0,
   });
 
-  const [monthlySeries, setMonthlySeries] = useState({ labels: [], values: [] });
+  const [monthlySeries, setMonthlySeries] = useState({
+    labels: [],
+    values: [],
+  });
 
   const months = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
+
+  // ----------------- MONTH CHANGE HANDLER -----------------
+  const handleMonthChange = (month, year) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+
+    // Reset data and stats for new month
+    setMonthlyStats({
+      totalIncome: 0,
+      fixedIncome: 0,
+      taskBasedIncome: 0,
+      freelanceIncome: 0,
+      pendingAmount: 0,
+      completedTasks: 0,
+      pendingTasks: 0,
+    });
+    setMonthlySeries({ labels: [], values: [] });
+
+    setClients([]);
+    setIncomeSources([]);
+    setTasks([]);
+    setLoadingData(true);
+  };
 
   // ----------------- FETCH DATA -----------------
   useEffect(() => {
@@ -59,6 +95,9 @@ export default function HomePage() {
         setTasks(taskData || []);
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err);
+        setClients([]);
+        setIncomeSources([]);
+        setTasks([]);
       } finally {
         setLoadingData(false);
       }
@@ -69,36 +108,66 @@ export default function HomePage() {
 
   // ----------------- COMPUTE STATS -----------------
   useEffect(() => {
-    if (loadingData) return;
+    if (loadingData) return; // only compute after data is fetched
 
     const computeStats = () => {
-      let totalIncome = 0, fixedIncome = 0, taskBasedIncome = 0, freelanceIncome = 0;
-      let pendingAmount = 0, completedTasks = 0, pendingTasks = 0;
+      let totalIncome = 0,
+        fixedIncome = 0,
+        taskBasedIncome = 0,
+        freelanceIncome = 0;
+      let pendingAmount = 0,
+        completedTasks = 0,
+        pendingTasks = 0;
 
       const startOfMonth = new Date(selectedYear, selectedMonth, 1);
-      const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59, 999);
+      const endOfMonth = new Date(
+        selectedYear,
+        selectedMonth + 1,
+        0,
+        23,
+        59,
+        59,
+        999
+      );
 
-      // Map clientId -> clientName
+      // Map clients
       const clientMap = {};
-      clients.forEach(c => clientMap[c._id] = c.company ? `${c.company} — ${c.name}` : c.name);
+      clients.forEach(
+        (c) =>
+          (clientMap[c._id] = c.company ? `${c.company} — ${c.name}` : c.name)
+      );
 
-      // ----- Income Sources -----
-      incomeSources.forEach(src => {
+      // Paid income from incomeSources only
+      incomeSources.forEach((src) => {
         if (!src.isActive) return;
-        const amount = Number(src.amount || 0);
 
-        // Categorize type
+        const created = new Date(src.createdAt);
+        if (created < startOfMonth || created > endOfMonth) return;
+
+        const amountPaid = Array.isArray(src.payments)
+          ? src.payments
+              .filter((p) => p.status?.toLowerCase() === "paid")
+              .reduce((sum, p) => sum + Number(p.amount || 0), 0)
+          : 0;
+
+        if (amountPaid <= 0) return;
+
         switch (src.type) {
-          case "Fixed Salary": fixedIncome += amount; break;
-          case "Task Based Salary": taskBasedIncome += amount; break;
-          case "Freelance": freelanceIncome += amount; break;
+          case "Fixed Salary":
+            fixedIncome += amountPaid;
+            break;
+          case "Task Based Salary":
+            taskBasedIncome += amountPaid;
+            break;
+          case "Freelance":
+            freelanceIncome += amountPaid;
+            break;
         }
-
-        totalIncome += amount;
+        totalIncome += amountPaid;
       });
 
-      // ----- Tasks -----
-      tasks.forEach(task => {
+      // Tasks
+      tasks.forEach((task) => {
         if (!task.dueDate) return;
         const date = new Date(task.dueDate);
         if (date < startOfMonth || date > endOfMonth) return;
@@ -106,17 +175,23 @@ export default function HomePage() {
         const status = (task.status || "").toLowerCase();
         const payment = (task.paymentStatus || "").toLowerCase();
 
-        if (status === "completed") completedTasks++; else pendingTasks++;
+        if (status === "completed") completedTasks++;
+        else pendingTasks++;
         if (payment !== "paid") pendingAmount += Number(task.amount || 0);
         if (payment === "paid") totalIncome += Number(task.amount || 0);
       });
 
       setMonthlyStats({
-        totalIncome, fixedIncome, taskBasedIncome, freelanceIncome,
-        pendingAmount, completedTasks, pendingTasks,
+        totalIncome,
+        fixedIncome,
+        taskBasedIncome,
+        freelanceIncome,
+        pendingAmount,
+        completedTasks,
+        pendingTasks,
       });
 
-      // ----- Half-year series -----
+      // Last 6 months series
       const labels = [];
       const values = [];
       for (let i = 5; i >= 0; i--) {
@@ -126,15 +201,30 @@ export default function HomePage() {
         labels.push(`${months[month].slice(0, 3)} ${String(year).slice(-2)}`);
 
         let total = 0;
-        incomeSources.forEach(src => total += Number(src.amount || 0));
-        tasks.forEach(task => {
+        incomeSources.forEach((src) => {
+          const created = new Date(src.createdAt);
+          if (created.getMonth() === month && created.getFullYear() === year) {
+            const paid = Array.isArray(src.payments)
+              ? src.payments
+                  .filter((p) => p.status?.toLowerCase() === "paid")
+                  .reduce((sum, p) => sum + Number(p.amount || 0), 0)
+              : 0;
+            total += paid;
+          }
+        });
+        tasks.forEach((task) => {
           const td = new Date(task.dueDate);
-          if (td && td.getMonth() === month && td.getFullYear() === year && (task.paymentStatus || "").toLowerCase() === "paid") {
+          if (
+            td.getMonth() === month &&
+            td.getFullYear() === year &&
+            (task.paymentStatus || "").toLowerCase() === "paid"
+          ) {
             total += Number(task.amount || 0);
           }
         });
         values.push(Math.round(total));
       }
+
       setMonthlySeries({ labels, values });
     };
 
@@ -144,70 +234,155 @@ export default function HomePage() {
   // ----------------- PIE CHART -----------------
   const pieChartData = useMemo(() => {
     const map = {};
-    incomeSources.forEach(src => {
-      const clientName = src.clientName || (clients.find(c => c._id === src.clientId)?.name || "Unknown");
-      const paymentTotal = Array.isArray(src.payments) ? src.payments.reduce((sum, p) => sum + Number(p.amount || 0), 0) : 0;
-      const total = paymentTotal > 0 ? paymentTotal : Number(src.amount || 0);
-      if (!map[clientName]) map[clientName] = 0;
-      map[clientName] += total;
+    incomeSources.forEach((src) => {
+      const created = new Date(src.createdAt);
+      if (
+        created.getMonth() !== selectedMonth ||
+        created.getFullYear() !== selectedYear
+      )
+        return;
+
+      const client = clients.find(
+        (c) => c._id.toString() === src.clientId?.toString()
+      );
+      const clientName =
+        src.clientName ||
+        (client?.company
+          ? `${client.company} — ${client.name}`
+          : client?.name) ||
+        "Unknown";
+
+      // Include amount if payments array missing
+      const paid =
+        Array.isArray(src.payments) && src.payments.length > 0
+          ? src.payments
+              .filter((p) => p.status?.toLowerCase() === "paid")
+              .reduce((sum, p) => sum + Number(p.amount || 0), 0)
+          : Number(src.amount || 0);
+
+      if (paid > 0) {
+        map[clientName] = (map[clientName] || 0) + paid;
+      }
     });
-    const labels = [], values = [];
-    Object.entries(map).forEach(([k, v]) => { if (v > 0) { labels.push(k); values.push(Math.round(v)); }});
+
+    const labels = Object.keys(map);
+    const values = Object.values(map).map((v) => Math.round(v));
+
     return { labels, values };
-  }, [incomeSources, clients]);
+  }, [incomeSources, clients, selectedMonth, selectedYear]);
 
   // ----------------- RENDER -----------------
   if (status === "loading" || loadingData) {
-  return <div style={{
-    textAlign:"center",
-    padding:"15rem 0",
-    fontWeight:"bold",
-    fontSize:"1.5rem",
-    color:"#352359"
-  }}>Loading dashboard...</div>;
-}
-
-
+    return (
+      <div
+        style={{
+          textAlign: "center",
+          padding: "15rem 0",
+          fontWeight: "bold",
+          fontSize: "1.5rem",
+          color: "#352359",
+        }}
+      >
+        Loading dashboard...
+      </div>
+    );
+  }
 
   const overviewData = [
-    { title: "Total Monthly Income", value: monthlyStats.totalIncome, color: "primary" },
-    { title: "Pending Payments", value: monthlyStats.pendingAmount, color: "warning" },
-    { title: "Tasks Completed", value: monthlyStats.completedTasks, suffix: " tasks", color: "success" },
-    { title: "Pending Tasks", value: monthlyStats.pendingTasks, suffix: " tasks", color: "info" },
+    {
+      title: "Total Monthly Income",
+      value: monthlyStats.totalIncome,
+      color: "primary",
+    },
+    {
+      title: "Pending Payments",
+      value: monthlyStats.pendingAmount,
+      color: "warning",
+    },
+    {
+      title: "Tasks Completed",
+      value: monthlyStats.completedTasks,
+      suffix: " tasks",
+      color: "success",
+    },
+    {
+      title: "Pending Tasks",
+      value: monthlyStats.pendingTasks,
+      suffix: " tasks",
+      color: "info",
+    },
   ];
 
   return (
     <div className="dashboard-page container-fluid py-3 px-2">
-      <div className="hero-card d-flex justify-content-between align-items-center" style={{ background: "linear-gradient(135deg, var(--bs-primary), #241b36)", color: "#fff" }}>
+      <div
+        className="hero-card d-flex justify-content-between align-items-center"
+        style={{
+          background: "linear-gradient(135deg, var(--bs-primary), #241b36)",
+          color: "#fff",
+        }}
+      >
         <div>
           <div className="hero-label">This Month</div>
           <div className="hero-amount">
-            {monthlyStats.totalIncome.toLocaleString("en-US", { style: "currency", currency: "pkr", maximumFractionDigits: 0 })}
+            {monthlyStats.totalIncome.toLocaleString("en-US", {
+              style: "currency",
+              currency: "pkr",
+              maximumFractionDigits: 0,
+            })}
           </div>
         </div>
         <div className="d-flex gap-2">
-          <Link href="/clients?openModal=true" className="btn btn-primary btn-sm">New Clients</Link>
-          <Link href="/tasks?openModal=true" className="btn btn-outline-primary btn-sm">New Task</Link>
+          <Link
+            href="/clients?openModal=true"
+            className="btn btn-primary btn-sm"
+          >
+            New Clients
+          </Link>
+          <Link
+            href="/tasks?openModal=true"
+            className="btn btn-outline-primary btn-sm"
+          >
+            New Task
+          </Link>
         </div>
       </div>
 
       <div className="d-flex justify-content-between mt-2 pt-2 align-items-center mb-3">
         <div>
           <h2 className="fw-bold mb-0 fs-5">Laancer Dashboard</h2>
-          <p className="text-muted small mb-0">Financial overview for {months[selectedMonth]} {selectedYear}</p>
+          <p className="text-muted small mb-0">
+            Financial overview for {months[selectedMonth]} {selectedYear}
+          </p>
         </div>
-        <MonthPickerIcon selectedMonth={selectedMonth} selectedYear={selectedYear} onChange={(m, y) => { setSelectedMonth(m); setSelectedYear(y); }} />
+        <MonthPickerIcon
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+          onChange={handleMonthChange}
+        />
       </div>
 
       <div className="row g-3 mb-4">
         {overviewData.map((card, idx) => (
           <div key={idx} className="col-6 col-md-6">
-            <div className={`card border-0 shadow-sm bg-${card.color} text-white h-100`}>
+            <div
+              className={`card border-0 shadow-sm bg-${card.color} text-white h-100`}
+            >
               <div className="card-body text-center">
                 <h3 className="mb-1 fw-bold">
-                  {card.value.toLocaleString("en-US", { style: card.suffix ? "decimal" : "currency", currency: "pkr", maximumFractionDigits: 0 })}{card.suffix || ""}
+                  {card.value.toLocaleString("en-US", {
+                    style: card.suffix ? "decimal" : "currency",
+                    currency: "pkr",
+                    maximumFractionDigits: 0,
+                  })}
+                  {card.suffix || ""}
                 </h3>
-                <h6 className="mb-0" style={{ color: "#352359", opacity: 0.9, fontWeight: 500 }}>{card.title}</h6>
+                <h6
+                  className="mb-0"
+                  style={{ color: "#352359", opacity: 0.9, fontWeight: 500 }}
+                >
+                  {card.title}
+                </h6>
               </div>
             </div>
           </div>
@@ -219,7 +394,10 @@ export default function HomePage() {
           <div className="card shadow-sm h-100">
             <div className="card-body d-flex flex-column px-3">
               <h5 className="card-title">Half Yearly Income Distribution</h5>
-              <div className="chart-container flex-fill d-flex align-items-center" style={{ minHeight: 150 }}>
+              <div
+                className="chart-container flex-fill d-flex align-items-center"
+                style={{ minHeight: 150 }}
+              >
                 <IncomeChart monthlyData={monthlySeries} />
               </div>
             </div>

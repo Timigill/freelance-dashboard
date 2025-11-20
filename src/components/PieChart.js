@@ -20,19 +20,19 @@ export default function PieChart({ data }) {
   useEffect(() => {
     if (!chartRef.current) return;
 
-    // Destroy old chart if exists
-    if (chartInstanceRef.current) {
-      chartInstanceRef.current.destroy();
-    }
+    // Destroy old chart
+    chartInstanceRef.current?.destroy();
 
-    // Create new chart
+    // Prevent rendering if no data
+    if (!data?.labels?.length || !data?.values?.length) return;
+
     chartInstanceRef.current = new Chart(chartRef.current, {
       type: "pie",
       data: {
-        labels: data.labels || [],
+        labels: data.labels,
         datasets: [
           {
-            data: data.values || [],
+            data: data.values,
             backgroundColor: data.labels.map(
               (_, i) => themeColors[i % themeColors.length]
             ),
@@ -55,34 +55,72 @@ export default function PieChart({ data }) {
   }, [data]);
 
   return (
-    <div className="d-flex align-items-center" style={{ height: "160px" }}>
-      <div style={{ width: "50%", height: "160px", position: "relative" }}>
-        <canvas ref={chartRef} />
-      </div>
-      <div className="ms-3" style={{ width: "50%", fontSize: "0.75rem" }}>
-        {data.labels.map((label, index) => (
-          <div key={index} className="d-flex align-items-center mb-2">
-            <div
-              style={{
-                width: "8px",
-                height: "8px",
-                backgroundColor: themeColors[index % themeColors.length],
-                borderRadius: "50%",
-                marginRight: "8px",
-              }}
-            />
-            <span
-              className="text-nowrap text-truncate"
-              style={{ maxWidth: "100px" }}
-            >
-              {label}
-            </span>
-            <span className="ms-2 text-end" style={{ minWidth: "40px" }}>
-              {data.values[index].toLocaleString()}
-            </span>
+    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+      {data.labels.length === 0 ? (
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "center",
+            fontSize: "1rem",
+            color: "#352359",
+            height: "200px", 
+          }}
+        >
+          Add client to see overview
+        </div>
+      ) : (
+        <>
+          <div
+            style={{
+              flex: "1 1 50%",
+              minWidth: 150,
+              height: "200px",
+              position: "relative",
+            }}
+          >
+            <canvas ref={chartRef} />
           </div>
-        ))}
-      </div>
+          <div style={{ flex: "1 1 50%", minWidth: 150, fontSize: "0.75rem" }}>
+            {data.labels.map((label, index) => (
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginBottom: 6,
+                }}
+              >
+                <div
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    backgroundColor: themeColors[index % themeColors.length],
+                    marginRight: 8,
+                  }}
+                />
+                <span
+                  style={{
+                    flex: "1 1 auto",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {label}
+                </span>
+                <span
+                  style={{ marginLeft: 8, minWidth: 40, textAlign: "right" }}
+                >
+                  {data.values[index].toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
