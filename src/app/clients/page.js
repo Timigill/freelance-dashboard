@@ -377,6 +377,7 @@ function ClientsPageContent() {
           <div className="d-flex flex-wrap justify-content-between gap-2">
             <select
               className="form-select form-select-sm"
+              style={{ border: "none", boxShadow: "none" }}
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
             >
@@ -387,6 +388,7 @@ function ClientsPageContent() {
             <select
               className="form-select form-select-sm"
               value={categoryFilter}
+              style={{ border: "none", boxShadow: "none", }}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
               <option value="All">All Categories</option>

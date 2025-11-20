@@ -17,7 +17,7 @@ function IncomePageContent() {
   const normalizeType = (type) => {
     if (!type) return "Fixed Salary";
     const t = type.trim().toLowerCase();
-    if (t === "task based salary" || t === "task-based salary") return "Task-Based Salary";
+    if (t === "task based salary") return "Task Based Salary";
     if (t === "fixed salary") return "Fixed Salary";
     if (t === "freelance") return "Freelance";
     return "Fixed Salary"; // fallback
@@ -345,7 +345,6 @@ function IncomePageContent() {
             <table className="table table-hover align-middle mb-0">
               <thead className="table-light">
                 <tr>
-                  <th>Name</th>
                   <th>Client</th>
                   <th>Amount</th>
                   <th>Frequency</th>
@@ -355,7 +354,6 @@ function IncomePageContent() {
               <tbody>
                 {filteredSources.map((source) => (
                   <tr key={source._id}>
-                    <td>{source.name}</td>
                     <td>{source.clientName || (source.clientId ? "Client" : "—")}</td>
                     <td>{source.amount.toLocaleString()}</td>
                     <td>{source.frequency}</td>
@@ -380,17 +378,7 @@ function IncomePageContent() {
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
-            {/* Name */}
-            <Form.Group className="mb-3">
-              <Form.Label>Name</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter source name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-              />
-            </Form.Group>
+            
 
             {/* Client */}
             <Form.Group className="mb-3">

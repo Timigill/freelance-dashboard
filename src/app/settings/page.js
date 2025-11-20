@@ -72,13 +72,33 @@ export default function SettingsPage() {
     e.preventDefault();
     setLoading(true);
 
-    if (form.newPassword && form.newPassword !== form.confirmPassword) {
-      toast.error("New passwords do not match");
-      setLoading(false);
-      return;
-    }
-
     try {
+      // Password validation (if changing password)
+      if (form.newPassword) {
+        const passwordRegex =
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=~`[\]{}|:;"'<>,.?/]).{8,}$/;
+
+        if (!passwordRegex.test(form.newPassword)) {
+          toast.error(
+            "New password must be at least 8 characters long and include uppercase, lowercase, number, and special character."
+          );
+          setLoading(false);
+          return;
+        }
+
+        if (form.newPassword !== form.confirmPassword) {
+          toast.error("New passwords do not match");
+          setLoading(false);
+          return;
+        }
+
+        if (!form.oldPassword) {
+          toast.error("Please enter your old password to change it");
+          setLoading(false);
+          return;
+        }
+      }
+
       const payload = {
         name: form.name,
         bio: form.bio,
