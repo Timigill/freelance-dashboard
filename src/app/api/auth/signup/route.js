@@ -11,7 +11,10 @@ export async function POST(req) {
     await dbConnect();
 
     if (!name || !email || !password || !phone) {
-      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "All fields are required" },
+        { status: 400 }
+      );
     }
 
     if (!/^\+\d{10,15}$/.test(phone)) {
@@ -28,7 +31,10 @@ export async function POST(req) {
     });
 
     if (existingUser) {
-      return NextResponse.json({ error: "User already exists" }, { status: 400 });
+      return NextResponse.json(
+        { error: "User already exists" },
+        { status: 400 }
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -43,7 +49,9 @@ export async function POST(req) {
 
     await newUser.save();
 
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
 
     await User.updateOne({ _id: newUser._id }, { verificationToken: token });
 
@@ -55,7 +63,7 @@ export async function POST(req) {
       },
     });
 
-    const verifyLink = `http://localhost:3000/verify?token=${token}`;
+    const verifyLink = `${process.env.BASE_URL}/verify?token=${token}`;
 
     await transporter.sendMail({
       from: `"Freelance Dashboard" <${process.env.EMAIL_USER}>`,
@@ -73,6 +81,9 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("Signup error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
