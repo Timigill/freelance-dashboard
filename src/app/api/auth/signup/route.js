@@ -63,7 +63,12 @@ export async function POST(req) {
       },
     });
 
-    const verifyLink = `${process.env.BASE_URL}/verify?token=${token}`;
+    const baseUrl =
+      process.env.BASE_URL ||
+      (process.env.NODE_ENV === "production"
+        ? "https://laancer.vercel.app"
+        : "http://localhost:3000");
+    const verifyLink = `${baseUrl}/verify?token=${token}`;
 
     await transporter.sendMail({
       from: `"Freelance Dashboard" <${process.env.EMAIL_USER}>`,
