@@ -11,6 +11,8 @@ export default function IncomePage() {
   const [showModal, setShowModal] = useState(false)
   const [currentSource, setCurrentSource] = useState(null)
   const [filter, setFilter] = useState('all')
+  const [frequencyFilter, setFrequencyFilter] = useState("all");
+
   const [form, setForm] = useState({
     name: '',
     amount: '',
@@ -133,11 +135,12 @@ export default function IncomePage() {
     }
   }
 
+
   // ✅ Filter logic
-  const filteredSources =
-    filter === 'all'
-      ? incomeSources
-      : incomeSources.filter(source => source.type === filter)
+ const filteredSources = incomeSources.filter(src =>
+  frequencyFilter === "all" || src.frequency === frequencyFilter
+);
+
 
   const totalIncome = filteredSources.reduce((sum, source) => sum + (source.amount || 0), 0)
 
@@ -222,21 +225,15 @@ export default function IncomePage() {
       </div>
 
       {/* Filter Buttons */}
-      <div className="card shadow-sm mb-4">
-        <div className="card-body">
-          <div className="btn-group">
-            {['all', 'Fixed', 'Task-Based', 'Freelance'].map(t => (
-              <button
-                key={t}
-                className={`btn ${filter === t ? 'btn-primary' : 'btn-outline-primary'}`}
-                onClick={() => setFilter(t)}
-              >
-                {t === 'all' ? 'All' : t}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      {['all', 'One-time', 'Weekly', 'Monthly', 'Yearly'].map(f => (
+        <button
+          key={f}
+          className={`btn ${frequencyFilter === f ? 'btn-primary' : 'btn-outline-primary'}`}
+          onClick={() => setFrequencyFilter(f)}
+        >
+          {f === 'all' ? 'All' : f}
+        </button>
+      ))}
 
       {/* Table */}
       <div className="card shadow-sm">
@@ -245,7 +242,6 @@ export default function IncomePage() {
             <table className="table table-hover align-middle mb-0">
               <thead className="table-light">
                 <tr>
-                 
                   <th>Client</th>
                   <th>Amount</th>
                   <th>Frequency</th>
@@ -294,6 +290,7 @@ export default function IncomePage() {
         <Modal.Header closeButton>
           <Modal.Title>{currentSource ? 'Edit' : 'Add'} Income Source</Modal.Title>
         </Modal.Header>
+
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
 
@@ -324,15 +321,14 @@ export default function IncomePage() {
 
             <Form.Group className="mb-3">
               <Form.Label>Amount</Form.Label>
-            <Form.Control
-  type="number"
-  placeholder="Enter amount"
-  value={form.amount || ""}  // <-- fix: fallback to empty string
-  onChange={(e) =>
-    setForm({ ...form, amount: e.target.value ? parseFloat(e.target.value) : "" })
-  }
-/>
-
+              <Form.Control
+                type="number"
+                placeholder="Enter amount"
+                value={form.amount || ""}
+                onChange={(e) =>
+                  setForm({ ...form, amount: e.target.value ? parseFloat(e.target.value) : "" })
+                }
+              />
             </Form.Group>
 
             <Form.Group className="mb-3">
@@ -359,6 +355,7 @@ export default function IncomePage() {
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />
             </Form.Group>
+
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowModal(false)}>
@@ -370,6 +367,7 @@ export default function IncomePage() {
           </Modal.Footer>
         </Form>
       </Modal>
+
     </div>
   )
 }
