@@ -39,11 +39,6 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.remember) {
-      toast.error("You must check 'Remember me' to login.");
-      return;
-    }
-
     setLoading(true);
 
     const result = await signIn("credentials", {
