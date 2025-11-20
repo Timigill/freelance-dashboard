@@ -24,8 +24,8 @@ export default function RootLayout({ children }) {
       "/tasks",
     ];
 
-    setIsDashboard(dashboardRoutes.some((r) => pathname.startsWith(r)));
-  }, [pathname]); 
+    setIsDashboard(dashboardRoutes.some((route) => pathname.startsWith(route)));
+  }, [pathname]);
 
   return (
     <html lang="en">
@@ -34,10 +34,13 @@ export default function RootLayout({ children }) {
       </head>
       <body className="bg-light">
         <SessionProvider>
-          <BootstrapClient />
-
-          {/* ✅ Automatically show Topbar + Sidebar for dashboard pages */}
-          {isDashboard ? <DashboardShell>{children}</DashboardShell> : children}
+          {/* Show dashboard-specific components only on dashboard pages */}
+          {isDashboard && <BootstrapClient />}
+          {isDashboard ? (
+            <DashboardShell>{children}</DashboardShell>
+          ) : (
+            children
+          )}
 
           <Toaster
             position="top-center"
@@ -50,8 +53,7 @@ export default function RootLayout({ children }) {
                 borderRadius: "10px",
                 padding: "12px 26px",
                 fontSize: "0.9rem",
-                boxShadow:
-                  "0 4px 12px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.1)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.1)",
                 borderLeft: "4px solid #22c55e",
               },
               success: {

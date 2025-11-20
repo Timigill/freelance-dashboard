@@ -1,31 +1,23 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useState, useEffect, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import IncomeChart from "@/components/IncomeChart";
-import FloatingActionButton from "@/components/FloatingIcon";
 import PieChart from "@/components/PieChart";
-import { BsPlusLg, BsCalendar3 } from "react-icons/bs";
-
+import FloatingActionButton from "@/components/FloatingIcon";
 import MonthPickerIcon from "@/components/MonthPickerIcon";
 
 export default function HomePage() {
-  // ----------------- AUTHENTICATION -----------------
   const { data: session, status } = useSession();
-  const [user, setUser] = useState(null);
-  const [loadingUser, setLoadingUser] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
 
-  // ----------------- STATES -----------------
-  // inside HomePage component
-
-  const [showClientModal, setShowClientModal] = useState(false);
-  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [clients, setClients] = useState([]);
   const [incomeSources, setIncomeSources] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [clients, setClients] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
   const [monthlyStats, setMonthlyStats] = useState({
     totalIncome: 0,
     fixedIncome: 0,
@@ -35,502 +27,200 @@ export default function HomePage() {
     completedTasks: 0,
     pendingTasks: 0,
   });
-  const [monthlySeries, setMonthlySeries] = useState({
-    labels: [],
-    values: [],
-  });
 
-  // ----------------- EFFECTS -----------------
-  useEffect(() => {
-    if (!session?.user?.id) return setLoadingUser(false);
+  const [monthlySeries, setMonthlySeries] = useState({ labels: [], values: [] });
 
-    const fetchUser = async () => {
-      try {
-        const res = await fetch(`/api/users/${session.user.id}`);
-        if (!res.ok) setUser(null);
-        else setUser(await res.json());
-      } catch {
-        setUser(null);
-      } finally {
-        setLoadingUser(false);
-      }
-    };
+  const months = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December",
+  ];
 
-    fetchUser();
-  }, [session?.user?.id]);
-
+  // ----------------- FETCH DATA -----------------
   useEffect(() => {
     if (status !== "authenticated") return;
 
-    const fetchData = async () => {
+    const fetchAllData = async () => {
+      setLoadingData(true);
       try {
-        const [incomeRes, tasksRes] = await Promise.all([
-          fetch(`/api/income?month=${selectedMonth}&year=${selectedYear}`),
-          fetch(`/api/tasks?month=${selectedMonth}&year=${selectedYear}`),
+        const [clientsRes, incomeRes, tasksRes] = await Promise.all([
+          fetch("/api/clients"),
+          fetch(`/api/income?month=${selectedMonth + 1}&year=${selectedYear}`),
+          fetch(`/api/tasks?month=${selectedMonth + 1}&year=${selectedYear}`),
         ]);
 
-        const incomeData = await incomeRes.json();
-        const taskData = await tasksRes.json();
+        const [clientsData, incomeData, taskData] = await Promise.all([
+          clientsRes.json(),
+          incomeRes.json(),
+          tasksRes.json(),
+        ]);
 
-        // Use fresh data for calculation
-        setIncomeSources(incomeData);
-        setTasks(taskData);
-
-        calculateMonthlyIncome(incomeData, taskData);
-        computeLastSixMonths(incomeData, taskData);
+        setClients(clientsData || []);
+        setIncomeSources(incomeData || []);
+        setTasks(taskData || []);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch dashboard data:", err);
+      } finally {
+        setLoadingData(false);
       }
     };
 
-    fetchData();
-  }, [selectedMonth, selectedYear, status]);
+    fetchAllData();
+  }, [status, selectedMonth, selectedYear]);
 
+  // ----------------- COMPUTE STATS -----------------
   useEffect(() => {
-    if (incomeSources.length && tasks.length) {
-      calculateMonthlyIncome(incomeSources, tasks);
-    }
-  }, [incomeSources, tasks, selectedMonth, selectedYear]);
+    if (loadingData) return;
 
-  // ----------------- FUNCTIONS -----------------
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+    const computeStats = () => {
+      let totalIncome = 0, fixedIncome = 0, taskBasedIncome = 0, freelanceIncome = 0;
+      let pendingAmount = 0, completedTasks = 0, pendingTasks = 0;
 
-  const computeLastSixMonths = () => {
-    const labelsArr = [];
-    const valuesArr = [];
+      const startOfMonth = new Date(selectedYear, selectedMonth, 1);
+      const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59, 999);
 
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(selectedYear, selectedMonth - i, 1);
-      const year = d.getFullYear();
-      const month = d.getMonth();
-      labelsArr.push(`${months[month].slice(0, 3)} ${String(year).slice(-2)}`);
+      // Map clientId -> clientName
+      const clientMap = {};
+      clients.forEach(c => clientMap[c._id] = c.company ? `${c.company} — ${c.name}` : c.name);
 
-      const startOfMonth = new Date(year, month, 1);
-      const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
+      // ----- Income Sources -----
+      incomeSources.forEach(src => {
+        if (!src.isActive) return;
+        const amount = Number(src.amount || 0);
 
-      let total = 0;
-
-      incomeSources.forEach((src) => {
-        if (src.payments?.length) {
-          src.payments.forEach((p) => {
-            const pd = new Date(p.date);
-            if (pd >= startOfMonth && pd <= endOfMonth) total += p.amount || 0;
-          });
-        } else {
-          const freq = src.frequency || "Monthly";
-          const amt = Number(src.amount || 0);
-          if (freq === "Monthly") total += amt;
-          else if (freq === "Weekly") total += amt * 4;
-          else if (freq === "Yearly") total += amt / 12;
-          else if (freq === "One-time") {
-            const sd = src.startDate ? new Date(src.startDate) : null;
-            if (sd && sd >= startOfMonth && sd <= endOfMonth) total += amt;
-          }
+        // Categorize type
+        switch (src.type) {
+          case "Fixed Salary": fixedIncome += amount; break;
+          case "Task Based Salary": taskBasedIncome += amount; break;
+          case "Freelance": freelanceIncome += amount; break;
         }
+
+        totalIncome += amount;
       });
 
-      tasks.forEach((task) => {
-        const td = task.dueDate ? new Date(task.dueDate) : null;
-        if (td && td >= startOfMonth && td <= endOfMonth) {
-          if (task.status === "Completed" || task.paymentStatus === "Paid") {
+      // ----- Tasks -----
+      tasks.forEach(task => {
+        if (!task.dueDate) return;
+        const date = new Date(task.dueDate);
+        if (date < startOfMonth || date > endOfMonth) return;
+
+        const status = (task.status || "").toLowerCase();
+        const payment = (task.paymentStatus || "").toLowerCase();
+
+        if (status === "completed") completedTasks++; else pendingTasks++;
+        if (payment !== "paid") pendingAmount += Number(task.amount || 0);
+        if (payment === "paid") totalIncome += Number(task.amount || 0);
+      });
+
+      setMonthlyStats({
+        totalIncome, fixedIncome, taskBasedIncome, freelanceIncome,
+        pendingAmount, completedTasks, pendingTasks,
+      });
+
+      // ----- Half-year series -----
+      const labels = [];
+      const values = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(selectedYear, selectedMonth - i, 1);
+        const year = d.getFullYear();
+        const month = d.getMonth();
+        labels.push(`${months[month].slice(0, 3)} ${String(year).slice(-2)}`);
+
+        let total = 0;
+        incomeSources.forEach(src => total += Number(src.amount || 0));
+        tasks.forEach(task => {
+          const td = new Date(task.dueDate);
+          if (td && td.getMonth() === month && td.getFullYear() === year && (task.paymentStatus || "").toLowerCase() === "paid") {
             total += Number(task.amount || 0);
           }
-          task.payments?.forEach((p) => {
-            const pd = new Date(p.date);
-            if (pd >= startOfMonth && pd <= endOfMonth) total += p.amount || 0;
-          });
-        }
-      });
-
-      valuesArr.push(Math.round(total));
-    }
-
-    setMonthlySeries({ labels: labelsArr, values: valuesArr });
-  };
-
-  useEffect(() => {
-    computeLastSixMonths();
-  }, [incomeSources, tasks, selectedMonth, selectedYear]);
-
-  const fetchClients = async () => {
-    try {
-      const res = await fetch("/api/clients");
-      const data = await res.json();
-      setClients(data); // save in state
-    } catch (error) {
-      console.error("Error fetching clients:", error);
-    }
-  };
-
-  const getPieChartData = () => {
-    const clientMap = {};
-
-    incomeSources.forEach((src) => {
-      const client = src.clientName?.trim() || "Unknown";
-
-      // 1. Sum payments if any
-      const paymentTotal = Array.isArray(src.payments)
-        ? src.payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
-        : 0;
-
-      // 2. Use amount only if there are no payments
-      const total = paymentTotal > 0 ? paymentTotal : Number(src.amount || 0);
-
-      // 3. Add to client total
-      if (!clientMap[client]) clientMap[client] = 0;
-      clientMap[client] += total;
-    });
-
-    // 4. Filter out clients with 0 income (optional but clean)
-    const labels = [];
-    const values = [];
-    for (const [key, val] of Object.entries(clientMap)) {
-      if (val > 0) {
-        labels.push(key);
-        values.push(Math.round(val));
+        });
+        values.push(Math.round(total));
       }
-    }
-
-    return { labels, values };
-  };
-  const pieChartData = useMemo(() => getPieChartData(), [incomeSources]);
-
-  const fetchIncomeSources = async () => {
-    try {
-      const res = await fetch(
-        `/api/income?month=${selectedMonth}&year=${selectedYear}`
-      );
-      const data = await res.json();
-      setIncomeSources(data);
-      // Recalculate stats after both income and tasks are ready
-      calculateMonthlyIncome(data, tasks);
-    } catch (error) {
-      console.error("Error fetching income sources:", error);
-    }
-  };
-
-  const fetchTasks = async () => {
-    const sampleTasks = [
-      {
-        id: 1,
-        name: "API Integration",
-        status: "Completed",
-        amount: 15000,
-        dueDate: new Date(),
-        paymentStatus: "Paid",
-      },
-      {
-        id: 2,
-        name: "UI Development",
-        status: "Completed",
-        amount: 12000,
-        dueDate: new Date(),
-        paymentStatus: "pending",
-      },
-      {
-        id: 3,
-        name: "Database Design",
-        status: "In Progress",
-        amount: 8000,
-        dueDate: new Date(),
-        paymentStatus: "Unpaid",
-      },
-      {
-        id: 4,
-        name: "Testing",
-        status: "Pending",
-        amount: 5000,
-        dueDate: new Date(),
-        paymentStatus: "Unpaid",
-      },
-    ];
-    setTasks(sampleTasks);
-    calculateMonthlyIncome(incomeSources, sampleTasks); // recalc stats
-  };
-
-  const calculateMonthlyIncome = (sources, taskList) => {
-    let totalIncome = 0;
-    let fixedIncome = 0;
-    let taskBasedIncome = 0;
-    let freelanceIncome = 0;
-    let pendingAmount = 0;
-    let completedTasks = 0;
-    let pendingTasks = 0;
-
-    const startOfMonth = new Date(selectedYear, selectedMonth, 1);
-    const endOfMonth = new Date(
-      selectedYear,
-      selectedMonth + 1,
-      0,
-      23,
-      59,
-      59,
-      999
-    );
-
-    // ----- Income Sources -----
-    sources.forEach((source) => {
-      if (!source.isActive) return;
-      const monthlyAmount = Number(source.amount || 0);
-      totalIncome += monthlyAmount;
-
-      switch (source.type) {
-        case "Fixed":
-          fixedIncome += monthlyAmount;
-          break;
-        case "Task-Based":
-          taskBasedIncome += monthlyAmount;
-          break;
-        case "Freelance":
-          freelanceIncome += monthlyAmount;
-          break;
-      }
-    });
-
-    // ----- Tasks -----
-    taskList.forEach((task) => {
-      if (!task.dueDate) return; // skip tasks without due date
-
-      const taskDate = new Date(task.dueDate);
-      if (taskDate < startOfMonth || taskDate > endOfMonth) return;
-
-      const status = task.status?.toLowerCase();
-      const payment = task.paymentStatus?.toLowerCase();
-
-      // Count completed vs pending
-      if (status === "completed") completedTasks++;
-      else pendingTasks++;
-
-      // Pending payments
-      if (payment !== "paid") pendingAmount += Number(task.amount || 0);
-
-      // Add paid tasks to total income
-      if (payment === "paid") totalIncome += Number(task.amount || 0);
-    });
-
-    setMonthlyStats({
-      totalIncome,
-      fixedIncome,
-      taskBasedIncome,
-      freelanceIncome,
-      pendingAmount,
-      completedTasks,
-      pendingTasks,
-    });
-  };
-
-  const calculateTaskStats = (taskList) => {
-    const stats = {
-      pendingAmount: 0,
-      completedTasks: 0,
-      pendingTasks: 0,
+      setMonthlySeries({ labels, values });
     };
 
-    const startOfMonth = new Date(selectedYear, selectedMonth, 1);
-    const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0);
+    computeStats();
+  }, [incomeSources, tasks, clients, selectedMonth, selectedYear, loadingData]);
 
-    taskList.forEach((task) => {
-      const taskDate = new Date(task.dueDate);
-      if (taskDate >= startOfMonth && taskDate <= endOfMonth) {
-        if (task.status === "Completed") stats.completedTasks++;
-        else {
-          stats.pendingTasks++;
-          if (task.paymentStatus === "Unpaid")
-            stats.pendingAmount += task.amount;
-        }
-      }
+  // ----------------- PIE CHART -----------------
+  const pieChartData = useMemo(() => {
+    const map = {};
+    incomeSources.forEach(src => {
+      const clientName = src.clientName || (clients.find(c => c._id === src.clientId)?.name || "Unknown");
+      const paymentTotal = Array.isArray(src.payments) ? src.payments.reduce((sum, p) => sum + Number(p.amount || 0), 0) : 0;
+      const total = paymentTotal > 0 ? paymentTotal : Number(src.amount || 0);
+      if (!map[clientName]) map[clientName] = 0;
+      map[clientName] += total;
     });
-
-    setMonthlyStats((prev) => ({
-      ...prev,
-      ...stats,
-    }));
-  };
-
-  const overviewData = [
-    {
-      title: "Total Monthly Income",
-      value: monthlyStats.totalIncome,
-      color: "primary",
-    },
-    {
-      title: "Pending Payments",
-      value: monthlyStats.pendingAmount,
-      color: "warning",
-    },
-    {
-      title: "Tasks Completed",
-      value: monthlyStats.completedTasks,
-      suffix: " tasks",
-      color: "success",
-    },
-    {
-      title: "Pending Tasks",
-      value: monthlyStats.pendingTasks,
-      suffix: " tasks",
-      color: "info",
-    },
-  ];
+    const labels = [], values = [];
+    Object.entries(map).forEach(([k, v]) => { if (v > 0) { labels.push(k); values.push(Math.round(v)); }});
+    return { labels, values };
+  }, [incomeSources, clients]);
 
   // ----------------- RENDER -----------------
+  if (status === "loading" || loadingData) {
+  return <div style={{
+    textAlign:"center",
+    padding:"15rem 0",
+    fontWeight:"bold",
+    fontSize:"1.5rem",
+    color:"#252235ff"
+  }}>Loading dashboard...</div>;
+}
 
-  if (status === "loading") {
-    return (
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "80vh" }}
-      >
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <span className="ms-2 fw-semibold">Loading your dashboard...</span>
-      </div>
-    );
-  }
+// if (status !== "authenticated" || !session?.user?.id) {
+//   return (
+//     <div className="d-flex flex-column justify-content-center align-items-center" style={{ height: "80vh" }}>
+//       <div className="card p-4 text-center" style={{ maxWidth: 400, borderRadius: 12, boxShadow: "0 8px 25px rgba(0,0,0,0.15)" }}>
+//         <h4 className="mb-3" style={{ color: "var(--bs-primary)" }}>Access Denied</h4>
+//         <p className="text-muted mb-4" style={{ fontSize: 18 }}>
+//           You must be logged in to access the dashboard.
+//         </p>
+//         <Link href="/login" className="btn btn-primary px-4 py-2">Go to Login</Link>
+//       </div>
+//     </div>
+//   );
+// }
 
-  if (status !== "authenticated") {
-    return (
-      <div
-        className="d-flex flex-column justify-content-center align-items-center"
-        style={{ height: "80vh" }}
-      >
-        <div
-          className="card p-4 text-center"
-          style={{
-            maxWidth: "400px",
-            borderRadius: "12px",
-            boxShadow: "0 8px 25px rgba(0, 0, 0, 0.15)",
-            transition: "transform 0.3s, box-shadow 0.3s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-4px)";
-            e.currentTarget.style.boxShadow = "0 12px 35px rgba(0, 0, 0, 0.45)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.15)";
-          }}
-        >
-          <h4 className="mb-3" style={{ color: "var(--bs-primary)" }}>
-            Access Denied
-          </h4>
-          <p className="text-muted mb-4 " style={{ fontSize: "18px" }}>
-            You must be logged in to access the dashboard.
-          </p>
-          <a
-            href="/login"
-            className="btn btn-primary px-4 py-2"
-            style={{ transition: "transform 0.2s, box-shadow 0.2s" }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "scale(1.02)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "scale(1)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            Go to Login
-          </a>
-        </div>
-      </div>
-    );
-  }
+
+  const overviewData = [
+    { title: "Total Monthly Income", value: monthlyStats.totalIncome, color: "primary" },
+    { title: "Pending Payments", value: monthlyStats.pendingAmount, color: "warning" },
+    { title: "Tasks Completed", value: monthlyStats.completedTasks, suffix: " tasks", color: "success" },
+    { title: "Pending Tasks", value: monthlyStats.pendingTasks, suffix: " tasks", color: "info" },
+  ];
 
   return (
     <div className="dashboard-page container-fluid py-3 px-2">
-      <div
-        className="hero-card d-flex justify-content-between align-items-center"
-        style={{
-          background: "linear-gradient(135deg, var(--bs-primary), #241b36)",
-          color: "#fff",
-        }}
-      >
+      <div className="hero-card d-flex justify-content-between align-items-center" style={{ background: "linear-gradient(135deg, var(--bs-primary), #241b36)", color: "#fff" }}>
         <div>
           <div className="hero-label">This Month</div>
           <div className="hero-amount">
-            {monthlyStats.totalIncome.toLocaleString("en-US", {
-              style: "currency",
-              currency: "pkr",
-              maximumFractionDigits: 0,
-            })}
+            {monthlyStats.totalIncome.toLocaleString("en-US", { style: "currency", currency: "pkr", maximumFractionDigits: 0 })}
           </div>
         </div>
         <div className="d-flex gap-2">
-          <Link
-            href="/clients?openModal=true"
-            className="btn btn-primary btn-sm"
-          >
-            New Clients
-          </Link>
-          <Link
-            href="/tasks?openModal=true"
-            className="btn btn-outline-primary btn-sm"
-          >
-            New Task
-          </Link>
+          <Link href="/clients?openModal=true" className="btn btn-primary btn-sm">New Clients</Link>
+          <Link href="/tasks?openModal=true" className="btn btn-outline-primary btn-sm">New Task</Link>
         </div>
       </div>
 
       <div className="d-flex justify-content-between mt-2 pt-2 align-items-center mb-3">
         <div>
           <h2 className="fw-bold mb-0 fs-5">Laancer Dashboard</h2>
-          <p className="text-muted small mb-0">
-            Financial overview for {months[selectedMonth]} {selectedYear}
-          </p>
+          <p className="text-muted small mb-0">Financial overview for {months[selectedMonth]} {selectedYear}</p>
         </div>
-        <MonthPickerIcon
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          onChange={(m, y) => {
-            setSelectedMonth(m);
-            setSelectedYear(y);
-          }}
-        />
+        <MonthPickerIcon selectedMonth={selectedMonth} selectedYear={selectedYear} onChange={(m, y) => { setSelectedMonth(m); setSelectedYear(y); }} />
       </div>
 
       <div className="row g-3 mb-4">
-        {overviewData.map((card, index) => (
-          <div key={index} className="col-6 col-md-6">
-            <div
-              className={`card border-0 shadow-sm bg-${card.color} text-white h-100`}
-            >
+        {overviewData.map((card, idx) => (
+          <div key={idx} className="col-6 col-md-6">
+            <div className={`card border-0 shadow-sm bg-${card.color} text-white h-100`}>
               <div className="card-body text-center">
                 <h3 className="mb-1 fw-bold">
-                  {card.value.toLocaleString("en-US", {
-                    style: card.suffix ? "decimal" : "currency",
-                    currency: "pkr",
-                    maximumFractionDigits: 0,
-                  })}
-                  {card.suffix || ""}
+                  {card.value.toLocaleString("en-US", { style: card.suffix ? "decimal" : "currency", currency: "pkr", maximumFractionDigits: 0 })}{card.suffix || ""}
                 </h3>
-                <h6
-                  className="mb-0"
-                  style={{
-                    color:
-                      card.color === "warning"
-                        ? "#352359" // dark text for yellow
-                        : card.color === "info"
-                        ? "#352359" // soft white for light blue
-                        : "#352359", // default muted white for darker cards
-                    opacity: 0.9,
-                    fontWeight: 500,
-                  }}
-                >
-                  {card.title}
-                </h6>
+                <h6 className="mb-0" style={{ color: "#352359", opacity: 0.9, fontWeight: 500 }}>{card.title}</h6>
               </div>
             </div>
           </div>
@@ -542,10 +232,7 @@ export default function HomePage() {
           <div className="card shadow-sm h-100">
             <div className="card-body d-flex flex-column px-3">
               <h5 className="card-title">Half Yearly Income Distribution</h5>
-              <div
-                className="chart-container flex-fill d-flex align-items-center"
-                style={{ minHeight: 150 }}
-              >
+              <div className="chart-container flex-fill d-flex align-items-center" style={{ minHeight: 150 }}>
                 <IncomeChart monthlyData={monthlySeries} />
               </div>
             </div>
