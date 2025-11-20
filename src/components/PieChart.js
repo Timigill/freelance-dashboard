@@ -98,7 +98,7 @@ export default function PieChart({ data }) {
               flex: "1 1 50%",
               minWidth: 150,
               fontSize: "0.75rem",
-              marginTop: isMobile ? -10 : 0, 
+              marginTop: isMobile ? 10 : 0, 
               textAlign: isMobile ? "left" : "left",
             }}
           >
