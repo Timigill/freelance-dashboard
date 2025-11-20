@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Chart from "chart.js/auto";
 
 export default function PieChart({ data }) {
   const chartRef = useRef(null);
   const chartInstanceRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const themeColors = [
     "#614599ff",
@@ -18,12 +19,16 @@ export default function PieChart({ data }) {
   ];
 
   useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
     if (!chartRef.current) return;
 
-    // Destroy old chart
     chartInstanceRef.current?.destroy();
-
-    // Prevent rendering if no data
     if (!data?.labels?.length || !data?.values?.length) return;
 
     chartInstanceRef.current = new Chart(chartRef.current, {
@@ -43,11 +48,7 @@ export default function PieChart({ data }) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false,
-          },
-        },
+        plugins: { legend: { display: false } },
       },
     });
 
@@ -55,7 +56,14 @@ export default function PieChart({ data }) {
   }, [data]);
 
   return (
-    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: "10px",
+        alignItems: "center",
+        flexDirection: isMobile ? "column" : "row",
+      }}
+    >
       {data.labels.length === 0 ? (
         <div
           style={{
@@ -66,7 +74,7 @@ export default function PieChart({ data }) {
             textAlign: "center",
             fontSize: "1rem",
             color: "#352359",
-            height: "200px", 
+            height: "200px",
           }}
         >
           Add client to see overview
@@ -77,19 +85,30 @@ export default function PieChart({ data }) {
             style={{
               flex: "1 1 50%",
               minWidth: 150,
-              height: "200px",
+              height: isMobile ? "150px" : "200px",
+              width: "100%",
+              maxWidth: isMobile ? "200px" : "100%", 
               position: "relative",
             }}
           >
             <canvas ref={chartRef} />
           </div>
-          <div style={{ flex: "1 1 50%", minWidth: 150, fontSize: "0.75rem" }}>
+          <div
+            style={{
+              flex: "1 1 50%",
+              minWidth: 150,
+              fontSize: "0.75rem",
+              marginTop: isMobile ? -10 : 0, 
+              textAlign: isMobile ? "left" : "left",
+            }}
+          >
             {data.labels.map((label, index) => (
               <div
                 key={index}
                 style={{
                   display: "flex",
                   alignItems: "center",
+                  justifyContent: isMobile ? "center" : "flex-start",
                   marginBottom: 6,
                 }}
               >
@@ -112,7 +131,11 @@ export default function PieChart({ data }) {
                   {label}
                 </span>
                 <span
-                  style={{ marginLeft: 8, minWidth: 40, textAlign: "right" }}
+                  style={{
+                    marginLeft: 8,
+                    minWidth: 40,
+                    textAlign: "right",
+                  }}
                 >
                   {data.values[index].toLocaleString()}
                 </span>
