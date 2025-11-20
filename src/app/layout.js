@@ -1,13 +1,37 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { SessionProvider } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import { SessionProvider, useSession } from "next-auth/react";
 import { Toaster } from "react-hot-toast";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import DashboardShell from "../components/DashboardShell";
 import BootstrapClient from "../components/BootstrapClient";
+
+// Component to handle dashboard redirection if not authenticated
+function AuthWrapper({ children }) {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  if (status === "loading" || status === "unauthenticated") {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
+}
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
@@ -34,10 +58,11 @@ export default function RootLayout({ children }) {
       </head>
       <body className="bg-light">
         <SessionProvider>
-          {/* Show dashboard-specific components only on dashboard pages */}
           {isDashboard && <BootstrapClient />}
           {isDashboard ? (
-            <DashboardShell>{children}</DashboardShell>
+            <AuthWrapper>
+              <DashboardShell>{children}</DashboardShell>
+            </AuthWrapper>
           ) : (
             children
           )}
@@ -57,12 +82,10 @@ export default function RootLayout({ children }) {
                 borderLeft: "4px solid #22c55e",
               },
               success: {
-                duration: 3000,
                 style: { borderLeft: "4px solid #22c55e" },
                 iconTheme: { primary: "#22c55e", secondary: "#1f2937" },
               },
               error: {
-                duration: 3000,
                 style: { borderLeft: "4px solid #ef4444" },
                 iconTheme: { primary: "#ef4444", secondary: "#1f2937" },
               },
