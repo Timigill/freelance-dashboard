@@ -17,7 +17,7 @@ function IncomePageContent() {
   const normalizeType = (type) => {
     if (!type) return "Fixed Salary";
     const t = type.trim().toLowerCase();
-    if (t === "task based salary" || t === "task-based salary") return "Task-Based Salary";
+    if (t === "task based salary") return "Task Based Salary";
     if (t === "fixed salary") return "Fixed Salary";
     if (t === "freelance") return "Freelance";
     return "Fixed Salary"; // fallback
