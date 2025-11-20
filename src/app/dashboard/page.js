@@ -163,7 +163,7 @@ export default function HomePage() {
     padding:"15rem 0",
     fontWeight:"bold",
     fontSize:"1.5rem",
-    color:"#252235ff"
+    color:"#352359"
   }}>Loading dashboard...</div>;
 }
 
