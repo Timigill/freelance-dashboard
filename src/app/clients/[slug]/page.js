@@ -11,7 +11,6 @@ function ClientsDynamicPageContent() {
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
 
-
   useEffect(() => {
     if (!slug) return;
     if (isFilter(slug)) fetchClients(slug);
@@ -133,9 +132,7 @@ function ClientsDynamicPageContent() {
           t.client?.trim().toLowerCase() ||
           t.client?.name?.trim().toLowerCase() ||
           "";
-        return (
-          taskClientId === clientId || taskClientName.includes(clientName)
-        );
+        return taskClientId === clientId || taskClientName.includes(clientName);
       });
 
       setTasks(filteredTasks);
@@ -274,51 +271,37 @@ function ClientsDynamicPageContent() {
             <p className="no-data">No invoices found.</p>
           )}
         </div>
-<div className="task-card">
-  <h3>All Tasks of {client.name}</h3>
 
-  {tasks.length > 0 ? (
-    <table className="table table-hover align-middle mb-0">
-      <thead>
-        <tr>
-          <th>Task Title</th>
-          <th>Client</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {tasks
-          .filter((task) => {
-            const taskClientId = task.clientId?.toString() || "";
-            const taskClientName = (task.clientName || task.client?.name || "")
-              .trim()
-              .toLowerCase();
-            const selectedClientId = client._id?.toString() || "";
-            const selectedClientName = client.name?.trim().toLowerCase() || "";
+        <div className="task-card">
+          <h3>All Tasks of {client.name}</h3>
 
-            return (
-              taskClientId === selectedClientId ||
-              taskClientName.includes(selectedClientName)
-            );
-          })
-          .map((task, index) => (
-            <tr key={task._id || `task-${index}`}>
-              <td>{task.title || task.name || "—"}</td>
-              <td>{task.clientName || task.client?.name || "—"}</td>
-              <td>{task.status || "Pending"}</td>
-              <td>
-                {/* Add your edit/delete buttons here */}
-              </td>
-            </tr>
-          ))}
-      </tbody>
-    </table>
-  ) : (
-    <p className="no-data">No tasks found for this client.</p>
-  )}
-</div>
-
+          {tasks.length > 0 ? (
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Task Title</th>
+                    <th>Client</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.map((task, index) => (
+                    <tr key={task._id || `task-${index}`}>
+                      <td>{task.title || task.name || "—"}</td>
+                      <td>{task.clientName || task.client?.name || "—"}</td>
+                      <td>{task.status || "Pending"}</td>
+                      <td>{/* edit/delete buttons */}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="no-data">No tasks found for this client.</p>
+          )}
+        </div>
 
         <style jsx>{`
           .client-container {
@@ -336,10 +319,10 @@ function ClientsDynamicPageContent() {
             margin-bottom: 20px;
             flex-wrap: wrap;
           }
-            .header-row h2{
+          .header-row h2 {
             font-size: 24px !important;
             font-weight: bold;
-            }
+          }
 
           .btn-back {
             background: #352359;
@@ -373,6 +356,26 @@ function ClientsDynamicPageContent() {
             padding: 20px;
             background: #fff;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          }
+
+          .invoice-card .table-wrapper,
+          .task-card .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* smooth scroll on mobile */
+          }
+
+          .invoice-card table,
+          .task-card table {
+            min-width: 600px; /* adjust depending on columns */
+          }
+
+          /* Optional: mobile-specific adjustments */
+          @media (max-width: 768px) {
+            .invoice-card table,
+            .task-card table {
+              min-width: 500px; /* adjust as needed */
+            }
           }
 
           .invoice-card h3 {
