@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { SessionProvider, useSession } from "next-auth/react";
 import { Toaster } from "react-hot-toast";
@@ -59,9 +59,13 @@ export default function RootLayout({ children }) {
       <body className="bg-light">
         <SessionProvider>
           {isDashboard && <BootstrapClient />}
+
           {isDashboard ? (
             <AuthWrapper>
-              <DashboardShell>{children}</DashboardShell>
+              {/* ✅ FIX — Add Suspense HERE */}
+              <Suspense fallback={<div>Loading dashboard...</div>}>
+                <DashboardShell>{children}</DashboardShell>
+              </Suspense>
             </AuthWrapper>
           ) : (
             children
@@ -78,7 +82,8 @@ export default function RootLayout({ children }) {
                 borderRadius: "10px",
                 padding: "12px 26px",
                 fontSize: "0.9rem",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.1)",
+                boxShadow:
+                  "0 4px 12px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.1)",
                 borderLeft: "4px solid #22c55e",
               },
               success: {
