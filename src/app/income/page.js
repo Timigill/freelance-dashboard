@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Badge } from "react-bootstrap";
 import { useSearchParams, useRouter } from "next/navigation";
+import Loader from "@/components/Loader";
 import toast from "react-hot-toast";
 
 export default function IncomePage() {
@@ -11,6 +12,7 @@ export default function IncomePage() {
   const [clients, setClients] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [currentSource, setCurrentSource] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [frequencyFilter, setFrequencyFilter] = useState("all");
 
@@ -25,6 +27,8 @@ export default function IncomePage() {
 
   // ✅ Fetch income sources
   const fetchIncomeSources = async () => {
+    setLoading(true);
+
     try {
       const res = await fetch("/api/income");
       if (!res.ok) throw new Error("Failed to fetch income sources");
@@ -32,6 +36,8 @@ export default function IncomePage() {
       setIncomeSources(data);
     } catch (error) {
       console.error("Error fetching income sources:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -236,9 +242,9 @@ export default function IncomePage() {
     (src) => frequencyFilter === "all" || src.frequency === frequencyFilter
   );
   // Only sources that are active
-const activeSources = filteredSources.filter(
-  (src) => src.clientStatus?.toLowerCase() === "active"
-);
+  const activeSources = filteredSources.filter(
+    (src) => src.clientStatus?.toLowerCase() === "active"
+  );
 
   const totalIncome = filteredSources.reduce(
     (sum, source) => sum + (source.amount || 0),
@@ -360,47 +366,69 @@ const activeSources = filteredSources.filter(
                 </tr>
               </thead>
               <tbody>
-                {filteredSources.map((source) => (
-                  <tr key={source._id}>
-                    <td>
-                      {source.clientName || (source.clientId ? "Client" : "—")}
-                    </td>
-                    <td>{source.amount.toLocaleString()}</td>
-                    <td>{source.frequency}</td>
-                    <td>
-                      <span
+                {loading ? (
+                  <tr>
+                    <td colSpan="5" style={{ padding: "50px 0" }}>
+                      <div
                         style={{
-                          color: "#352359",
-                          fontWeight: "500",
-                          padding: "4px 8px",
-                          borderRadius: "6px",
-                          fontSize: "0.85rem",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
                         }}
                       >
-                        {source.clientStatus?.charAt(0).toUpperCase() +
-                          source.clientStatus?.slice(1)}
-                      </span>
-                    </td>
-
-                    <td>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        className="me-2"
-                        onClick={() => handleEdit(source)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleDelete(source._id)}
-                      >
-                        Delete
-                      </Button>
+                        <Loader width="150px" text="Loading Income..." />
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : filteredSources.length > 0 ? (
+                  filteredSources.map((source) => (
+                    <tr key={source._id}>
+                      <td>
+                        {source.clientName ||
+                          (source.clientId ? "Client" : "—")}
+                      </td>
+                      <td>{source.amount.toLocaleString()}</td>
+                      <td>{source.frequency}</td>
+                      <td>
+                        <span
+                          style={{
+                            color: "#352359",
+                            fontWeight: "500",
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          {source.clientStatus?.charAt(0).toUpperCase() +
+                            source.clientStatus?.slice(1)}
+                        </span>
+                      </td>
+                      <td>
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="me-2"
+                          onClick={() => handleEdit(source)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDelete(source._id)}
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center py-4 text-muted">
+                      No income sources found.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
