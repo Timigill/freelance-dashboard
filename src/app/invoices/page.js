@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import toast, { Toaster } from "react-hot-toast";
+import Loader from "@/components/Loader";
 import { showToast } from "../../utils/toastHelper";
-
 
 export default function InvoicesClient({ initialOpenModal }) {
   const [invoices, setInvoices] = useState([]);
@@ -43,7 +43,7 @@ export default function InvoicesClient({ initialOpenModal }) {
       setClients(Array.isArray(clientData) ? clientData : []);
     } catch (err) {
       console.error("Error fetching data:", err);
-      showToast("Failed to fetch data.","error");
+      showToast("Failed to fetch data.", "error");
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ export default function InvoicesClient({ initialOpenModal }) {
     e.preventDefault();
 
     if (!form.client || !form.amount) {
-      showToast("Please select a client and enter an amount.","error");
+      showToast("Please select a client and enter an amount.", "error");
       return;
     }
 
@@ -97,7 +97,7 @@ export default function InvoicesClient({ initialOpenModal }) {
 
     // Validation
     if (form.status === "Partially Paid" && paidAmount > totalAmount) {
-      showToast("Paid amount cannot exceed total amount.","error");
+      showToast("Paid amount cannot exceed total amount.", "error");
       return;
     }
 
@@ -129,10 +129,10 @@ export default function InvoicesClient({ initialOpenModal }) {
 
       fetchData();
       handleClose();
-      showToast("Invoice saved successfully!","success");
+      showToast("Invoice saved successfully!", "success");
     } catch (error) {
       console.error("Error saving invoice:", error);
-      showToast("Error saving invoice","error");
+      showToast("Error saving invoice", "error");
     }
   };
 
@@ -144,104 +144,105 @@ export default function InvoicesClient({ initialOpenModal }) {
   };
 
   // Delete invoice
-const handleDelete = async (invoiceId) => {
-  if (!invoiceId) return
-   showToast("Invalid invoice ID","error");
+  const handleDelete = async (invoiceId) => {
+    if (!invoiceId) return;
+    showToast("Invalid invoice ID", "error");
 
-  const confirmed = await new Promise((resolve) => {
-    let dismissed = false;
+    const confirmed = await new Promise((resolve) => {
+      let dismissed = false;
 
-    const ConfirmToast = ({ id }) => {
-      useEffect(() => {
-        const timer = setTimeout(() => {
-          if (!dismissed) {
-            dismissed = true;
-            toast.dismiss(id);
-            resolve(false);
-          }
-        }, 4000);
-        return () => clearTimeout(timer);
-      }, [id]);
+      const ConfirmToast = ({ id }) => {
+        useEffect(() => {
+          const timer = setTimeout(() => {
+            if (!dismissed) {
+              dismissed = true;
+              toast.dismiss(id);
+              resolve(false);
+            }
+          }, 4000);
+          return () => clearTimeout(timer);
+        }, [id]);
 
-      return (
-        <div
-          style={{
-            position: "fixed",
-            width: "100vw",
-            height: "100vh",
-            zIndex: 9999,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
+        return (
           <div
             style={{
-              backgroundColor: "#fff",
-              color: "#352359",
-              padding: "20px 30px",
-              borderRadius: "10px",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-              maxWidth: "340px",
-              textAlign: "center",
+              position: "fixed",
+              width: "100vw",
+              height: "100vh",
+              zIndex: 9999,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
-            <h5 className="mb-3">Confirm Delete</h5>
-            <p style={{ fontSize: "0.9rem" }}>
-              Are you sure you want to delete this invoice?
-            </p>
-            <div className="d-flex justify-content-center gap-3 mt-3">
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => {
-                  if (!dismissed) {
-                    dismissed = true;
-                    toast.dismiss(id);
-                    resolve(false);
-                  }
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-danger btn-sm"
-                onClick={() => {
-                  if (!dismissed) {
-                    dismissed = true;
-                    toast.dismiss(id);
-                    resolve(true);
-                  }
-                }}
-              >
-                Delete
-              </button>
+            <div
+              style={{
+                backgroundColor: "#fff",
+                color: "#352359",
+                padding: "20px 30px",
+                borderRadius: "10px",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+                maxWidth: "340px",
+                textAlign: "center",
+              }}
+            >
+              <h5 className="mb-3">Confirm Delete</h5>
+              <p style={{ fontSize: "0.9rem" }}>
+                Are you sure you want to delete this invoice?
+              </p>
+              <div className="d-flex justify-content-center gap-3 mt-3">
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    if (!dismissed) {
+                      dismissed = true;
+                      toast.dismiss(id);
+                      resolve(false);
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => {
+                    if (!dismissed) {
+                      dismissed = true;
+                      toast.dismiss(id);
+                      resolve(true);
+                    }
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      );
-    };
+        );
+      };
 
-    toast.custom((t) => <ConfirmToast id={t.id} />, {
-      duration: 4000,
-      position: "top-center",
+      toast.custom((t) => <ConfirmToast id={t.id} />, {
+        duration: 4000,
+        position: "top-center",
+      });
     });
-  });
 
-  if (!confirmed) return;
+    if (!confirmed) return;
 
-  try {
-    const res = await fetch(`/api/invoices?id=${invoiceId}`, { method: "DELETE" });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.message || "Failed to delete invoice");
+    try {
+      const res = await fetch(`/api/invoices?id=${invoiceId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || "Failed to delete invoice");
 
-    showToast("Invoice deleted successfully!","success");
-    fetchData(); // refresh the list
-  } catch (err) {
-    console.error("Delete error:", err);
-    showToastr("Error deleting invoice","error");
-  }
-};
-
+      showToast("Invoice deleted successfully!", "success");
+      fetchData(); // refresh the list
+    } catch (err) {
+      console.error("Delete error:", err);
+      showToastr("Error deleting invoice", "error");
+    }
+  };
 
   // Close modal
   const handleClose = () => {
@@ -281,14 +282,7 @@ const handleDelete = async (invoiceId) => {
     link.click();
   };
 
-  if (loading) {
-    return (
-      <div className="text-center mt-5">
-        <Spinner animation="border" />
-        <p>Loading invoices...</p>
-      </div>
-    );
-  }
+  
 
   // Helper for status colors
   const getStatusColor = (status) => {
@@ -400,49 +394,59 @@ const handleDelete = async (invoiceId) => {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((inv, index) => (
-              <tr key={inv._id}>
-                <td>{index + 1}</td>
-                <td>{`INV-${String(index + 1).padStart(2, "0")}`}</td>
-                <td>{inv.client}</td>
-                <td>{Number(inv.amount).toFixed(2)}</td>
-                <td>
-                  <span
-                    className="d-inline-block text-center text-truncate"
+            {loading ? (
+              <tr>
+                <td colSpan="8" style={{ padding: "50px 0" }}>
+                  <div
                     style={{
-                      maxWidth: "100px",
-                      padding: "4px 8px",
-                      borderRadius: "6px",
-                      backgroundColor: "#e9ecef",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
-                    {inv.status}
-                  </span>
-                </td>
-                <td>{inv.paid ? Number(inv.paid).toFixed(2) : "-"}</td>
-                <td>
-                  {inv.remaining ? Number(inv.remaining).toFixed(2) : "-"}
-                </td>
-                <td>
-                  <div className="d-flex flex-column flex-sm-row justify-content-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline-primary"
-                      onClick={() => handleEdit(index)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline-danger"
-                      onClick={() => handleDelete(inv._id)}
-                    >
-                      Delete
-                    </Button>
+                    <Loader width="150px" text="Loading Invoices..." />
                   </div>
                 </td>
               </tr>
-            ))}
+            ) : filtered.length > 0 ? (
+              filtered.map((inv, index) => (
+                <tr key={inv._id}>
+                  <td>{index + 1}</td>
+                  <td>{`INV-${String(index + 1).padStart(2, "0")}`}</td>
+                  <td>{inv.client}</td>
+                  <td>{Number(inv.amount).toFixed(2)}</td>
+                  <td>{inv.status}</td>
+                  <td>{inv.paid ? Number(inv.paid).toFixed(2) : "-"}</td>
+                  <td>
+                    {inv.remaining ? Number(inv.remaining).toFixed(2) : "-"}
+                  </td>
+                  <td>
+                    <div className="d-flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline-primary"
+                        onClick={() => handleEdit(index)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline-danger"
+                        onClick={() => handleDelete(inv._id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" className="text-center py-4 text-muted">
+                  No invoices found.
+                </td>
+              </tr>
+            )}
           </tbody>
 
           {/* Totals */}

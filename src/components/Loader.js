@@ -2,7 +2,7 @@
 
 import React from "react";
 
-export default function Loader({ width = "100%", height = "6px",  }) {
+export default function Loader({ width = "100%", height = "6px", text = "Loading..." }) {
   return (
     <div
       style={{
@@ -43,7 +43,7 @@ export default function Loader({ width = "100%", height = "6px",  }) {
       </div>
 
       {/* Loading text */}
-      {/* <span
+      <span
         style={{
           fontSize: "1rem",
           color: "#352359",
@@ -52,7 +52,7 @@ export default function Loader({ width = "100%", height = "6px",  }) {
         }}
       >
         {text}
-      </span> */}
+      </span>
 
       <style jsx>{`
         @keyframes loadingBar {
