@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import Loader from "@/components/Loader";
 import { useSearchParams } from "next/navigation";
 import { showToast } from "../../utils/toastHelper";
 
@@ -19,6 +20,8 @@ function ClientsPageContent() {
   const [shouldCloseModal, setShouldCloseModal] = useState(false);
   const [sortOrder, setSortOrder] = useState("newest");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const isValid = Object.values(form).every((f) => f.trim() !== "");
   const searchParams = useSearchParams();
@@ -74,6 +77,8 @@ function ClientsPageContent() {
   }, []);
 
   const fetchClients = async () => {
+    setLoading(true);
+
     try {
       const res = await fetch("/api/clients");
       const data = await res.json();
@@ -82,6 +87,8 @@ function ClientsPageContent() {
     } catch (err) {
       console.error("Error fetching clients:", err);
       setClients([]); // ensure it's always an array
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -93,8 +100,10 @@ function ClientsPageContent() {
     e.preventDefault();
     if (!isValid) {
       showToast("Please fill all fields.", "error");
-      // return;
+      return;
     }
+
+    setSaving(true);
 
     try {
       const method = editingClientId ? "PUT" : "POST";
@@ -111,7 +120,10 @@ function ClientsPageContent() {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message || "Failed to save client");
+      if (!res.ok) {
+        showToast(data.message || "Failed to save client", "error");
+        return; // NO THROW
+      }
 
       showToast(
         editingClientId ? "Client updated!" : "Client added!",
@@ -130,8 +142,9 @@ function ClientsPageContent() {
       fetchClients();
       setShouldCloseModal(true);
     } catch (err) {
-      console.error("Error saving client:", err);
       showToast(err.message, "error");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -388,7 +401,7 @@ function ClientsPageContent() {
             <select
               className="form-select form-select-sm"
               value={categoryFilter}
-              style={{ border: "none", boxShadow: "none", }}
+              style={{ border: "none", boxShadow: "none" }}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
               <option value="All">All Categories</option>
@@ -415,7 +428,21 @@ function ClientsPageContent() {
                 </tr>
               </thead>
               <tbody>
-                {filteredAndSortedClients.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan="8" style={{ padding: "50px 0" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Loader width="150px" text="Loading clients..." />
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredAndSortedClients.length > 0 ? (
                   filteredAndSortedClients.map((client) => (
                     <tr key={client._id}>
                       <td>
@@ -447,11 +474,11 @@ function ClientsPageContent() {
                           style={{
                             color:
                               client.status === "active"
-                                ? "#2c2b2bc9 !important"
+                                ? "#2c2b2bc9"
                                 : client.status === "inactive"
-                                ? "#2c2b2bff !important"
-                                : "2c2b2bff !important",
-                            fontWeight: "200", // optional
+                                ? "#2c2b2bff"
+                                : "#2c2b2bff",
+                            fontWeight: "200",
                           }}
                         >
                           {client.status.charAt(0).toUpperCase() +
@@ -484,7 +511,7 @@ function ClientsPageContent() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="text-center py-4 text-muted">
+                    <td colSpan="8" className="text-center py-4 text-muted">
                       No clients found.
                     </td>
                   </tr>
@@ -582,9 +609,13 @@ function ClientsPageContent() {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={!isValid}
+                  disabled={!isValid || saving}
                 >
-                  {editingClientId ? "Update Client" : "Save Client"}
+                  {saving
+                    ? "Saving..."
+                    : editingClientId
+                    ? "Update Client"
+                    : "Save Client"}
                 </button>
               </div>
             </form>

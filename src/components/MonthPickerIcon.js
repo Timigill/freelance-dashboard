@@ -27,12 +27,19 @@ export default function MonthPickerIcon({ selectedMonth, selectedYear, onChange 
     "0"
   )}`;
 
+  const now = new Date();
+  const maxStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}`;
+
   return (
     <>
       <input
         ref={inputRef}
         type="month"
         value={valueStr}
+        max={maxStr}     
         onChange={handleChange}
         style={{ display: "none" }}
         aria-hidden="true"

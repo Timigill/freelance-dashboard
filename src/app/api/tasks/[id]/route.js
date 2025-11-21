@@ -13,18 +13,13 @@ const getUserIdFromSession = async () => {
   return session.user.id;
 };
 
-// =========================
-// 🗑 DELETE TASK
-// =========================
-export async function DELETE(req, { params }) {
+export async function DELETE(req, context) {
   try {
+    const params = await context.params; // ✅ unwrap the promise
     const { id } = params;
 
     if (!isValidId(id))
-      return NextResponse.json(
-        { error: true, message: "Invalid Task ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: true, message: "Invalid Task ID" }, { status: 400 });
 
     await dbConnect();
     const userId = await getUserIdFromSession();
@@ -32,10 +27,7 @@ export async function DELETE(req, { params }) {
     const deleted = await Task.findOneAndDelete({ _id: id, userId });
 
     if (!deleted)
-      return NextResponse.json(
-        { error: true, message: "Task not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: true, message: "Task not found" }, { status: 404 });
 
     return NextResponse.json({ message: "Task deleted successfully" });
   } catch (err) {
@@ -47,40 +39,27 @@ export async function DELETE(req, { params }) {
   }
 }
 
-// =========================
-// ✏ UPDATE TASK
-// =========================
-export async function PUT(req, { params }) {
+export async function PUT(req, context) {
   try {
+    const params = await context.params; // ✅ unwrap the promise
     const { id } = params;
 
     if (!isValidId(id))
-      return NextResponse.json(
-        { error: true, message: "Invalid Task ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: true, message: "Invalid Task ID" }, { status: 400 });
 
     await dbConnect();
     const userId = await getUserIdFromSession();
-
     const body = await req.json();
 
-    const updatedTask = await Task.findOneAndUpdate(
-      { _id: id, userId },
-      body,
-      { new: true, runValidators: true }
-    )
-      .populate({
-        path: "clientId",
-        select: "name company email",
-      })
+    const updatedTask = await Task.findOneAndUpdate({ _id: id, userId }, body, {
+      new: true,
+      runValidators: true,
+    })
+      .populate({ path: "clientId", select: "name company email" })
       .lean();
 
     if (!updatedTask)
-      return NextResponse.json(
-        { error: true, message: "Task not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: true, message: "Task not found" }, { status: 404 });
 
     updatedTask.clientName = updatedTask.clientId
       ? updatedTask.clientId.company
@@ -97,3 +76,4 @@ export async function PUT(req, { params }) {
     );
   }
 }
+

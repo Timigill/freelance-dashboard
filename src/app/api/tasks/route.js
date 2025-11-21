@@ -14,9 +14,6 @@ const getUserIdFromSession = async () => {
   return session.user.id;
 };
 
-// =========================
-// 🚀 GET TASKS
-// =========================
 export async function GET(request) {
   try {
     await dbConnect();
@@ -128,3 +125,4 @@ export async function POST(request) {
     );
   }
 }
+
