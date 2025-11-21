@@ -1,8 +1,11 @@
-"use client";
-export const dynamic = "force-dynamic"; // Add this
-
+// page.js
+import { Suspense } from "react";
 import IncomePage from "./IncomePageInner";
 
 export default function Page() {
-  return <IncomePage />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <IncomePage />
+    </Suspense>
+  );
 }
