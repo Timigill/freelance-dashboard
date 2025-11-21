@@ -1,0 +1,529 @@
+"use client";
+import { useState, useEffect } from "react";
+import { Modal, Button, Form, Badge } from "react-bootstrap";
+import { useSearchParams, useRouter } from "next/navigation";
+import Loader from "@/components/Loader";
+import toast from "react-hot-toast";
+
+export default function IncomePage() {
+  const [incomeSources, setIncomeSources] = useState([]);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [clients, setClients] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [currentSource, setCurrentSource] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all");
+  const [frequencyFilter, setFrequencyFilter] = useState("all");
+
+  const [form, setForm] = useState({
+    name: "",
+    amount: "",
+    frequency: "Monthly",
+    description: "",
+    clientId: "",
+    clientName: "",
+  });
+
+  // ✅ Fetch income sources
+  const fetchIncomeSources = async () => {
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/income");
+      if (!res.ok) throw new Error("Failed to fetch income sources");
+      const data = await res.json();
+      setIncomeSources(data);
+    } catch (error) {
+      console.error("Error fetching income sources:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Fetch clients
+  const fetchClients = async () => {
+    try {
+      const res = await fetch("/api/clients");
+      if (!res.ok) throw new Error("Failed to fetch clients");
+      const data = await res.json();
+      setClients(data);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchIncomeSources();
+    fetchClients();
+  }, []);
+
+  // ✅ Auto-open modal if ?openModal=true
+  useEffect(() => {
+    if (searchParams.get("openModal") === "true") {
+      setCurrentSource(null);
+      setForm({
+        name: "",
+        amount: "",
+        frequency: "Monthly",
+        description: "",
+        clientId: "",
+        clientName: "",
+      });
+      setShowModal(true);
+    }
+  }, [searchParams]);
+
+  // ✅ Save or update
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      let updatedForm = { ...form };
+
+      if (currentSource) {
+        // Include _id for edit
+        updatedForm._id = currentSource._id;
+      }
+
+      if (updatedForm.clientId && !updatedForm.clientName) {
+        const selected = clients.find((c) => c._id === updatedForm.clientId);
+        if (selected)
+          updatedForm.clientName = selected.company
+            ? `${selected.company} — ${selected.name}`
+            : selected.name;
+      }
+
+      if (typeof updatedForm.amount === "string") {
+        updatedForm.amount = parseFloat(updatedForm.amount) || 0;
+      }
+
+      const url = "/api/income";
+      const method = currentSource ? "PUT" : "POST";
+
+      await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedForm),
+      });
+
+      setShowModal(false);
+      setCurrentSource(null);
+      setForm({
+        name: "",
+        amount: "",
+        frequency: "Monthly",
+        description: "",
+        clientId: "",
+        clientName: "",
+      });
+      fetchIncomeSources();
+    } catch (error) {
+      console.error("Error saving income source:", error);
+    }
+  };
+
+  // ✅ Edit
+  const handleEdit = (source) => {
+    setCurrentSource(source);
+    setForm({
+      name: source.name,
+      amount: source.amount,
+      frequency: source.frequency,
+      description: source.description || "",
+      clientId: source.clientId || "",
+      clientName: source.clientName || "",
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!id) return toast.error("Invalid income ID");
+
+    let confirmed = false;
+
+    await new Promise((resolve) => {
+      let dismissed = false;
+
+      const ConfirmToast = ({ id }) => {
+        useEffect(() => {
+          const timer = setTimeout(() => {
+            if (!dismissed) {
+              dismissed = true;
+              toast.dismiss(id);
+              resolve(false); // auto-cancel after 4s
+            }
+          }, 4000);
+
+          return () => clearTimeout(timer);
+        }, [id]);
+
+        return (
+          <div
+            style={{
+              position: "fixed",
+              width: "100vw",
+              height: "100vh",
+              zIndex: 9999,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "#fff",
+                color: "#352359",
+                padding: "20px 30px",
+                borderRadius: "10px",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+                maxWidth: "340px",
+                textAlign: "center",
+              }}
+            >
+              <h5 className="mb-3">Confirm Delete</h5>
+              <p style={{ fontSize: "0.9rem" }}>
+                Are you sure you want to delete this income source?
+              </p>
+              <div className="d-flex justify-content-center gap-3 mt-3">
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    if (!dismissed) {
+                      dismissed = true;
+                      toast.dismiss(id);
+                      resolve(false);
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => {
+                    if (!dismissed) {
+                      dismissed = true;
+                      toast.dismiss(id);
+                      resolve(true);
+                    }
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      toast.custom((t) => <ConfirmToast id={t.id} />, {
+        duration: 4000,
+        position: "top-center",
+      });
+    }).then((res) => (confirmed = res));
+
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/income?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
+
+      if (!res.ok)
+        throw new Error(data?.message || "Failed to delete income source");
+
+      toast.success("Income source deleted successfully!");
+      fetchIncomeSources();
+    } catch (err) {
+      toast.error(`Error deleting income source: ${err.message}`);
+    }
+  };
+
+  // ✅ Filter logic
+  const filteredSources = incomeSources.filter(
+    (src) => frequencyFilter === "all" || src.frequency === frequencyFilter
+  );
+  // Only sources that are active
+  const activeSources = filteredSources.filter(
+    (src) => src.clientStatus?.toLowerCase() === "active"
+  );
+
+  const totalIncome = filteredSources.reduce(
+    (sum, source) => sum + (source.amount || 0),
+    0
+  );
+
+  return (
+    <div className="container-fluid py-4">
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-nowrap">
+        <div>
+          <h3
+            className="fw-bold mb-0 fs-5 fs-md-4"
+            style={{ color: "var(--bs-primary)" }}
+          >
+            Income Sources
+          </h3>
+          <p className="text-muted fs-6 mb-0">
+            Manage your income streams and track earnings
+          </p>
+        </div>
+
+        <button
+          className="btn mt-2 mt-md-0"
+          style={{
+            background: "var(--bs-primary)",
+            color: "white",
+            whiteSpace: "nowrap",
+            fontSize: "0.9rem",
+            padding: "6px 14px",
+          }}
+          onClick={() => {
+            setCurrentSource(null);
+            setForm({
+              name: "",
+              amount: "",
+              frequency: "Monthly",
+              description: "",
+              clientId: "",
+              clientName: "",
+            });
+            setShowModal(true);
+          }}
+        >
+          Add Income Source
+        </button>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="row mb-4 g-3 justify-content-center justify-content-md-start">
+        <div className="col-6 col-md-4">
+          <div className="card bg-primary text-white h-100 text-center">
+            <div className="card-body d-flex flex-column justify-content-center">
+              <h6 className="mb-2" style={{ color: "var(--bs-primary)" }}>
+                Total Monthly Income
+              </h6>
+              <h3 className="mb-0">{totalIncome.toLocaleString()}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-6 col-md-4">
+          <div className="card bg-success text-white h-100 text-center">
+            <div className="card-body d-flex flex-column justify-content-center">
+              <h6 className="mb-2" style={{ color: "var(--bs-primary)" }}>
+                Active Sources
+              </h6>
+              <h3 className="mb-0">{activeSources.length}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-6 col-md-4 d-flex justify-content-center justify-content-md-start">
+          <div
+            className="card bg-info text-white h-100 text-center"
+            style={{ minWidth: "100%" }}
+          >
+            <div className="card-body d-flex flex-column justify-content-center">
+              <h6 className="mb-2" style={{ color: "var(--bs-primary)" }}>
+                Average per Source
+              </h6>
+              <h3 className="mb-0">
+                {incomeSources.length
+                  ? Math.round(
+                      totalIncome / incomeSources.length
+                    ).toLocaleString()
+                  : 0}
+              </h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter Buttons */}
+      {["all", "One-time", "Weekly", "Monthly", "Yearly"].map((f) => (
+        <button
+          key={f}
+          className={`btn ${
+            frequencyFilter === f ? "btn-primary" : "btn-outline-primary"
+          }`}
+          onClick={() => setFrequencyFilter(f)}
+        >
+          {f === "all" ? "All" : f}
+        </button>
+      ))}
+
+      {/* Table */}
+      <div className="card shadow-sm">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>Client</th>
+                  <th>Amount</th>
+                  <th>Frequency</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="5" style={{ padding: "50px 0" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Loader width="150px" text="Loading Income..." />
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredSources.length > 0 ? (
+                  filteredSources.map((source) => (
+                    <tr key={source._id}>
+                      <td>
+                        {source.clientName ||
+                          (source.clientId ? "Client" : "—")}
+                      </td>
+                      <td>{source.amount.toLocaleString()}</td>
+                      <td>{source.frequency}</td>
+                      <td>
+                        <span
+                          style={{
+                            color: "#352359",
+                            fontWeight: "500",
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          {source.clientStatus?.charAt(0).toUpperCase() +
+                            source.clientStatus?.slice(1)}
+                        </span>
+                      </td>
+                      <td>
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="me-2"
+                          onClick={() => handleEdit(source)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDelete(source._id)}
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center py-4 text-muted">
+                      No income sources found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal */}
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {currentSource ? "Edit" : "Add"} Income Source
+          </Modal.Title>
+        </Modal.Header>
+
+        <Form onSubmit={handleSubmit}>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Client</Form.Label>
+              <Form.Select
+                required
+                value={form.clientId || ""}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  const selected = clients.find((c) => c._id === id);
+                  const clientName = selected
+                    ? selected.company
+                      ? `${selected.company} — ${selected.name}`
+                      : selected.name
+                    : "";
+                  setForm((prev) => ({ ...prev, clientId: id, clientName }));
+                }}
+              >
+                <option value="">Select client...</option>
+                {clients.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.company ? `${c.company} — ${c.name}` : c.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Enter amount"
+                value={form.amount || ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    amount: e.target.value ? parseFloat(e.target.value) : "",
+                  })
+                }
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Frequency</Form.Label>
+              <Form.Select
+                value={form.frequency}
+                onChange={(e) =>
+                  setForm({ ...form, frequency: e.target.value })
+                }
+                required
+              >
+                <option value="One-time">One-time</option>
+                <option value="Weekly">Weekly</option>
+                <option value="Monthly">Monthly</option>
+                <option value="Yearly">Yearly</option>
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                placeholder="Enter description"
+                value={form.description}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit">
+              Save
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+    </div>
+  );
+}
