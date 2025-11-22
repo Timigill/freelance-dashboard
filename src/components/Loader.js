@@ -13,7 +13,7 @@ export default function Loader({ width = "100%", height = "6px", text = "Loading
         width: width,
         minHeight: "50px",
         padding: "8px",
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "none",
         borderRadius: "6px",
         overflow: "hidden",
         position: "relative",
