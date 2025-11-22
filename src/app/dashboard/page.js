@@ -15,6 +15,7 @@ export default function HomePage() {
   const [clients, setClients] = useState([]);
   const [incomeSources, setIncomeSources] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -71,165 +72,166 @@ export default function HomePage() {
     setLoadingData(true);
   };
 
-  // ----------------- FETCH DATA -----------------
-  useEffect(() => {
-    if (status !== "authenticated") return;
+// ----------------- FETCH DATA -----------------
+useEffect(() => {
+  if (status !== "authenticated") return;
 
-    const fetchAllData = async () => {
-      setLoadingData(true);
-      try {
-        const [clientsRes, incomeRes, tasksRes] = await Promise.all([
-          fetch("/api/clients"),
-          fetch(`/api/income?month=${selectedMonth + 1}&year=${selectedYear}`),
-          fetch(`/api/tasks?month=${selectedMonth + 1}&year=${selectedYear}`),
-        ]);
+  const fetchAllData = async () => {
+    setLoadingData(true);
+    try {
+      const [clientsRes, incomeRes, tasksRes, invoicesRes] = await Promise.all([
+        fetch("/api/clients"),
+        fetch(`/api/income?month=${selectedMonth + 1}&year=${selectedYear}`),
+        fetch(`/api/tasks?month=${selectedMonth + 1}&year=${selectedYear}`),
+        fetch(`/api/invoices`) // fetch invoices
+      ]);
 
-        const [clientsData, incomeData, taskData] = await Promise.all([
-          clientsRes.json(),
-          incomeRes.json(),
-          tasksRes.json(),
-        ]);
+      const [clientsData, incomeData, taskData, invoicesData] = await Promise.all([
+        clientsRes.json(),
+        incomeRes.json(),
+        tasksRes.json(),
+        invoicesRes.json()
+      ]);
 
-        setClients(clientsData || []);
-        setIncomeSources(incomeData || []);
-        setTasks(taskData || []);
-      } catch (err) {
-        console.error("Failed to fetch dashboard data:", err);
-        setClients([]);
-        setIncomeSources([]);
-        setTasks([]);
-      } finally {
-        setLoadingData(false);
+      setClients(clientsData || []);
+      setIncomeSources(incomeData || []);
+      setTasks(taskData || []);
+      setInvoices(invoicesData || []); // new state for invoices
+    } catch (err) {
+      console.error("Failed to fetch dashboard data:", err);
+      setClients([]);
+      setIncomeSources([]);
+      setTasks([]);
+      setInvoices([]);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  fetchAllData();
+}, [status, selectedMonth, selectedYear]);
+
+// ----------------- COMPUTE STATS -----------------
+useEffect(() => {
+  if (loadingData) return;
+
+  const computeStats = () => {
+    let totalIncome = 0;
+    let fixedIncome = 0;
+    let taskBasedIncome = 0;
+    let freelanceIncome = 0;
+    let pendingAmount = 0;
+    let completedTasks = 0;
+    let pendingTasks = 0;
+
+    const startOfMonth = new Date(selectedYear, selectedMonth, 1);
+    const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59, 999);
+
+    // Map clients
+    const clientMap = {};
+    clients.forEach(c => clientMap[c._id] = c.company ? `${c.company} — ${c.name}` : c.name);
+
+    // --- Income sources ---
+    incomeSources.forEach(src => {
+      if (!src.isActive) return;
+      const created = new Date(src.createdAt);
+      if (created < startOfMonth || created > endOfMonth) return;
+
+      const amountPaid = Array.isArray(src.payments)
+        ? src.payments.filter(p => p.status?.toLowerCase() === "paid")
+            .reduce((sum, p) => sum + Number(p.amount || 0), 0)
+        : 0;
+      if (amountPaid <= 0) return;
+
+      switch(src.type){
+        case "Fixed Salary": fixedIncome += amountPaid; break;
+        case "Task Based Salary": taskBasedIncome += amountPaid; break;
+        case "Freelance": freelanceIncome += amountPaid; break;
       }
-    };
+      totalIncome += amountPaid;
+    });
 
-    fetchAllData();
-  }, [status, selectedMonth, selectedYear]);
+    // --- Tasks ---
+    tasks.forEach(task => {
+      if (!task.dueDate) return;
+      const date = new Date(task.dueDate);
+      if (date < startOfMonth || date > endOfMonth) return;
 
-  // ----------------- COMPUTE STATS -----------------
-  useEffect(() => {
-    if (loadingData) return; // only compute after data is fetched
+      const status = (task.status || "").toLowerCase();
+      const payment = (task.paymentStatus || "").toLowerCase();
 
-    const computeStats = () => {
-      let totalIncome = 0,
-        fixedIncome = 0,
-        taskBasedIncome = 0,
-        freelanceIncome = 0;
-      let pendingAmount = 0,
-        completedTasks = 0,
-        pendingTasks = 0;
+      if (status === "completed") completedTasks++;
+      else pendingTasks++;
 
-      const startOfMonth = new Date(selectedYear, selectedMonth, 1);
-      const endOfMonth = new Date(
-        selectedYear,
-        selectedMonth + 1,
-        0,
-        23,
-        59,
-        59,
-        999
-      );
+      if (payment === "paid") totalIncome += Number(task.amount || 0);
+      else pendingAmount += Number(task.amount || 0);
+    });
 
-      // Map clients
-      const clientMap = {};
-      clients.forEach(
-        (c) =>
-          (clientMap[c._id] = c.company ? `${c.company} — ${c.name}` : c.name)
-      );
+    // --- Invoices ---
+    invoices.forEach(inv => {
+      const created = new Date(inv.createdAt);
+      if (created < startOfMonth || created > endOfMonth) return;
 
-      // Paid income from incomeSources only
-      incomeSources.forEach((src) => {
-        if (!src.isActive) return;
+      const paid = Number(inv.paid || 0);
+      const remaining = Number(inv.remaining || 0);
 
+      totalIncome += paid;
+      pendingAmount += remaining;
+    });
+
+    setMonthlyStats({
+      totalIncome,
+      fixedIncome,
+      taskBasedIncome,
+      freelanceIncome,
+      pendingAmount,
+      completedTasks,
+      pendingTasks,
+    });
+
+    // --- Last 6 months series ---
+    const labels = [];
+    const values = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(selectedYear, selectedMonth - i, 1);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      labels.push(`${months[month].slice(0,3)} ${String(year).slice(-2)}`);
+
+      let total = 0;
+      incomeSources.forEach(src => {
         const created = new Date(src.createdAt);
-        if (created < startOfMonth || created > endOfMonth) return;
-
-        const amountPaid = Array.isArray(src.payments)
-          ? src.payments
-              .filter((p) => p.status?.toLowerCase() === "paid")
-              .reduce((sum, p) => sum + Number(p.amount || 0), 0)
-          : 0;
-
-        if (amountPaid <= 0) return;
-
-        switch (src.type) {
-          case "Fixed Salary":
-            fixedIncome += amountPaid;
-            break;
-          case "Task Based Salary":
-            taskBasedIncome += amountPaid;
-            break;
-          case "Freelance":
-            freelanceIncome += amountPaid;
-            break;
+        if (created.getMonth() === month && created.getFullYear() === year){
+          const paid = Array.isArray(src.payments)
+            ? src.payments.filter(p => p.status?.toLowerCase() === "paid")
+                .reduce((sum, p) => sum + Number(p.amount || 0), 0)
+            : 0;
+          total += paid;
         }
-        totalIncome += amountPaid;
+      });
+      tasks.forEach(task => {
+        const td = new Date(task.dueDate);
+        if (td.getMonth() === month && td.getFullYear() === year &&
+            (task.paymentStatus || "").toLowerCase() === "paid") {
+          total += Number(task.amount || 0);
+        }
+      });
+      invoices.forEach(inv => {
+        const created = new Date(inv.createdAt);
+        if (created.getMonth() === month && created.getFullYear() === year){
+          total += Number(inv.paid || 0);
+        }
       });
 
-      // Tasks
-      tasks.forEach((task) => {
-        if (!task.dueDate) return;
-        const date = new Date(task.dueDate);
-        if (date < startOfMonth || date > endOfMonth) return;
+      values.push(Math.round(total));
+    }
 
-        const status = (task.status || "").toLowerCase();
-        const payment = (task.paymentStatus || "").toLowerCase();
+    setMonthlySeries({ labels, values });
+  };
 
-        if (status === "completed") completedTasks++;
-        else pendingTasks++;
-        if (payment !== "paid") pendingAmount += Number(task.amount || 0);
-        if (payment === "paid") totalIncome += Number(task.amount || 0);
-      });
+  computeStats();
+}, [incomeSources, tasks, invoices, clients, selectedMonth, selectedYear, loadingData]);
 
-      setMonthlyStats({
-        totalIncome,
-        fixedIncome,
-        taskBasedIncome,
-        freelanceIncome,
-        pendingAmount,
-        completedTasks,
-        pendingTasks,
-      });
-
-      // Last 6 months series
-      const labels = [];
-      const values = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(selectedYear, selectedMonth - i, 1);
-        const year = d.getFullYear();
-        const month = d.getMonth();
-        labels.push(`${months[month].slice(0, 3)} ${String(year).slice(-2)}`);
-
-        let total = 0;
-        incomeSources.forEach((src) => {
-          const created = new Date(src.createdAt);
-          if (created.getMonth() === month && created.getFullYear() === year) {
-            const paid = Array.isArray(src.payments)
-              ? src.payments
-                  .filter((p) => p.status?.toLowerCase() === "paid")
-                  .reduce((sum, p) => sum + Number(p.amount || 0), 0)
-              : 0;
-            total += paid;
-          }
-        });
-        tasks.forEach((task) => {
-          const td = new Date(task.dueDate);
-          if (
-            td.getMonth() === month &&
-            td.getFullYear() === year &&
-            (task.paymentStatus || "").toLowerCase() === "paid"
-          ) {
-            total += Number(task.amount || 0);
-          }
-        });
-        values.push(Math.round(total));
-      }
-
-      setMonthlySeries({ labels, values });
-    };
-
-    computeStats();
-  }, [incomeSources, tasks, clients, selectedMonth, selectedYear, loadingData]);
 
   // ----------------- PIE CHART -----------------
   const pieChartData = useMemo(() => {
