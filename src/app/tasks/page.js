@@ -550,12 +550,17 @@ function TasksPageContent() {
     }
   }, [params]);
 
-  // ✅ Fetch data on mount & when filters change
-  useEffect(() => {
-    fetchTasks();
-    fetchIncomeSources();
-    fetchClients();
-  }, [filters]);
+  // Fetch clients & income sources once
+useEffect(() => {
+  fetchClients();
+  fetchIncomeSources();
+}, []);
+
+// Fetch tasks on filter change
+useEffect(() => {
+  fetchTasks();
+}, [filters]);
+
 
   const fetchTasks = async () => {
     setLoading(true);

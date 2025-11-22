@@ -31,7 +31,7 @@ export default function LandingPage() {
   const features = [
     {
       icon: <FiFolder size={36} color="#241b36" />,
-      title: "Project Management",
+      title: "Task Management",
       desc: "Organize your workflow and deadlines effortlessly.",
     },
 

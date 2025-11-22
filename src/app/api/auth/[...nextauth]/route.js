@@ -37,7 +37,8 @@ export const authOptions = {
         } else {
           try {
             const phoneNumber = parsePhoneNumber(emailOrPhone, "PK");
-            if (!phoneNumber.isValid()) throw new Error("Invalid phone number format");
+            if (!phoneNumber.isValid())
+              throw new Error("Invalid phone number format");
             user = await User.findOne({ phone: phoneNumber.number });
           } catch {
             throw new Error("Invalid phone number format");
@@ -45,7 +46,8 @@ export const authOptions = {
         }
 
         if (!user) throw new Error("User not found");
-        if (!user.isVerified) throw new Error("Please verify your account first");
+        if (!user.isVerified)
+          throw new Error("Please verify your account first");
 
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) throw new Error("Invalid password");
@@ -76,31 +78,45 @@ export const authOptions = {
 
       if (account?.provider === "google" || account?.provider === "github") {
         const existingUser = await User.findOne({ email: user.email });
+
         if (!existingUser) {
           await User.create({
             name: user.name || "No Name",
             email: user.email,
             isVerified: true,
             provider: account.provider,
+            profilePic: user.image || null, 
           });
+
           console.log("✅ New OAuth user saved to DB:", user.email);
         } else {
+          // Update profilePic if it changed on Google
+          if (user.image && existingUser.profilePic !== user.image) {
+            existingUser.profilePic = user.image;
+            await existingUser.save();
+          }
+
           console.log("ℹ️ OAuth user already exists:", user.email);
         }
       }
+
       return true;
     },
 
     async jwt({ token, user }) {
       if (user) {
         const dbUser = await User.findOne({ email: user.email });
-        if (dbUser) token.id = dbUser._id.toString();
+        if (dbUser) {
+          token.id = dbUser._id.toString();
+          token.profilePic = dbUser.profilePic || null; // ADD THIS
+        }
       }
       return token;
     },
 
     async session({ session, token }) {
       if (token?.id) session.user.id = token.id;
+      session.user.profilePic = token.profilePic || null; // ADD THIS
       return session;
     },
   },

@@ -43,7 +43,14 @@ export default function SettingsPage() {
           phone: data.phone || "",
           bio: data.bio || "",
         }));
-        setPreview(data.profilePic || null);
+
+        // Fix: if profilePic is a URL, use it directly
+        setPreview(
+          data.profilePic?.startsWith("data:") ||
+            data.profilePic?.startsWith("http")
+            ? data.profilePic
+            : session.user.profilePic || "/default-avatar.png"
+        );
       } catch (err) {
         console.error(err);
         toast.error("Failed to fetch profile");

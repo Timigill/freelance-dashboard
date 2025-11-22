@@ -84,57 +84,66 @@ export default function InvoicesClient({ initialOpenModal }) {
   };
 
   // Save (Add/Edit)
-  const handleSave = async (e) => {
-    e.preventDefault();
+const handleSave = async (e) => {
+  e.preventDefault();
 
-    if (!form.client || !form.amount) {
-      showToast("Please select a client and enter an amount.", "error");
-      return;
-    }
+  if (!form.client || !form.amount) {
+    showToast("Please select a client and enter an amount.", "error");
+    return;
+  }
 
-    const totalAmount = Number(form.amount);
-    const paidAmount = Number(form.paid) || 0;
+  const totalAmount = Number(form.amount);
+  const paidAmount = Number(form.paid) || 0;
 
-    // Validation
-    if (form.status === "Partially Paid" && paidAmount > totalAmount) {
-      showToast("Paid amount cannot exceed total amount.", "error");
-      return;
-    }
+  if (form.status === "Partially Paid" && paidAmount > totalAmount) {
+    showToast("Paid amount cannot exceed total amount.", "error");
+    return;
+  }
 
-    let updatedForm = { ...form };
-    if (updatedForm.status === "Paid") {
-      updatedForm.paid = totalAmount;
-      updatedForm.remaining = 0;
-    } else if (updatedForm.status === "Partially Paid") {
-      updatedForm.remaining = totalAmount - paidAmount;
+  let updatedForm = { ...form };
+  if (updatedForm.status === "Paid") {
+    updatedForm.paid = totalAmount;
+    updatedForm.remaining = 0;
+  } else if (updatedForm.status === "Partially Paid") {
+    updatedForm.remaining = totalAmount - paidAmount;
+  } else {
+    updatedForm.paid = 0;
+    updatedForm.remaining = totalAmount;
+  }
+
+  try {
+    const method = editingIndex !== null ? "PUT" : "POST";
+    const body =
+      editingIndex !== null
+        ? { ...updatedForm, _id: invoices[editingIndex]._id }
+        : updatedForm;
+
+    const res = await fetch("/api/invoices", {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to save invoice");
+
+    // ✅ Update state without extra GET
+    if (editingIndex !== null) {
+      setInvoices((prev) =>
+        prev.map((inv, i) => (i === editingIndex ? data : inv))
+      );
     } else {
-      updatedForm.paid = 0;
-      updatedForm.remaining = totalAmount;
+      setInvoices((prev) => [data, ...prev]);
     }
 
-    try {
-      const method = editingIndex !== null ? "PUT" : "POST";
-      const body =
-        editingIndex !== null
-          ? { ...updatedForm, _id: invoices[editingIndex]._id }
-          : updatedForm;
+    handleClose();
+    showToast("Invoice saved successfully!", "success");
+  } catch (error) {
+    console.error("Error saving invoice:", error);
+    showToast("Error saving invoice", "error");
+  }
+};
 
-      const res = await fetch("/api/invoices", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) throw new Error("Failed to save invoice");
-
-      fetchData();
-      handleClose();
-      showToast("Invoice saved successfully!", "success");
-    } catch (error) {
-      console.error("Error saving invoice:", error);
-      showToast("Error saving invoice", "error");
-    }
-  };
 
   // Edit invoice
   const handleEdit = (index) => {

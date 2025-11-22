@@ -14,10 +14,16 @@ export async function GET(req, { params }) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    return NextResponse.json({
+      ...user._doc,
+      profilePic: user.profilePic || null,
+    });
   } catch (err) {
     console.error("GET user error:", err);
-    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch user" },
+      { status: 500 }
+    );
   }
 }
 
@@ -43,7 +49,10 @@ export async function PATCH(req, { params }) {
     if (data.oldPassword && data.newPassword) {
       const isMatch = await bcrypt.compare(data.oldPassword, user.password);
       if (!isMatch) {
-        return NextResponse.json({ error: "Old password is incorrect" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Old password is incorrect" },
+          { status: 400 }
+        );
       }
       const hashed = await bcrypt.hash(data.newPassword, 10);
       user.password = hashed;
@@ -56,6 +65,9 @@ export async function PATCH(req, { params }) {
     return NextResponse.json({ message: "Profile updated", user: updatedUser });
   } catch (err) {
     console.error("PATCH user error:", err);
-    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update profile" },
+      { status: 500 }
+    );
   }
 }

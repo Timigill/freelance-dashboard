@@ -24,11 +24,11 @@ export async function GET(req) {
   }
 }
 
-// ✅ POST create invoice for logged-in user
+// POST create invoice for logged-in user
 export async function POST(req) {
   try {
     await dbConnect();
-    const userId = await getUserIdFromSession(); // ✅ fixed
+    const userId = await getUserIdFromSession();
     const body = await req.json();
 
     if (!body.client || !body.amount) {
@@ -49,9 +49,7 @@ export async function POST(req) {
     }
 
     const invoice = await Invoice.create({ ...body, id: newId, userId });
-
-    const updated = await Invoice.find({ userId }).sort({ createdAt: -1 });
-    return NextResponse.json(updated);
+    return NextResponse.json(invoice); // ✅ only the new invoice
   } catch (err) {
     console.error(err);
     return NextResponse.json(
@@ -61,8 +59,7 @@ export async function POST(req) {
   }
 }
 
-
-// ✅ PUT update invoice for logged-in user
+// PUT update invoice
 export async function PUT(req) {
   try {
     await dbConnect();
@@ -75,13 +72,16 @@ export async function PUT(req) {
       { new: true }
     );
 
-    if (!updated) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+    if (!updated)
+      return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
 
-    const invoices = await Invoice.find({ userId }).sort({ createdAt: -1 });
-    return NextResponse.json(invoices);
+    return NextResponse.json(updated); 
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Failed to update invoice" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update invoice" },
+      { status: 500 }
+    );
   }
 }
 
@@ -93,15 +93,23 @@ export async function DELETE(req) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
-    if (!id) return NextResponse.json({ error: "Invoice ID required" }, { status: 400 });
+    if (!id)
+      return NextResponse.json(
+        { error: "Invoice ID required" },
+        { status: 400 }
+      );
 
     const deleted = await Invoice.findOneAndDelete({ _id: id, userId });
-    if (!deleted) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+    if (!deleted)
+      return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
 
     const invoices = await Invoice.find({ userId }).sort({ createdAt: -1 });
     return NextResponse.json(invoices);
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Failed to delete invoice" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete invoice" },
+      { status: 500 }
+    );
   }
 }
